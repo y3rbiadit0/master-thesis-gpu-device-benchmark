@@ -1,0 +1,10 @@
+\frontchapter{Abstract}
+As AI model training scales across growing numbers of GPUs, communication becomes a bottleneck. Most communication is host-orchestrated: launches and synchronization can leave devices waiting. GPU initiation moves control into kernels and, when supported, posts network work directly to the NIC without CPU involvement. It is not inherently faster; pattern, size, topology, synchronization, and progress determine the benefit. This thesis identifies those conditions across communication models and validates them in a Conjugate Gradient (CG) solver on the Leonardo Booster partition.
+
+We develop \emph{gpu-comm-benchmark}, a CUDA/SYCL suite comparing MPI, NCCL/oneCCL, NVSHMEM, and OSHMPI across point-to-point, halo, collective, and CG-inspired patterns. We also extend oneCCL with grouped NCCL point-to-point, a complete OSHMPI backend, and a validated NVSHMEM runtime and staging foundation, and extend aCG with OSHMPI and SYCL implementations.
+
+Experiments on 1--32 GPUs expose a decision boundary rather than one winner. MPI minimizes startup cost; GPU-initiated NVSHMEM leads large steady halos; NCCL paths lead large allreduce and multi-node all-to-all. MPI/UCC avoids a 17--34$\times$ small-message all-to-all slowdown at 16 and 32 ranks, while its multi-node allreduce benefit begins at 64\,KiB. OSHMPI wins every multi-rank synthetic \texttt{cg\_step}, whereas NCCL leads its communication-free controls.
+
+Correlating \texttt{cg\_step} with aCG shows that matched reduction costs agree within 6.5--21\%, but the regular synthetic halo misses the irregular peer structure and overlap in aCG, making NCCL the fastest stable host-initiated backend. Device-side NVSHMEM scales better than blocking OSHMPI at larger rank counts, but absent IBGDA leaves inter-node RMA CPU-proxied. GPU initiation therefore helps when persistent work amortizes control costs and the application can exploit overlap; microbenchmarks predict matched primitives, not complete rankings.
+
+\printkeywords

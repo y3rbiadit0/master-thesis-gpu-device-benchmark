@@ -1,0 +1,432 @@
+\chapter{Experimental Evaluation}\label{ch:m-results}
+
+\section{Evaluation Strategy}
+
+Results follow the decision process. Point-to-point and structured microbenchmarks identify message-size and topology regions in which each stack is competitive. The \texttt{cg\_step} benchmark tests a CG-like composition, and the complete aCG campaign determines whether that ranking survives irregular sparse matrices, repeated dependencies, overlap, and convergence. A cross-level summary closes the main campaign; the subsequent preliminary NCCL section reports the later memory-path comparison separately.
+
+Small differences must be interpreted against job-level spread. The discussion therefore emphasizes persistent regions, large crossovers, and application-level effects rather than declaring a winner from isolated one-percent differences.
+
+\section{Microbenchmark Results}\label{sec:micro-results}
+
+\subsection{Point-to-Point Ping-Pong}
+
+Table~\ref{tab:m-pingpong-inter} gives representative inter-node results for two GPUs on two nodes. CUDA-aware HPC-X MPI is fastest at every tested size. Its advantage is largest in the startup regime: at 4 bytes it requires 3.217\,$\mu$s, compared with 17.325\,$\mu$s for NVSHMEM and 28.766\,$\mu$s for NCCL. At 16\,MiB the difference narrows, but MPI remains fastest.
+
+\begin{table}[htbp]
+\centering
+\caption{Inter-node ping-pong latency on \texttt{2n1g}. Lower is better.}
+\label{tab:m-pingpong-inter}
+\footnotesize
+\begin{tabular}{lrr}
+\toprule
+Stack & 4\,B ($\mu$s) & 16\,MiB ($\mu$s)\\
+\midrule
+CUDA MPI & 3.217 & 1111.883\\
+SYCL MPI & 3.231 & 1423.033\\
+OSHMPI & 7.319 & 1550.311\\
+CUDA NVSHMEM & 17.325 & 1388.035\\
+CUDA NCCL & 28.766 & 1436.395\\
+SYCL oneCCL/NCCL & 33.735 & 1445.162\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The intra-node result is more conditional. MPI has the lowest small-message floor and reaches approximately 89\,GB/s at large sizes, but NVSHMEM is fastest over a broad middle range. The measured crossover lies between 512 bytes and 1\,KiB, and MPI becomes faster again between 1 and 2\,MiB. This is direct evidence against assigning one latency or bandwidth ranking to a library independent of message size.
+
+\subsection{Halo Exchange}
+
+For isolated halo exchanges, MPI has the lowest fixed overhead on every measured topology. Its fitted small-message floor ranges from approximately 4.8\,$\mu$s on \texttt{1n2g} to 6.6\,$\mu$s on \texttt{8n4g}; NCCL, oneCCL, and the SHMEM paths pay higher launch or synchronization costs. At large multi-node messages, NVSHMEM overtakes MPI. On \texttt{8n4g} the two are effectively tied at a 2\,MiB aggregate payload, while at 4\,MiB NVSHMEM requires 155.860\,$\mu$s and CUDA MPI 166.488\,$\mu$s.
+
+Steady-state batching changes the result because fixed completion costs are amortized. OSHMPI becomes competitive at small-to-medium sizes, while NVSHMEM gives the highest large-message rate. Table~\ref{tab:m-halo-bandwidth} shows that this large-message ordering is stable across mixed multi-node topologies.
+
+\begin{table}[htbp]
+\centering
+\caption{Approximate peak steady-state halo bandwidth in GB/s.}
+\label{tab:m-halo-bandwidth}
+\begin{tabular}{lrrr}
+\toprule
+Topology & CUDA MPI & CUDA NVSHMEM & OSHMPI\\
+\midrule
+\texttt{2n4g} & 34.3 & 41.0 & 24.5\\
+\texttt{4n4g} & 36.4 & 40.9 & 24.4\\
+\texttt{8n4g} & 35.7 & 40.6 & 24.4\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The distinction between isolated and steady-state behavior is essential for interpreting RQ1 and the OSHMPI trade-offs in RQ2. OSHMPI's barrier and completion cost is visible in each isolated exchange but is divided across a batch in steady mode. The resulting amortized latency must not be interpreted as raw network latency.
+
+\subsection{Allreduce}
+
+Allreduce separates the small-message synchronization regime from the bulk-reduction regime. UCC improves the GPU-aware MPI result by 1.1--140 times across all sizes on \texttt{1n2g}, \texttt{1n4g}, and \texttt{2n1g}, and it helps at and above 64\,KiB on the larger multi-node topologies. Below that threshold, it is 1.06--2.2 times slower. Every topology with four GPUs per node also exhibits a reproducible cliff at exactly 4\,KiB: UCC latency rises by 81\% on \texttt{1n4g} and 120\% on \texttt{8n4g} between 2 and 4\,KiB while the non-UCC path remains flat. This boundary is not inferred from timing alone. TL/UCP's default rule explicitly selects latency-oriented recursive k-nomial below 4\,KiB and bandwidth-oriented scatter-reduce/allgather k-nomial at and above 4\,KiB \cite{openucx_ucc_source_2026}. The source-level switch explains why both CUDA and SYCL MPI reproduce the cliff. The selected policy nevertheless enables UCC for this benchmark because it is decisively better over most of the payload range.
+
+Figure~\ref{fig:m-ucc-allreduce} shows the available matched A/B surface behind this policy. Plotting the ratio rather than either absolute curve makes both the topology-dependent small-message penalty and the large-message gain visible on one scale.
+
+\begin{sidewaysfigure}
+\centering
+\includegraphics[width=\textheight]{results/ucc-ab-allreduce.png}
+\caption{Effect of enabling UCC for allreduce through CUDA MPI (top) and SYCL MPI (bottom). Each bar is $t_{\mathrm{UCC\ off}}/t_{\mathrm{UCC\ on}}$, so values above one favor UCC and values below one favor Open MPI's tuned component. The 4\,KiB algorithm switch appears as a downward step on four-GPU-per-node topologies, while the multi-node curves cross back above parity at 64\,KiB. The \texttt{1n1g} control remains in the campaign and is discussed separately, but is omitted from this ratio view because it contains no inter-rank reduction. The empty SYCL \texttt{8n4g} panel indicates that no matched A/B cells were available, not a ratio of one.}
+\label{fig:m-ucc-allreduce}
+\end{sidewaysfigure}
+
+NCCL-based paths dominate the large-message regime. On \texttt{1n4g}, NCCL and NVSHMEM reach approximately 85\,GB/s of ring-equivalent bandwidth, while MPI and OSHMPI reach approximately 46\,GB/s. NVSHMEM's allreduce normally dispatches through NCCL in this benchmark, so this near equality is evidence about the selected stack rather than an independent NVSHMEM collective algorithm. Table~\ref{tab:m-allreduce-bandwidth} shows how network scaling reduces every backend's rate while preserving the advantage of the NCCL-based paths.
+
+\begin{table}[htbp]
+\centering
+\caption{Approximate peak allreduce bus bandwidth in GB/s.}
+\label{tab:m-allreduce-bandwidth}
+\begin{tabular}{lrrr}
+\toprule
+Topology & CUDA NCCL & CUDA NVSHMEM & CUDA MPI\\
+\midrule
+\texttt{1n4g} & 85.2 & 85.4 & 46.0\\
+\texttt{2n4g} & 30.2 & 30.7 & 15.0\\
+\texttt{4n4g} & 17.4 & 17.1 & 10.7\\
+\texttt{8n4g} & 15.1 & 12.4 & 8.9\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The small-message winner is less stable. At \texttt{8n4g}, oneCCL/OSHMPI is fastest at 16\,KiB, oneCCL/NCCL leads from 32\,KiB through 1\,MiB, and direct CUDA NCCL is fastest by 2\,MiB. Wrapper overhead, backend algorithm selection, and message size therefore all remain visible even when the logical operation is unchanged.
+
+The single-rank MPI control is not a usable reduction floor. At 16\,MiB, CUDA MPI takes 21.4\,ms and reaches only approximately 0.78\,GB/s, whereas the two-GPU case takes 232\,$\mu$s. The corresponding single-rank all-to-all control is healthy at 8.7\,$\mu$s, so the anomaly is specific to the reduction path and is excluded from comparative interpretation.
+
+\subsection{All-to-All}
+
+The all-to-all results demonstrate why runtime tuning must precede library ranking. Without UCC, Open MPI takes 338--422\,$\mu$s on \texttt{4n4g} and 670--974\,$\mu$s on \texttt{8n4g} for transfers no larger than 256 bytes per peer. Enabling UCC reduces these cells to 14--31\,$\mu$s, a 17--34 times improvement. The apparent small-message advantage of NCCL and NVSHMEM therefore disappears: tuned MPI is 2.7--5 times faster in this region. UCC's large-message regression is real but bounded at 1.8 times and appears above approximately 16\,KiB per peer on multi-node topologies, making the default a trade of at most 1.8 times against as much as 34 times.
+
+Figure~\ref{fig:m-ucc-alltoall} localizes that trade to communicator and payload size. The sharp high-rank region below the marked threshold motivates enabling UCC by default; the smaller bars below parity at large payloads show the cost of that choice.
+
+\begin{sidewaysfigure}
+\centering
+\includegraphics[width=\textheight]{results/ucc-ab-alltoall.png}
+\caption{Effect of enabling UCC for all-to-all through CUDA MPI (top) and SYCL MPI (bottom). Each bar is $t_{\mathrm{UCC\ off}}/t_{\mathrm{UCC\ on}}$, so values above one favor UCC. The dotted line marks 512 bytes per peer; below it, at 16 ranks or more, Open MPI's fixed rule selects modified Bruck. This produces the 17--34-fold region on \texttt{4n4g} and \texttt{8n4g}, followed by ordinary ratios after the default leaves that algorithm. Ratios below one at larger payloads show UCC's bounded regression. The healthy \texttt{1n1g} control remains in the campaign but is omitted from this ratio view because it has no inter-rank exchange.}
+\label{fig:m-ucc-alltoall}
+\end{sidewaysfigure}
+
+The magnitude is caused primarily by an Open MPI algorithm-selection pathology rather than an extraordinary UCC network algorithm. Open MPI's fixed decision function selects algorithm~3, modified Bruck, for per-peer payloads from 4 to 511 bytes at 16--31 ranks and below 512 bytes at 32--63 ranks \cite{openmpi_alltoall_source_2026}. A forced-algorithm control at 16 ranks confirms that the default follows modified Bruck below this boundary.
+
+\begin{table}[htbp]
+\centering
+\caption{Forced Open MPI all-to-all algorithms at 16 ranks with UCC disabled, in $\mu$s.}
+\label{tab:m-alltoall-forced}
+\scriptsize
+\begin{tabular}{rrrrrrr}
+\toprule
+Floats/peer & B/peer & Linear & Pairwise & Modified Bruck & Linear sync & Default\\
+\midrule
+1   & 4   & 25.7 & 64.8 & 340.0 & 29.9 & 342.3\\
+4   & 16  & 22.1 & 58.1 & 341.4 & 24.5 & 341.2\\
+64  & 256 & 27.9 & 72.4 & 421.2 & 29.6 & 420.0\\
+128 & 512 & 31.7 & 79.6 & 429.2 & 34.9 & 38.8\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Modified Bruck reduces the number of network rounds to $\lceil\log_2 P\rceil$ by forwarding blocks, a useful latency trade on the host systems for which the algorithm was designed \cite{bruck_alltoall_1997}. Open MPI's implementation, however, allocates a temporary span for the complete send buffer, performs initial and final cyclic rotations, constructs and commits an indexed datatype at every distance, and copies each received noncontiguous block set back before the next round \cite{openmpi_alltoall_source_2026}. With GPU-resident data, these datatype-engine copies and noncontiguous datatype operations are no longer cache-resident host work. The plateau is consequently independent of payload from 4 to 256 bytes per peer, and doubling from 16 to 32 ranks changes its cost by 1.97--1.99 times rather than the $5/4$ ratio expected if Bruck's network rounds alone dominated. This scaling is consistent with local buffer and datatype work dominating, although it is not a direct profile of each copy.
+
+UCC avoids creating that cost. The runtime trace maps every measured CUDA all-to-all size to \texttt{CL\_BASIC \{TL\_UCP\}}, and TL/UCP source identifies its CUDA default as the pairwise two-sided implementation \cite{venkata_ucc_2024,openucx_ucc_source_2026}. That implementation addresses one contiguous slice per peer in the original CUDA send and receive buffers and calls UCX's nonblocking tagged send and receive functions with the CUDA memory type. It has no UCC-layer full-buffer rotation, indexed datatype, or Bruck temporary span. UCC is still faster than Open MPI's forced linear schedules, but by the ordinary factor of approximately 1.5 rather than 17--34 times. The large ratio therefore measures the cost of Open MPI's unsuitable default; forcing \texttt{linear\_sync} is another way to avoid it without UCC.
+
+As the per-peer payload grows, NCCL and NVSHMEM overtake MPI. The sampled crossover moves to smaller messages as the rank count increases: between 32 and 64\,KiB per peer on \texttt{2n4g}, between 8 and 16\,KiB on \texttt{4n4g}, and between 2 and 4\,KiB on \texttt{8n4g}. Table~\ref{tab:m-alltoall-bandwidth} reports the large-message endpoint.
+
+\begin{table}[htbp]
+\centering
+\caption{Peak all-to-all aggregate bandwidth in GB/s at the largest sampled payload.}
+\label{tab:m-alltoall-bandwidth}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Topology & CUDA MPI & CUDA NCCL & CUDA NVSHMEM & oneCCL/NCCL\\
+\midrule
+\texttt{2n4g} & 5.9 & 13.3 & 13.4 & 12.9\\
+\texttt{4n4g} & 4.3 & 10.5 & 10.5 & 10.5\\
+\texttt{8n4g} & 4.2 & 9.8 & 9.1 & 10.2\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Direct OSHMPI is strong within one node, reaching approximately 35.8\,GB/s on \texttt{1n4g}, but falls to 1.2\,GB/s on \texttt{8n4g}. oneCCL/OSHMPI reaches 2.7\,GB/s in the latter cell, still far below the NCCL-based paths. These results compare different legal implementations: NCCL uses grouped point-to-point operations, MPI and OSHMPI use native collectives, and direct SHMEM uses one-sided transfers where required.
+
+The analyzed all-to-all tree merges two measured sets rather than rerunning every backend under the new default in one campaign. Each retained cell has three jobs and nine trials, and the 17--34-fold effect is too large to depend on small allocation variation, but a clean final sweep is still required for fully matched allocation-level comparisons.
+
+\section{Composite CG-Step Results}\label{sec:cg-step-results}
+
+The final sweep covers seven topologies, five grid sides, and six backends, with nine successful trials in each of the 210 cells. Table~\ref{tab:m-cg-step} shows a simpler winner surface than the preliminary aggregate suggested. NCCL wins the five no-communication \texttt{1n1g} controls, while OSHMPI wins all 30 multi-rank cells, including every single-node multi-GPU and multi-node size. The OSHMPI result is the explicitly configured host-staged scalar path described in Section~\ref{sec:runtime-method}, not a device-resident OpenSHMEM reduction. Its advantage depends partly on staging the two eight-byte sums through host symmetric memory, which is faster at this payload than the measured device/UCC alternative. The same backend therefore uses a different best path for bulk allreduce and scalar CG reductions.
+
+\begin{table}[htbp]
+\centering
+\caption{Fastest \texttt{cg\_step} backend by topology and grid side.}
+\label{tab:m-cg-step}
+\footnotesize
+\begin{tabular}{lccccc}
+\toprule
+Topology & 512 & 1024 & 2048 & 4096 & 8192\\
+\midrule
+\texttt{1n1g} & NCCL & NCCL & NCCL & NCCL & NCCL\\
+\texttt{1n2g} & OSHMPI & OSHMPI & OSHMPI & OSHMPI & OSHMPI\\
+\texttt{1n4g} & OSHMPI & OSHMPI & OSHMPI & OSHMPI & OSHMPI\\
+\texttt{2n1g} & OSHMPI & OSHMPI & OSHMPI & OSHMPI & OSHMPI\\
+\texttt{2n4g} & OSHMPI & OSHMPI & OSHMPI & OSHMPI & OSHMPI\\
+\texttt{4n4g} & OSHMPI & OSHMPI & OSHMPI & OSHMPI & OSHMPI\\
+\texttt{8n4g} & OSHMPI & OSHMPI & OSHMPI & OSHMPI & OSHMPI\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The local-work sweep reaches the compute crossover within one GPU. CUDA MPI rises from 79.3\,$\mu$s at side~512 to 956.5\,$\mu$s at side~8192, and the spread among the four CUDA/SHMEM backends contracts from 2.01 to 1.04 times. At \texttt{8n4g}, in contrast, increasing local work 64-fold from side~512 to 4096 changes CUDA MPI by only 5.6\%; even side~8192 reaches only 149.1\,$\mu$s. The selected regime, rather than a backend name alone, determines whether communication differences remain visible.
+
+NVSHMEM's multi-node result has an intermittent tail rather than uniformly slow iterations. At \texttt{4n4g}, side~512, its mean is 1.94 times CUDA MPI and 1.23 times its own minimum. At \texttt{8n4g}, side~1024, the mean is approximately 3.8 times CUDA MPI and 1.57 times its own minimum. Across jobs, the \texttt{S=512} spread reaches 1.29 times at \texttt{4n4g} and 1.68 times at \texttt{8n4g}, while every other backend remains within 1.04 times in five of six topologies. One NCCL-enabled \texttt{8n4g} phase record even has a negative phase-sum gap, marking the same unstable cell rather than physical negative overlap. The effect grows with node count and is concentrated in the RMA halo phase, consistent with occasional stalls in the measured CPU-proxy path. The stored dataset does not contain oneCCL/OSHMPI \texttt{cg\_step} results, so no claim is made for that declared but unmeasured cell.
+
+\subsection{Phase Decomposition}
+
+Table~\ref{tab:m-cg-phases} reports the separate synchronized pass at \texttt{4n4g}, side~512. The phase sum is the serialized cost, while \emph{step} is the unmodified loop measurement. Their difference is a diagnostic gap containing both overlap removed by phase boundaries and synchronization overhead introduced by the separate pass.
+
+\begin{table}[htbp]
+\centering
+\caption{\texttt{cg\_step} phase decomposition on \texttt{4n4g}, side~512, in $\mu$s.}
+\label{tab:m-cg-phases}
+\scriptsize
+\begin{tabular}{lrrrrrrr}
+\toprule
+Backend & Pack & Halo & Compute & Reduce & Sum & Step & Gap\\
+\midrule
+CUDA MPI & 13.4 & 22.1 & 24.3 & 58.6 & 118.4 & 109.7 & 8.7 (7\%)\\
+CUDA NCCL & 27.9 & 38.0 & 22.8 & 76.8 & 165.6 & 108.8 & 56.8 (34\%)\\
+CUDA NVSHMEM & 13.9 & 72.4 & 35.4 & 84.9 & 206.6 & 194.3 & 12.3 (6\%)\\
+OSHMPI (staged) & 13.6 & 25.7 & 24.5 & 38.5 & 102.3 & 89.6 & 12.7 (12\%)\\
+SYCL MPI & 13.6 & 25.6 & 91.9 & 62.6 & 193.7 & 186.7 & 7.0 (4\%)\\
+SYCL oneCCL/NCCL & 13.6 & 49.2 & 71.7 & 108.1 & 242.5 & 207.6 & 34.9 (14\%)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The staged OSHMPI reduction phase costs 38.5\,$\mu$s, equivalent to approximately 43\% of its winning unsplit step. NCCL exposes why the separate-pass design is necessary: its phase sum exceeds the unsplit result by 34\%, compared with 7\% for CUDA MPI. The gap is consistent with greater asynchronous overlap, but it also includes the extra synchronization and independent-pass variation and is not a direct measure of overlap alone. Replacing the unsplit value with the phase sum would make NCCL appear 52\% slower than it is.
+
+\subsection{OSHMPI Scalar-Reduction Placement}
+
+The winning OSHMPI row requires a qualification because its bulk data and scalar reductions use different memory paths. In staged mode, ordinary CUDA allocations hold the dot-product partials; each reduction copies one double to the default host symmetric heap and executes \texttt{shmem\_double\_sum\_to\_all} there. In device mode, the partials, result, and OpenSHMEM work arrays instead reside in the OSHMPI CUDA symmetric space, and UCC is enabled so that the collective can consume device pointers. A paired experiment at side~512 measured nine trials per cell against a staged baseline whose job-to-job spread was 1.00--1.03 times. Table~\ref{tab:m-oshmpi-reduce-placement} reports the relative increase caused by the complete device/UCC configuration.
+
+\begin{table}[htbp]
+\centering
+\caption{Relative change from staged OSHMPI to the device/UCC variant of \texttt{cg\_step} at side~512.}
+\label{tab:m-oshmpi-reduce-placement}
+\footnotesize
+\begin{tabular}{lrrrr}
+\toprule
+Phase & \texttt{1n4g} & \texttt{2n4g} & \texttt{4n4g} & \texttt{8n4g}\\
+\midrule
+Pack & +8.5\% & +8.5\% & +7.6\% & +6.4\%\\
+Halo & +11.6\% & $-4.8$\% & +1.9\% & +2.6\%\\
+Compute & +45.0\% & +45.0\% & +46.6\% & +47.0\%\\
+Reduce & +91.6\% & +144.7\% & +88.4\% & +117.4\%\\
+Unsplit step & +47.1\% & +69.5\% & +52.4\% & +64.6\%\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The reduction result is the expected part of the experiment. Direct device reduction costs 1.88--2.45 times the staged reduction phase because, for an eight-byte collective, UCC's small-message overhead exceeds the cost of copying the two scalar operands to the host. Host staging is therefore a measured optimization for this specific payload, not merely a compatibility workaround. It is not a general recommendation to stage reductions: in the standalone 16\,MiB allreduce on \texttt{1n4g}, staging is 34 times slower than the device path because pageable PCIe traffic dominates the bulk operation.
+
+The 47--70\% unsplit-step penalty must not be attributed entirely to the collective. The compute phase performs no communication but rises by 45--47\%, nearly independently of topology. The device variant changes operand residency, enables UCC, and replaces ordinary CUDA partial buffers with allocations from the OSHMPI CUDA symmetric space. Its flat compute penalty is consistent with slower kernel writes to those registered symmetric allocations, but the present experiment does not isolate that mechanism. A retained \texttt{1n1g} device-versus-staged control, where no inter-rank collective or RMA occurs, is required to distinguish the allocator effect from UCC or communication effects.
+
+\subsection{Primitive-to-Step Model}
+
+The CUDA MPI phase measurements permit a direct test of the isolated primitives. Once the allreduce microbenchmark is matched to the UCC setting used by \texttt{cg\_step}, it predicts the measured CUDA MPI reduction phase to within 8\% at \texttt{1n4g} and 6\% at \texttt{4n4g}. Without that correction, the prediction is 31\% high at one topology and 12\% low at the other because the sign of UCC's effect changes with placement. The payload comparison is valid despite different element types: the microbenchmark reduces two \texttt{float32} values and \texttt{cg\_step} reduces one \texttt{float64}, for eight bytes in both cases. The default OSHMPI allreduce curve cannot be substituted into the same model because it measures device/UCC operands, whereas the winning OSHMPI \texttt{cg\_step} row stages its scalar operands through host memory.
+
+The halo prediction fails by a stable structural factor. \texttt{halo\_1d} predicts 11.6--12.2\,$\mu$s while the CUDA MPI step measures 22--24\,$\mu$s; the ratio is 1.88 at \texttt{1n4g} and 1.90 at \texttt{4n4g} and remains flat across an eightfold payload change. The discrepancy follows from operation count rather than bandwidth: \texttt{cg\_step} issues two serialized \texttt{MPI\_Sendrecv} calls, whereas \texttt{halo\_1d} executes one ring exchange.
+
+\subsection{Residual SYCL Cost}
+
+The CUDA and SYCL MPI microbenchmarks agree within approximately 1--2\% on the same HPC-X, UCX, and UCC stack, but their composite steps do not. Five redundant waits between submissions on the in-order SYCL queue accounted for 22.7\,$\mu$s in SYCL MPI and 24.5\,$\mu$s in oneCCL; removing them recovered only about one third of the original gap. Measurements before commit \texttt{b75258a} are therefore not pooled with the final sweep.
+
+The final single-GPU control isolates what remains. At side~512, SYCL MPI takes 116.9\,$\mu$s against CUDA MPI's 79.3\,$\mu$s, a fixed gap of 37.6\,$\mu$s without communication. At side~8192 the values are 1159.8 and 956.5\,$\mu$s, indicating approximately 19\% slower arithmetic in addition to the roughly 38\,$\mu$s submission cost. The use of \texttt{sycl::reduction} instead of the hand-written CUDA dot kernel is the next hypothesis to test, not an established cause.
+
+Taken alone, these results predict OSHMPI throughout the multi-node CG-like regime. The complete solver and its irregular communication pattern provide a direct test of that prediction.
+
+\section{Real-World Evaluation with aCG}\label{sec:acg-results}
+
+\subsection{End-to-End Solver Performance}
+
+NCCL is the fastest stable host-initiated communicator for both matrices at every measured scale. OSHMPI is close within one node: it is 1.5--4.5\% behind NCCL at two and four GPUs. The gap grows when the run crosses nodes, reaching 23--26\% at 32 GPUs. Table~\ref{tab:m-acg-oshmpi} gives the complete OSHMPI scaling result and its throughput difference from the two most relevant references.
+
+\begin{table}[htbp]
+\centering
+\caption{OSHMPI aCG performance and throughput relative to NCCL and host NVSHMEM.}
+\label{tab:m-acg-oshmpi}
+\footnotesize
+\begin{tabular}{llrrrr}
+\toprule
+Matrix & GPUs & Time (s) & GFLOP/s/GPU & vs NCCL & vs host NVSHMEM\\
+\midrule
+Bump & 2  & 21.889 & 161.89 & $-3.3\%$  & $-1.0\%$\\
+Bump & 4  & 12.729 & 140.03 & $-4.5\%$  & $+4.4\%$\\
+Bump & 8  & 9.365  & 95.94  & $-17.1\%$ & $+21.3\%$\\
+Bump & 16 & 7.812  & 55.10  & $-25.8\%$ & $+44.7\%$\\
+Bump & 32 & 7.881  & 28.56  & $-23.8\%$ & $+73.3\%$\\
+Queen & 2  & 48.449 & 189.12 & $-1.5\%$  & $-0.5\%$\\
+Queen & 4  & 25.780 & 175.41 & $-3.0\%$  & $+2.4\%$\\
+Queen & 8  & 16.188 & 142.05 & $-6.6\%$  & $+11.8\%$\\
+Queen & 16 & 11.620 & 98.11  & $-17.9\%$ & $+26.9\%$\\
+Queen & 32 & 9.489  & 60.42  & $-23.4\%$ & $+54.9\%$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:m-acg-scaling} separates stable scaling from MPI reliability. The left panels normalize the fastest-converged throughput of NCCL, NVSHMEM, OSHMPI, and device NVSHMEM to one GPU; MPI is deliberately excluded from these lines. The right panels show every MPI job separately: each marker is the median of that job's valid trials and each whisker spans its minimum to maximum. This avoids connecting rare fast MPI trials into a scaling curve that no representative job follows.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{results/acg-campaign-summary.png}
+\caption{aCG results for Bump\_2911 and Queen\_4147. Left: fastest-converged work-normalized scaling for stable backends, preserving the reference-paper convention; the dashed NVSHMEM series is the monolithic device-side solver. Right: MPI per-job median solver time with the valid-trial minimum--maximum range.}
+\label{fig:m-acg-scaling}
+\end{figure}
+
+OSHMPI increasingly outperforms the campaign's host-NVSHMEM configuration, but that comparison is not a general statement about the libraries. The aCG jobs set \texttt{NVSHMEM\_DISABLE\_NCCL=1}, forcing a slower native reduction path, whereas the microbenchmark normally permits NCCL collective dispatch. The monolithic device-NVSHMEM solver eventually exceeds OSHMPI at larger scales, but it changes both execution model and solver organization.
+
+\subsection{Phase-to-Phase Correlation}
+
+The communication skeleton matches exactly at steady state: one aCG CG iteration performs one halo exchange and two allreduces of one double each, as \texttt{cg\_step} does. The whole-run counters report 51,812 allreduces over 25,905 iterations; the two operations beyond $2K$ occur outside the steady loop. This structural match permits phase-to-phase comparison, but only after pairing backends by the operation they actually call rather than by communicator name. In particular, aCG's OSHMPI communicator uses OpenSHMEM for its halo but synchronizes the stream and calls \texttt{MPI\_Allreduce} for scalars. The direct \texttt{cg\_step} OSHMPI reduction, \texttt{shmem\_double\_sum\_to\_all}, therefore has no aCG counterpart.
+
+\begin{table}[htbp]
+\centering
+\caption{Reduction-path pairing between \texttt{cg\_step} and aCG.}
+\label{tab:m-acg-reduction-pairing}
+\footnotesize
+\begin{tabularx}{\textwidth}{lYY}
+\toprule
+\texttt{cg\_step} backend & Reduction call & Matched aCG communicator\\
+\midrule
+\texttt{cuda\_mpi} & \texttt{MPI\_Allreduce} & \texttt{acg-cg-oshmpi}\\
+\texttt{cuda\_nccl} & \texttt{ncclAllReduce} & \texttt{acg-cg-nccl}\\
+\texttt{cuda\_nvshmem} & NVSHMEM sum reduction & \texttt{acg-cg-nvshmem}, with NCCL dispatch disabled\\
+\texttt{oshmpi} & \texttt{shmem\_double\_sum\_to\_all} & None\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Table~\ref{tab:m-acg-reduction-correlation} compares the best aCG run per cell with half of the corresponding two-reduction \texttt{cg\_step} phase across \texttt{1n2g}, \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}. The MPI and NCCL predictions agree within 6.5--9.7\% on average across both matrices. NVSHMEM remains useful but weaker at 32 GPUs because its benchmark baseline has a 1.29--1.68 times spread. Over the same 16-fold rank range, the independent scaling factors also agree: \texttt{cuda\_nvshmem} predicts 5.73 times against 5.66 and 5.71 times in aCG, while \texttt{cuda\_nccl} predicts 3.81 times against 3.61 and 3.20 times.
+
+\begin{table}[htbp]
+\centering
+\caption{Mean absolute relative error of matched eight-byte reduction predictions.}
+\label{tab:m-acg-reduction-correlation}
+\begin{tabular}{lrrl}
+\toprule
+Reduction path & Bump\_2911 & Queen\_4147 & Interpretation\\
+\midrule
+MPI & 6.5\% & 7.7\% & Solid\\
+NCCL & 9.7\% & 7.3\% & Solid\\
+NVSHMEM & 14\% & 21\% & Weaker at 32 GPUs\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The two known configuration differences were measured rather than left as threats. Raising \texttt{UCX\_RNDV\_THRESH} from the benchmark's 1024 bytes to aCG's 16,384 bytes changes the CUDA MPI step by only 1.8--3.0\%, far below the MPI divergence discussed below. Conversely, aCG's \texttt{NVSHMEM\_DISABLE\_NCCL=1} is material: a paired same-session control increases the reduction phase by 12.5\% on \texttt{1n2g}, 53.6\% on \texttt{2n4g}, and 42.6\% on \texttt{8n4g}. The NVSHMEM correlation therefore uses the matched disabled-dispatch arm. Local kernels still vary by as much as 11.4\% among communicators, so matched phase prediction must not be promoted to a prediction of total solver time.
+
+\subsection{Overlap and Synchronization}
+
+The growing OSHMPI penalty is consistent with its communication path. For Bump, time attributed to the residual ``other'' category grows from approximately 1.04\,s at two GPUs to 3.71\,s at 32; Queen grows from approximately 1.10\,s to 3.69\,s. The nominal halo column remains near 0.06--0.08\,s because it brackets the end function, which performs no communication for OSHMPI. The blocking put/quiet/barrier sequence has already completed in the begin function and is charged to ``other''.
+
+Two exploratory changes did not improve the total. Replacing global barriers with neighbor flags left the representative result essentially unchanged, and splitting begin/end still called \texttt{shmem\_quiet} before computation, merely moving measured time between categories. These negative results indicate that the barrier alone is not the dominant issue. Genuine overlap requires nonblocking puts in the begin phase and a deferred quiet in the end phase, followed by instrumentation that separates issue time from network wait time.
+
+This blocking path contributes to the disagreement with \texttt{cg\_step}, but it is not the only cause. The synthetic comparison uses two fixed neighbors, eager messages, blocking exclusively timed exchange, and a 4\,KiB per-peer message at side~512. Across aCG, ranks instead communicate with 1.0--10.8 irregular neighbors and exchange 125--336\,KiB per iteration through nonblocking rendezvous messages overlapped with the local sparse matrix--vector product. Its reported halo time is only the exposed wait: the implied 48--108\,GB/s per process can exceed any one NIC and confirms that it is not measuring the same quantity as the synthetic halo. The different UCX threshold is not the explanation; the controlled threshold change affects \texttt{cg\_step} by only 1.8--3.0\%. Peer structure, protocol, and overlap place the solver in a regime that neither \texttt{cg\_step} nor the regular \texttt{halo\_1d} ring contains.
+
+\subsection{Convergence and Reliability}
+
+All 90 completed multi-GPU OSHMPI trials terminate successfully and satisfy the relative residual threshold. Bump residuals range from $9.132\times10^{-7}$ to $9.998\times10^{-7}$, and Queen residuals from $9.044\times10^{-7}$ to $9.998\times10^{-7}$. Manufactured-solution error remains tightly grouped across backends. This supports numerical consistency of the communicator port.
+
+Reduction order changes the iteration count by a few percent and occasionally produces outliers. One Bump two-GPU OSHMPI run required 30,611 iterations and caused a $1.23\times$ spread; repeat jobs returned to the approximately 25,000-iteration region. For this reason throughput normalized by executed work is more robust than total time alone.
+
+MPI exhibits a separate reliability problem at larger scales, localized to the many-neighbor communication path rather than to \texttt{MPI\_Allreduce} itself. The \texttt{acg-cg-mpi} and \texttt{acg-cg-oshmpi} variants call the identical CUDA-aware collective on the same stack and differ only in whether the halo uses MPI nonblocking messages or OSHMPI puts. On Bump at \texttt{4n4g}, the former allreduce has a 176.8\,$\mu$s median and 29.6-fold spread, while the latter is 29.0\,$\mu$s with a 1.0-fold spread; at \texttt{8n4g}, the medians are 1103.8 and 30.5\,$\mu$s. Halo and allreduce inflate together run by run, showing that the MPI halo leaves state or arrival skew that poisons the following collective measurement.
+
+The instability is not allocation-bound. Within one allocation, spread reaches 29.6 times for Bump and 34.5 times for Queen at \texttt{4n4g}; one \texttt{8n4g} job records three sequential allreduce measurements of 157, 2051, and 152\,$\mu$s on the same nodes. NCCL remains stable on those allocations, arguing against node selection or general fabric congestion as the cause. The evidence supports distinct fast and slow Open MPI/UCX states on the many-neighbor rendezvous path, but not a formal claim of bimodality. One 32-GPU attempt additionally reports PMIx/UCX failure, and some timing decompositions become self-inconsistent even when the final solution is valid. \texttt{cg\_step} does not reproduce this behavior, so NCCL remains the stable performance reference and MPI is reported through per-job ranges rather than a pooled median or rare fastest point.
+
+\subsection{Supporting CUDA--SYCL Comparison}
+
+The separate SYCL Bump\_2911 report is slower than CUDA MPI by the factors in Table~\ref{tab:m-sycl-control}. The gap is substantial enough that CUDA and SYCL communication measurements should not be interpreted as a pure API comparison: compiler, kernels, memory handling, and host orchestration also differ. The narrowing at 16 GPUs indicates that communication and scaling costs increasingly dominate the fixed compute-side difference, but the separate reporting policy prevents a strict statistical comparison.
+
+\begin{table}[htbp]
+\centering
+\caption{Median SYCL aCG solver time relative to the CUDA MPI implementation for Bump\_2911.}
+\label{tab:m-sycl-control}
+\begin{tabular}{rr}
+\toprule
+GPUs & SYCL/CUDA solver time\\
+\midrule
+1 & $1.336\times$\\
+4 & $1.400\times$\\
+8 & $1.446\times$\\
+16 & $1.170\times$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+These results justify treating the SYCL variants as complete stacks in RQ1 and as implementation context in RQ3. They do not establish performance portability across accelerator vendors.
+
+\section{Cross-Level Summary}
+
+The three evidence levels agree on broad mechanisms but not on a total backend order. Once paired by the actual collective call and runtime settings, \texttt{cg\_step} predicts aCG's eight-byte reduction within 6.5--9.7\% for MPI and NCCL and within 14--21\% for NVSHMEM; the independent scaling factors agree to within 1--5\%. The stable 1.9-fold difference between \texttt{halo\_1d} and the \texttt{cg\_step} halo is explained by two serialized exchanges, but neither synthetic halo predicts aCG's irregular, rendezvous, mostly overlapped exchange. The complete solver ranking consequently cannot be obtained by adding isolated costs: \texttt{cg\_step}'s OSHMPI leadership does not survive aCG's peer structure, overlap opportunities, collective configuration, convergence, and MPI performance regimes.
+
+\begin{resultbox}[Main experimental result]
+Pattern-oriented benchmarks predict matched primitives and identify the mechanisms that matter, but they predict a complete application only when peer structure, payload, synchronization, progress, and overlap semantics also match. On the evaluated aCG campaign, NCCL is the fastest stable host-initiated backend even though OSHMPI wins every multi-rank synthetic CG-step cell.
+\end{resultbox}
+
+\section{Preliminary Intra-Node Evaluation of NCCL 2.31 Symmetric-Memory Paths}\label{sec:nccl-preliminary-results}
+
+The exploratory comparison in Section~\ref{sec:nccl-preliminary-method} asks whether a newer library and symmetric buffers warrant a matched follow-up in CG. Table~\ref{tab:m-nccl-preliminary} selects representative cells, including reversals, while Figures~\ref{fig:m-nccl-preliminary-allreduce} and~\ref{fig:m-nccl-preliminary-alltoall} show every supplied size. Ratios greater than one favor the symmetric configuration. These values are not pooled with the main campaign and do not establish an additional GPU-initiated application result.
+
+\begin{table}[htbp]
+\centering
+\caption{Preliminary \texttt{nccl-tests} medians on one node with four A100 GPUs (\,$\mu$s). ``Plain'' and ``Sym.'' refer to NCCL~2.31.2; the final column is $t_{2.18.5}/t_{\mathrm{sym}}$. Sizes retain the supplied note's convention.}
+\label{tab:m-nccl-preliminary}
+\footnotesize
+\begin{tabular}{llrrrr}
+\toprule
+Operation & Size & 2.18.5 & Plain & Sym. & Speedup\\
+\midrule
+Allreduce & 8\,B & 12.4 & 12.6 & 7.5 & $1.65\times$\\
+ & 32\,KiB & 18.4 & 18.5 & 10.6 & $1.74\times$\\
+ & 256\,KiB & 19.2 & 19.3 & 22.7 & $0.85\times$\\
+ & 512\,KiB & 23.3 & 24.9 & 25.3 & $0.92\times$\\
+ & 1\,MiB & 44.5 & 34.1 & 33.5 & $1.33\times$\\
+ & 16\,MiB & 182.0 & 202.1 & 156.4 & $1.16\times$\\
+\midrule
+All-to-all & 64\,B & 11.1 & 13.8 & 14.0 & $0.79\times$\\
+ & 1\,KiB & 11.0 & 12.7 & 12.6 & $0.87\times$\\
+ & 4\,MiB & 41.5 & 46.9 & 43.6 & $0.95\times$\\
+ & 8\,MiB & 63.9 & 68.1 & 59.6 & $1.07\times$\\
+ & 16\,MiB & 102.2 & 106.1 & 89.2 & $1.15\times$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Allreduce: A Promising Small-Message Region}
+
+Across the listed 4\,B--32\,KiB cells, the symmetric configuration is approximately 1.54--1.74 times faster than NCCL~2.18.5. The 8\,B median falls from 12.4 to 7.5\,$\mu$s: a $1.65\times$ speedup, or approximately 40\% lower latency, rather than a 65\% reduction in time. Plain NCCL~2.31.2 takes 12.6\,$\mu$s in that cell, so upgrading the version alone does not reproduce the gain. At 1\,MiB, by contrast, much of the improvement already appears in the plain version (44.5 to 34.1\,$\mu$s), with a smaller additional reduction to 33.5\,$\mu$s after the allocation/registration change.
+
+The result is not monotonic. Relative to NCCL~2.18.5, the symmetric path is approximately 18\% slower at 256\,KiB and 9\% slower at 512\,KiB, while it regains an advantage in the supplied 1--16\,MiB cells. The 4\,B plain-2.31 anomaly is retained and marked in the figure; its proposed warm-up explanation requires the raw trials. These observations motivate a matched scalar-reduction experiment, but the unspecified datatype and completion boundary prevent treating the 8\,B result as a prediction for aCG's one-double reductions.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{results/nccl-preliminary-allreduce.png}
+\caption{Preliminary allreduce comparison from the supplied three-run medians. Upper panel: all three configurations. Lower panel: each plain reference divided by the symmetric latency. Points are the supplied sizes; connecting lines are guides only. No trial-level uncertainty is available.}
+\label{fig:m-nccl-preliminary-allreduce}
+\end{figure}
+
+\subsection{All-to-All: Limited Small-Message Benefit}
+
+For the supplied 64\,B--32\,KiB cells, the symmetric and plain NCCL~2.31.2 medians are nearly equal, and both remain slower than NCCL~2.18.5. At 16\,MiB, the symmetric median is 89.2\,$\mu$s versus 106.1\,$\mu$s for plain 2.31.2 and 102.2\,$\mu$s for 2.18.5: approximately $1.19\times$ and $1.15\times$ speedups, respectively. Thus the small-message allreduce advantage does not generalize to personalized exchange.
+
+The note attributes this contrast to the absence of a dedicated all-to-all kernel in NCCL's internal symmetric-kernel directory. That observation alone cannot establish which path the executable selected or why it was slower. A host all-to-all call, grouped sends/receives, and a custom LSA device kernel are different implementations. Version-specific API coverage and registration benefits must therefore be checked against the tested executable before assigning a causal explanation \cite{nvidia_nccl_collectives_2026,nvidia_nccl_registration_2026}. In particular, this study supports neither a universal rejection of LSA all-to-all nor a new aCG prediction, since CG contains no all-to-all phase.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{results/nccl-preliminary-alltoall.png}
+\caption{Preliminary all-to-all comparison from the supplied three-run medians, with speedup defined as reference divided by symmetric latency. The reported size axis is not equated with the main benchmark's per-peer axis. Differences of a few percent should be read against the note's reported run spread.}
+\label{fig:m-nccl-preliminary-alltoall}
+\end{figure}
+
+\subsection{Inter-Node Observations and Application Implications}
+
+The same note reports that the tested GIN CPU-proxy path did not improve on the older NCCL reference across nodes, and that attempted GDAKI runs stalled. It supplies no inter-node timing table or diagnostic logs, so no numerical comparison or definitive failure cause is inferred. The independently documented NVSHMEM IBGDA driver limitations provide platform context, not proof that the NCCL failure had the same cause. LSA's intra-node peer-memory path remains distinct from GDAKI's network-posting path.
+
+The strongest candidate for follow-up is therefore the small allreduce on one node. A matched one-double FP64 sum, followed by a reduction-only change to \texttt{cg\_step} and aCG, would test whether the observed latency gain survives application dependencies. A hybrid local-LSA/inter-node-MPI reduction would add local reduction, inter-node reduction, and local distribution stages; its extra synchronization could outweigh the gain for eight-byte operands. It remains a hypothesis rather than a demonstrated improvement.

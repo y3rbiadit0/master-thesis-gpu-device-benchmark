@@ -1,0 +1,59 @@
+% =====================================================================
+%  Inscrive Thesis Template  -  main.tex
+%  ---------------------------------------------------------------
+%  This file only orchestrates: it loads the style, sets metadata and
+%  includes content. All styling lives in inscrive-thesis.sty; all
+%  prose lives in frontmatter/ and chapters/.
+%
+%  Build:  pdflatex main  ->  biber main  ->  pdflatex main x2
+%          (or just press recompile in Inscrive)
+% =====================================================================
+\documentclass[12pt,a4paper,oneside]{report}
+\usepackage{inscrive-thesis}
+
+% ---- Bibliography database -----------------------------------------
+\addbibresource{references.bib}
+
+% ---- Metadata -------------------------------------------------------
+\title{When Does GPU-Initiated Communication Pay Off?}
+\subtitle{A Pattern-Oriented Study from Microbenchmarks to Conjugate Gradient}
+\author{Franco Nicolas Merenda}
+\studentid{0522501614}
+\degree{Master's Degree in Computer Science}
+\department{Department of Computer Science}
+\university{University of Salerno}
+\supervisor{Prof.\ Biagio Cosenza}
+\cosupervisor{PhD.\ Lorenzo Carpentieri}
+\academicyear{2025--2026}
+\keywords{GPU-Initiated Communication, Distributed GPU Computing, MPI, NCCL, oneCCL, NVSHMEM, OSHMPI, UCX, UCC, Conjugate Gradient}
+
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{3}
+
+\begin{document}
+
+% ---- Cover ----------------------------------------------------------
+\input{frontmatter/titlepage}
+
+% ---- Front matter (roman numerals) ---------------------------------
+\pagenumbering{roman}
+\input{frontmatter/abstract}
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ---- Main matter (arabic numerals) ---------------------------------
+\cleardoublepage
+\pagenumbering{arabic}
+\input{chapters/01-introduction}
+\input{chapters/02-background}
+\input{chapters/03-methodology}
+\input{chapters/04-experimental-evaluation}
+\input{chapters/05-related-work}
+\input{chapters/06-discussion}
+\input{chapters/07-conclusion}
+
+% ---- Back matter ----------------------------------------------------
+\printbibliography[heading=bibintoc]
+
+\end{document}
