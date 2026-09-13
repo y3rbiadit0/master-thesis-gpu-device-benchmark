@@ -2,7 +2,7 @@
 
 \section{Research Design}
 
-The experimental design follows three levels of increasing application context. Isolated microbenchmarks first characterize primitive and structured communication patterns over message-size and topology sweeps. A composite \texttt{cg\_step} benchmark then executes the communication skeleton of one CG iteration. Finally, the complete aCG application combines communication with sparse matrix--vector multiplication, vector operations, convergence tests, and repeated dependencies. GPU-initiated NVSHMEM neighbor kernels and the monolithic device-side solver provide the initiation evidence for RQ1. The oneCCL OSHMPI backend, NVSHMEM foundation, and grouped NCCL implementation provide the construction and semantic evidence for RQ2; only the complete OSHMPI and NCCL paths contribute performance measurements. The OSHMPI and SYCL aCG implementations enable the application-transfer test required by RQ3.
+The experimental design follows three levels of increasing application context. Isolated microbenchmarks first characterize primitive and structured communication patterns over message-size and topology sweeps. A composite \texttt{cg\_step} benchmark then executes the communication skeleton of one CG iteration. Finally, the complete aCG application combines communication with sparse matrix--vector multiplication, vector operations, convergence tests, and repeated dependencies. GPU-initiated NVSHMEM neighbor kernels and the monolithic device-side solver provide the initiation evidence for RQ1. For RQ2, direct NVSHMEM and OSHMPI measurements and their application integration expose one-sided performance and programming trade-offs relative to MPI and NCCL. The oneCCL OSHMPI backend, NVSHMEM foundation, and grouped NCCL implementation additionally provide construction and semantic evidence about a common interface; only the complete oneCCL OSHMPI and NCCL paths contribute performance measurements through that interface. RQ3 combines application-transfer evidence from the extended aCG suite with the separate CUDA--SYCL solver-time comparison.
 
 The unit of comparison is a complete runtime stack. ``MPI'' below means the installed GPU-aware HPC-X Open MPI over UCX, and ``oneCCL'' is always qualified by its NCCL or OSHMPI backend. This avoids attributing to an API a result that may have been caused by a transport, collective component, progress engine, or staging policy.
 
@@ -19,17 +19,17 @@ Table~\ref{tab:m-artifact-evidence} maps the five contributions to their evidenc
 \toprule
 Contribution & Artifact & Evidence & Boundary\\
 \midrule
-1 (RQ1, RQ3) & \href{https://github.com/y3rbiadit0/gpu-comm-benchmark}{CUDA/SYCL benchmark} & Seven configured stacks; primitive and composite measurements & Different algorithms and completion semantics; MoE unmeasured\\
+1 (RQ1--RQ3) & \href{https://github.com/y3rbiadit0/gpu-comm-benchmark}{CUDA/SYCL benchmark} & Seven stacks; primitive, composite, and direct SHMEM comparisons & Different algorithms and completion semantics; MoE unmeasured\\
 2 (RQ2) & \href{https://github.com/y3rbiadit0/oneCCL/tree/fix/nccl_group_support}{Grouped NCCL dispatch} & Group semantics, correctness tests, measured oneCCL/NCCL path & Host-initiated; no device-API comparison\\
 3 (RQ2) & \href{https://github.com/y3rbiadit0/oneCCL/tree/feat/oshmpi}{oneCCL/OSHMPI} & Implemented operations and benchmark measurements & Blocking symmetric staging; no asynchronous overlap\\
 3 (RQ2) & \href{https://github.com/y3rbiadit0/oneCCL/tree/feat/nvshmem_collectives}{oneCCL/NVSHMEM foundation} & One-/two-node bootstrap, lifecycle, and staging validation & Public collectives unsupported; no performance evidence\\
-4 (RQ3) & \href{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}{aCG OSHMPI communicator} & Complete CUDA solver campaign on two matrices & OpenSHMEM halo, MPI scalar reductions; monolithic NVSHMEM changes execution model\\
-5 (RQ3) & \href{https://github.com/y3rbiadit0/acg-sycl}{SYCL aCG} & Separate median-time implementation control & NVIDIA only; distinct reporting policy\\
+4 (RQ2, RQ3) & \href{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}{aCG OSHMPI communicator} & Solver validation and one-sided integration trade-offs on two matrices & OpenSHMEM halo, MPI scalar reductions; monolithic NVSHMEM changes execution model\\
+5 (RQ3) & \href{https://github.com/y3rbiadit0/acg-sycl}{SYCL aCG} & CUDA--SYCL performance retention through reported solver-time ratios & NVIDIA only; distinct reporting policy\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-RQ1 is answered through relative performance regions and their implementation context, rather than a same-algorithm initiation-only experiment. RQ2 uses implemented behavior and documented validation, with timing evidence only for completed benchmark paths. RQ3 tests three distinct outcomes: agreement of matched reduction costs, representation of halo communication, and the complete solver ranking. The preliminary NCCL study provides a candidate for later matched experiments, not an additional aCG validation result.
+RQ1 is answered through relative performance regions and their implementation context, rather than a same-algorithm initiation-only experiment. RQ2 combines timing evidence for completed direct and oneCCL paths with inspection of the implemented memory, initiation, synchronization, and progress contracts. Programmability is assessed qualitatively through the required allocations, remote addressing, completion operations, and integration changes; runtime validation establishes whether these paths function, while the NVSHMEM oneCCL foundation supplies no collective-performance evidence. RQ3 tests four outcomes: agreement of matched reduction costs, representation of halo communication, the complete solver ranking including convergence effects, and CUDA--SYCL performance retention on the evaluated platform. The preliminary NCCL study provides a candidate for later matched experiments, not an additional aCG validation result.
 
 \section{Communication Benchmark Suite}\label{sec:benchmark-method}
 
@@ -183,9 +183,11 @@ The primary metrics are solver time and GFLOP/s per GPU. CUDA-event profiling ad
 
 Correctness requires successful termination and a relative residual below $10^{-6}$. Iteration counts, residuals, and manufactured-solution error are retained for every communicator. They are used to distinguish numerical effects of reduction order from communication corruption.
 
-\subsection{Supporting SYCL Control}
+\subsection{CUDA--SYCL Performance Retention}
 
-The SYCL implementation developed in this work is evaluated as a supporting control rather than as another communication backend in the CUDA aCG campaign. MPI provides its distributed runtime and halo exchange, while a solver option changes only the scalar reductions between MPI and oneCCL. Its available report uses median solver time and covers Bump\_2911 through 16 GPUs, so those values are reported separately and are not pooled with the fastest-trial CUDA campaign. The purpose is to check whether portable compute and orchestration overhead could dominate a communication comparison, not to claim cross-vendor performance portability from one NVIDIA platform.
+The SYCL implementation developed in this work addresses the performance-retention part of RQ3 through a separate implementation comparison. MPI provides its distributed runtime and halo exchange, while a solver option changes only the scalar reductions between MPI and oneCCL. Its available report uses median solver time and covers Bump\_2911 through 16 GPUs, so those values are reported separately and are not pooled with the fastest-trial CUDA campaign. Performance retention is assessed through the reported SYCL-to-CUDA MPI solver-time ratios at each GPU count: a ratio of one indicates equal time, and a ratio above one indicates additional time in the SYCL implementation.
+
+The comparison also serves as a portable-compute control for interpreting communication rankings. The composite benchmark's communication-free cases provide supporting evidence about kernel and submission costs, but do not isolate the causes of the complete solver's performance gap. The available configurations and distinct reporting policies constrain attribution and statistical comparison. The resulting evidence concerns performance retained by this SYCL implementation on NVIDIA A100 GPUs, rather than performance portability across accelerator vendors.
 
 \section{Preliminary NCCL Version and Memory-Path Comparison}\label{sec:nccl-preliminary-method}
 
