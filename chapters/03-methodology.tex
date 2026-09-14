@@ -116,7 +116,7 @@ NCCL retains its default algorithm and protocol selection; multi-node runs set s
 
 The word \emph{tuned} must be interpreted cautiously. The current harness encodes these policies, but the aggregated JSON artifacts do not preserve a complete environment snapshot, source revision, node list, or placement record. They also store the selected final configuration rather than UCC on/off as a case axis. Consequently, the UCC effect sizes rely on the separately documented paired campaign and cannot be reconstructed from the final aggregate alone; no tuned-versus-untuned difference is inferred from backend curves collected under unknown settings.
 
-\subsection{Measured IBGDA Availability}
+\subsection{Measured IBGDA Availability}\label{sec:ibgda-check}
 
 IBGDA availability was checked directly on Leonardo compute node \texttt{lrdn3445} in job~55764638. Table~\ref{tab:m-ibgda-check} separates prerequisites already supplied by the system from the two site-level driver settings that block the transport. The version requirements follow NVIDIA's NVSHMEM installation guidance \cite{nvidia_nvshmem_install_2026}.
 
@@ -139,7 +139,7 @@ InfiniBand devices & \texttt{mlx5} & four devices, one port each & available\\
 \end{tabularx}
 \end{table}
 
-Both blocked settings are controlled through the site NVIDIA driver configuration and require a driver reload; they cannot be changed inside a Slurm job. A \texttt{2n1g} NVSHMEM ping-pong probe with \texttt{NVSHMEM\_DEBUG=INFO} consequently reported only \texttt{ibrc.cpp} transport lines and no IBGDA module. The inter-node RMA measurements in this thesis therefore exercise a CPU proxy that posts work requests to the NIC. The installed NVHPC~24.5 module supplies NVSHMEM~2.11.0, which also predates the CPU-assisted IBGDA NIC-handler route available in the 3.x series. Finally, the runtime defaults \texttt{NVSHMEM\_REMOTE\_TRANSPORT} to \texttt{ibrc}; a future IBGDA experiment must change that selection as well as enabling \texttt{NVSHMEM\_IB\_ENABLE\_IBGDA}. Changing only the latter would silently continue to measure \texttt{ibrc}.
+Both blocked settings are controlled through the site NVIDIA driver configuration and require a driver reload; they cannot be changed inside a Slurm job. A \texttt{2n1g} NVSHMEM ping-pong probe with \texttt{NVSHMEM\_DEBUG=INFO} consequently reported only \texttt{ibrc.cpp} transport lines and no IBGDA module. The inter-node RMA measurements in this thesis therefore exercise a CPU proxy that posts work requests to the NIC. This is not specific to the present campaign: Trotter et al.\ report the same absence of IBGDA support on Leonardo and MareNostrum~5 \cite{trotter_cpu-_2025}. The installed NVHPC~24.5 module supplies NVSHMEM~2.11.0, which also predates the CPU-assisted IBGDA NIC-handler route available in the 3.x series. Finally, the runtime defaults \texttt{NVSHMEM\_REMOTE\_TRANSPORT} to \texttt{ibrc}; a future IBGDA experiment must change that selection as well as enabling \texttt{NVSHMEM\_IB\_ENABLE\_IBGDA}. Changing only the latter would silently continue to measure \texttt{ibrc}.
 
 \section{oneCCL Extensions}
 
