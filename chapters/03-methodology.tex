@@ -197,7 +197,7 @@ The three-way comparison distinguishes an observed version change (2.18.5 plain 
 
 The summary does not record datatype, reduction operator, process/thread layout, in-place mode, timing/completion boundary, warm-up counts, correctness output, or inclusion of setup costs. It reports 1.0--1.1-fold run spread except for a 1.5-fold anomaly at 4\,B in plain NCCL~2.31 allreduce, attributed in the note to warm-up. Individual trials and the spread definition are unavailable, so no confidence intervals or error bars are reconstructed. The 8\,B allreduce cell is not assumed to represent one FP64 scalar. Size labels are retained exactly: the all-to-all bandwidth at 16\,MiB is consistent with total per-rank buffer size and a $(P-1)/P$ bus factor at $P=4$, but this convention needs confirmation from the original records before comparison with the main per-peer sweep. Reported speedups below are recomputed as reference latency divided by symmetric latency using the rounded medians.
 
-\section{Reproducibility Policy}
+\section{Reproducibility Policy}\label{sec:reproducibility}
 
 The cluster directories in both repositories are the executable specification of the experiments. They record module stacks, build presets, launcher choice, topology matrices, process-to-GPU mapping, transport variables, solver flags, and result-reduction scripts. OSHMPI and oneCCL must use the same MPI installation, and the aCG campaign prints the selected transport configuration. Remaining provenance gaps in the archived aggregates are reported explicitly rather than reconstructed from assumptions.
 

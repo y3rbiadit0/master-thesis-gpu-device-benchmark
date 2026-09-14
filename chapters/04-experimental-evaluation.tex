@@ -6,6 +6,42 @@ Results follow the decision process. Point-to-point and structured microbenchmar
 
 Small differences must be interpreted against job-level spread. The discussion therefore emphasizes persistent regions, large crossovers, and application-level effects rather than declaring a winner from isolated one-percent differences.
 
+\section{Experimental Environment}\label{sec:eval-environment}
+
+Every measurement reported in this chapter was collected on the accelerated Booster partition of the Leonardo supercomputer at CINECA \cite{turisini_leonardo_2024}, whose architecture Section~\ref{sec:leonardo} describes: four NVIDIA A100 SXM GPUs per node, joined inside the node by NVLink~3.0 without an NVSwitch and between nodes by an InfiniBand HDR DragonFly+ fabric reached through two dual-port HDR100 adapters. One process drives one GPU throughout, so a topology label names both the node count and the ranks per node, from the single-GPU control \texttt{1n1g} to 32 GPUs on eight nodes in \texttt{8n4g}. Jobs are scheduled through Slurm, and each benchmark cell is measured in several independently scheduled allocations so that job-to-job placement variation is visible in the reported spread rather than hidden inside one lucky allocation.
+
+The evidence accumulated in this way is substantial enough to be worth stating before the results begin. The microbenchmark campaign sweeps four communication patterns across the topology matrix and the full message-size range of each stack below; the composite \texttt{cg\_step} sweep covers 210 topology, grid-size, and backend cells with nine trials each; and the aCG campaign contributes 507 completed solver logs, of which 354 are strict four-communicator trials. Section~\ref{sec:benchmark-method} defines the patterns and the timing and validation policy that every cell obeys, and Section~\ref{sec:acg-method} the two SuiteSparse matrices that the solver campaign uses.
+
+\subsection{Toolchains and Library Versions}
+
+The seven measured stacks are not seven configurations of one build. They come from two toolchains that meet only at the network. The native path is compiled with the NVHPC toolkit against CUDA and links the vendor communication libraries that the same module supplies; the portable path is compiled with DPC++ and resolves the same HPC-X installation, with oneCCL built separately for each of the backends this thesis adds. Keeping them separate is what makes the SYCL variants complete stacks rather than re-linked CUDA, and it is also why a version table is necessary: the two paths do not agree on every component, and some components are fixed by the site module environment rather than chosen. Table~\ref{tab:m-eval-versions} records them and shows which campaign each stack feeds.
+
+\begin{table}[htbp]
+\centering
+\caption{Software environment of each measured stack, and the campaigns it contributes to. Stack names follow Table~\ref{tab:m-evaluated-stacks}. OSHMPI and the oneCCL backends developed in this work are built from source; their revisions are recorded in the artifact repositories listed in Section~\ref{sec:reproducibility}.}
+\label{tab:m-eval-versions}
+\scriptsize
+\begin{tabularx}{\textwidth}{lYYccc}
+\toprule
+Stack & Compute toolchain & Communication stack & Micro & \texttt{cg\_step} & aCG\\
+\midrule
+\texttt{cuda\_mpi} & NVHPC~24.5, CUDA~12.4 & HPC-X MPI~2.19 over UCX; UCC~1.4.0 per operation & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+\texttt{cuda\_nccl} & NVHPC~24.5, CUDA~12.4 & NCCL~2.18.5, as supplied by NVHPC~24.5 & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+\texttt{cuda\_nvshmem} & NVHPC~24.5, CUDA~12.4 & NVSHMEM~2.11.0 (NVHPC~24.5), \texttt{ibrc} transport, NCCL collective dispatch & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+\texttt{oshmpi} & NVHPC~24.5, CUDA~12.4 & OSHMPI over the same HPC-X MPI~2.19, UCX OSC component & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+\texttt{sycl\_mpi} & DPC++~6.3, GCC~12.2, CUDA~12.2 & the same HPC-X MPI~2.19 installation & $\checkmark$ & $\checkmark$ & $\checkmark$\\
+\texttt{sycl\_oneccl} & DPC++~6.3, GCC~12.2, CUDA~12.2 & oneCCL over NCCL~2.18.5; bundled Intel MPI for launch and bootstrap, restricted to the TCP OFI provider across nodes & $\checkmark$ & $\checkmark$ & --\\
+\texttt{sycl\_oneccl\_oshmpi} & DPC++~6.3, GCC~12.2, CUDA~12.2 & oneCCL over OSHMPI, linked against the same HPC-X MPI~2.19 & $\checkmark$ & -- & --\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Two properties of this environment govern how the comparisons may be read. MPI and OSHMPI resolve one HPC-X installation and share a single UCX configuration, so a difference between them is attributable to the interface and its operation mapping rather than to the transport underneath. NCCL and NVSHMEM instead select their own payload transports, so a difference involving them is a difference between complete stacks. The runtime policies that complete this picture -- per-operation UCC selection, the \texttt{ibrc} remote transport, symmetric heap sizes, and process-to-GPU mapping -- belong to the experimental design and are recorded in Section~\ref{sec:runtime-method} rather than repeated here. Where the aCG campaign deliberately departs from the benchmark configuration, in its UCX rendezvous threshold and its disabling of NCCL dispatch beneath NVSHMEM, the size of each deviation was measured rather than assumed, and Section~\ref{sec:acg-results} reports both.
+
+The SYCL aCG comparison of Section~\ref{sec:acg-results} uses the same DPC++ toolchain as the benchmark's SYCL stacks, with MPI providing its distributed runtime and a solver option selecting MPI or oneCCL for the scalar reductions. Its reporting policy differs from the CUDA campaign's, which is why its results stay separate rather than joining the primary ranking.
+
+One consequence of this environment deserves stating plainly, because it bounds the whole chapter. The NCCL and NVSHMEM versions are those the installed NVHPC~24.5 module provides, not versions selected for the study, and NVSHMEM~2.11.0 predates the release series in which several device-initiated paths matured. The preliminary comparison in Section~\ref{sec:nccl-preliminary-results} steps outside this environment on purpose: it adds a separate NCCL~2.31.2 build on a single four-GPU node to ask whether a newer library and symmetric memory registration would change the small-message picture. It is reported apart from the main campaign because its toolchain, and much of its measurement metadata, are not those recorded above.
+
 \section{Microbenchmark Results}\label{sec:micro-results}
 
 \subsection{Point-to-Point Ping-Pong}
@@ -147,7 +183,7 @@ Topology & CUDA MPI & CUDA NCCL & CUDA NVSHMEM & oneCCL/NCCL\\
 
 Direct OSHMPI is strong within one node, reaching approximately 35.8\,GB/s on \texttt{1n4g}, but falls to 1.2\,GB/s on \texttt{8n4g}. oneCCL/OSHMPI reaches 2.7\,GB/s in the latter cell, still far below the NCCL-based paths. These results compare different legal implementations: NCCL uses grouped point-to-point operations, MPI and OSHMPI use native collectives, and direct SHMEM uses one-sided transfers where required.
 
-The analyzed all-to-all tree merges two measured sets rather than rerunning every backend under the new default in one campaign. Each retained cell has three jobs and nine trials, and the 17--34-fold effect is too large to depend on small allocation variation, but a clean final sweep is still required for fully matched allocation-level comparisons.
+One caveat attaches to the all-to-all analysis: it combines two rounds of measurement rather than a single sweep of every backend under the tuned default. Each retained cell still rests on three independently scheduled allocations and nine trials, and an effect of 17--34 times is far too large to arise from allocation variation, but a fully matched comparison at the allocation level would require one clean final sweep.
 
 \section{Composite CG-Step Results}\label{sec:cg-step-results}
 
@@ -175,7 +211,7 @@ Topology & 512 & 1024 & 2048 & 4096 & 8192\\
 
 The local-work sweep reaches the compute crossover within one GPU. CUDA MPI rises from 79.3\,$\mu$s at side~512 to 956.5\,$\mu$s at side~8192, and the spread among the four CUDA/SHMEM backends contracts from 2.01 to 1.04 times. At \texttt{8n4g}, in contrast, increasing local work 64-fold from side~512 to 4096 changes CUDA MPI by only 5.6\%; even side~8192 reaches only 149.1\,$\mu$s. The selected regime, rather than a backend name alone, determines whether communication differences remain visible.
 
-NVSHMEM's multi-node result has an intermittent tail rather than uniformly slow iterations. At \texttt{4n4g}, side~512, its mean is 1.94 times CUDA MPI and 1.23 times its own minimum. At \texttt{8n4g}, side~1024, the mean is approximately 3.8 times CUDA MPI and 1.57 times its own minimum. Across jobs, the \texttt{S=512} spread reaches 1.29 times at \texttt{4n4g} and 1.68 times at \texttt{8n4g}, while every other backend remains within 1.04 times in five of six topologies. One NCCL-enabled \texttt{8n4g} phase record even has a negative phase-sum gap, marking the same unstable cell rather than physical negative overlap. The effect grows with node count and is concentrated in the RMA halo phase, consistent with occasional stalls in the measured CPU-proxy path. The stored dataset does not contain oneCCL/OSHMPI \texttt{cg\_step} results, so no claim is made for that declared but unmeasured cell.
+NVSHMEM's multi-node result has an intermittent tail rather than uniformly slow iterations. At \texttt{4n4g}, side~512, its mean is 1.94 times CUDA MPI and 1.23 times its own minimum. At \texttt{8n4g}, side~1024, the mean is approximately 3.8 times CUDA MPI and 1.57 times its own minimum. Across jobs, the \texttt{S=512} spread reaches 1.29 times at \texttt{4n4g} and 1.68 times at \texttt{8n4g}, while every other backend remains within 1.04 times in five of six topologies. One NCCL-enabled \texttt{8n4g} phase record even has a negative phase-sum gap, marking the same unstable cell rather than physical negative overlap. The effect grows with node count and is concentrated in the RMA halo phase, consistent with occasional stalls in the measured CPU-proxy path. The oneCCL/OSHMPI path is declared for \texttt{cg\_step} but never produced measurements, so no claim is made for that cell.
 
 \subsection{Phase Decomposition}
 
@@ -236,7 +272,7 @@ The halo prediction fails by a stable structural factor. \texttt{halo\_1d} predi
 
 \subsection{Residual SYCL Cost}
 
-The CUDA and SYCL MPI microbenchmarks agree within approximately 1--2\% on the same HPC-X, UCX, and UCC stack, but their composite steps do not. Five redundant waits between submissions on the in-order SYCL queue accounted for 22.7\,$\mu$s in SYCL MPI and 24.5\,$\mu$s in oneCCL; removing them recovered only about one third of the original gap. Measurements before commit \texttt{b75258a} are therefore not pooled with the final sweep.
+The CUDA and SYCL MPI microbenchmarks agree within approximately 1--2\% on the same HPC-X, UCX, and UCC stack, but their composite steps do not. Five redundant waits between submissions on the in-order SYCL queue accounted for 22.7\,$\mu$s in SYCL MPI and 24.5\,$\mu$s in oneCCL; removing them recovered only about one third of the original gap. Measurements taken before that fix describe a different implementation and are therefore excluded from the final sweep rather than pooled with it.
 
 The final single-GPU control isolates what remains. At side~512, SYCL MPI takes 116.9\,$\mu$s against CUDA MPI's 79.3\,$\mu$s, a fixed gap of 37.6\,$\mu$s without communication. At side~8192 the values are 1159.8 and 956.5\,$\mu$s, indicating approximately 19\% slower arithmetic in addition to the roughly 38\,$\mu$s submission cost. The use of \texttt{sycl::reduction} instead of the hand-written CUDA dot kernel is the next hypothesis to test, not an established cause.
 
