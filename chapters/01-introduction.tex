@@ -1,6 +1,7 @@
 \chapter{Introduction}\label{ch}
 
-Applications distributed across Graphics Processing Units (GPUs) must coordinate data movement as well as computation. When an application spans several accelerators, the choice of communication stack determines how transfers are initiated, how their completion is observed, and how they interact with GPU kernels. Selecting a suitable stack therefore requires understanding both the application's communication needs and the execution costs of the available implementations.
+Applications distributed across Graphics Processing Units (GPUs) must coordinate data movement as well as computation.  
+When an application make use of multiple GPUs within a node or across nodes, the choice of communication stack determines how transfers are going to be handled, from their initiation to the completition, and finally how they will interact with GPU kernels. Selecting a suitable stack therefore requires understanding both the application's communication needs and the execution costs of the available implementations.
 
 This thesis investigates that selection problem through a progression from communication patterns to a complete application. A common benchmark identifies the regimes in which different stacks are effective; extensions to oneCCL examine how additional communication paths can be exposed through a shared interface; and an extended Conjugate Gradient solver tests whether the benchmark guidance transfers to application execution. This chapter develops the motivation and research gaps behind that progression, defines the research questions, and summarizes the scope, findings, and contributions.
 
