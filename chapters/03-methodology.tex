@@ -2,7 +2,7 @@
 
 \section{Research Design}
 
-The evaluation follows a candidate communication path from an isolated operation to a complete application. Microbenchmarks first locate its favorable message-size and placement regimes. A composite \texttt{cg\_step} then tests whether those observations explain a sequence containing halo exchange, computation, and scalar reductions. Finally, aCG tests the prediction with a sparse partition, application dependencies, and convergence. The purpose of increasing application context is to establish which properties a benchmark must preserve to provide useful selection guidance.
+The evaluation follows a candidate communication path from an isolated operation to a complete application. Microbenchmarks first locate its favorable message-size and placement regimes. A composite \texttt{cg\_step} then tests whether those observations explain a sequence containing halo exchange, computation, and scalar reductions. Finally, aCG tests cross-level agreement with a sparse partition, application dependencies, and convergence. The purpose of increasing application context is to establish which properties a benchmark must preserve to provide useful selection guidance.
 
 The unit of comparison is a configured runtime stack. Direct MPI denotes GPU-aware HPC-X Open MPI over UCX; oneCCL is qualified by its NCCL or OSHMPI backend. Device invocation is evaluated through persistent NVSHMEM neighbor kernels and the monolithic NVSHMEM solver. These implementations differ from host-driven alternatives in more than invocation mode, so the comparison identifies performance regimes without treating every difference as an initiation-only effect.
 
@@ -56,9 +56,31 @@ Identifier & Compute interface & Communication path\\
 \end{tabularx}
 \end{table}
 
+Table~\ref{tab:m-pattern-coverage} records measured coverage rather than API capability. The seven stack identifiers describe the union of the campaign; no single pattern contains all paths. In particular, oneCCL/OSHMPI is measured only for the standalone collectives, while the persistent device-invoked NVSHMEM implementation is specific to the neighbor patterns and the monolithic solver.
+
 \begin{table}[htbp]
 \centering
-\caption{Software versions and roles in the main campaign. Source-built adapters are identified by repository and branch in Chapter~\ref{ch}; exact measured revisions are not available for every archived run.}
+\caption{Measured backend coverage in the reconciled benchmark archive. ``No'' denotes an absent campaign cell, not an unsupported operation in the underlying library.}
+\label{tab:m-pattern-coverage}
+\scriptsize
+\begin{tabular}{lccccc}
+\toprule
+Stack & Ping-pong & Halo & Allreduce & All-to-all & \texttt{cg\_step}\\
+\midrule
+\texttt{cuda\_mpi} & Yes & Yes & Yes & Yes & Yes\\
+\texttt{sycl\_mpi} & Yes & Yes & Yes & Yes & Yes\\
+\texttt{cuda\_nccl} & Yes & Yes & Yes & Yes & Yes\\
+\texttt{cuda\_nvshmem} & Yes & Yes & Yes & Yes & Yes\\
+\texttt{oshmpi} & Yes & Yes & Yes & Yes & Yes\\
+\texttt{sycl\_oneccl} & Yes & Yes & Yes & Yes & Yes\\
+\texttt{sycl\_oneccl\_oshmpi} & No & No & Yes & Yes & No\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Software versions and roles in the main campaign. Source-built adapters are identified by repository and branch in the artifact records; exact measured revisions are not available for every archived run.}
 \label{tab:m-eval-versions}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYY}
@@ -158,7 +180,7 @@ Pattern & Operation & Size range & Iterations\\
 \end{tabularx}
 \end{table}
 
-Ping-pong uses \texttt{1n2g} and \texttt{2n1g}. Halo adds \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}; collectives and the composite step also retain \texttt{1n1g} controls. Not every declared backend has every measured pattern: oneCCL/OSHMPI has no composite-step data. The suite also implements variable-count MoE traffic, but no complete MoE campaign is available for quantitative conclusions.
+Ping-pong uses \texttt{1n2g} and \texttt{2n1g}. Halo adds \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}; collectives and the composite step also retain \texttt{1n1g} controls. Table~\ref{tab:m-pattern-coverage} gives the exact backend matrix: oneCCL/OSHMPI has standalone allreduce and all-to-all data but no ping-pong, halo, or composite-step campaign. The suite also implements variable-count MoE traffic, but no complete MoE campaign is available for quantitative conclusions.
 
 Payload conventions are operation-specific. Ping-pong uses one directional payload. Halo counts two sends and two receives. Allreduce reports input bytes, with bus bandwidth normalized by $2(P-1)/P$. All-to-all reports bytes per peer on its size axis and the whole per-rank send buffer, including the self block, for aggregate bandwidth. Bandwidth is recomputed from the stated payload and latency; these different conventions are not compared as physical link rates.
 
@@ -214,7 +236,7 @@ Correctness is checked from the recorded residual relative to the initial residu
 
 Phase timers have backend-dependent meanings. The halo timer brackets the wait remaining at halo-end, whereas OSHMPI's blocking communication appears mainly in \emph{other}. NVSHMEM may include communication in its SpMV interval, and allreduce timing includes arrival skew. These columns cannot simply be added into an overlap-free network-cost model.
 
-For scalar prediction, half of the stored two-reduction \texttt{cg\_step} phase at side 512 is compared with aCG's accumulated allreduce time divided by its recorded operation count. The latter includes operations outside the steady loop: a run with $K$ iterations records $2K+2$ reductions. MPI is paired with the MPI scalar calls in the OSHMPI-halo solver, and NCCL with the NCCL solver. Mean absolute percentage error over the five matched rank counts is
+For the scalar cross-level comparison, half of the stored two-reduction \texttt{cg\_step} phase at side 512 is compared with aCG's accumulated allreduce time divided by its recorded operation count. The latter includes operations outside the steady loop: a run with $K$ iterations records $2K+2$ reductions. MPI is paired with the MPI scalar calls in the OSHMPI-halo solver, and NCCL with the NCCL solver. Mean absolute percentage discrepancy over the five matched rank counts is
 \[
 \mathrm{MAPE}=\frac{100}{5}\sum_{P\in\{2,4,8,16,32\}}
 \left|\frac{\widehat{t}_P}{t_P}-1\right|.
@@ -227,16 +249,10 @@ The separate Bump\_2911 report compares CUDA and SYCL solver-time medians at 1, 
 
 The available comparison report contains timing and iteration summaries, but its CUDA parser does not populate the convergence flag or normalized residual. The resulting zero converged-count field represents missing classification, not demonstrated nonconvergence. Until the original comparison logs are reprocessed, these ratios are retained as supporting implementation timings rather than a newly verified equal-accuracy comparison. Kernel, memory, and orchestration contributions are not isolated by the ratios alone.
 
-\section{Exploratory NCCL Protocol}\label{sec:nccl-preliminary-method}
-
-A later intra-node study compares NCCL 2.18.5 with ordinary allocation, NCCL 2.31.2 with ordinary allocation, and NCCL 2.31.2 with \texttt{ncclMemAlloc} and symmetric window registration on four A100 GPUs. The available summary contains three-run median latencies for 21 allreduce and 19 all-to-all sizes. Comparing versions and comparing the two 2.31.2 configurations answer different questions; the latter still combines allocation and registration.
-
-Symmetric buffers do not establish that user kernels invoked NCCL's device API \cite{nvidia_nccl_registration_2026,nvidia_nccl_device_2026}. Datatype, exact source and launch configuration, completion boundary, warm-up, correctness output, and individual trial timings are unavailable. No uncertainty intervals are reconstructed, and the supplied eight-byte cell is not assumed to be one FP64 sum. The study identifies candidates for follow-up rather than modifying the main campaign's ranking.
-
 \section{Reproducibility and Evidence Boundaries}\label{sec:reproducibility}
 
 The reconciled archive in \path{data/main-campaign/} contains benchmark allocation summaries, all retained aCG trial records, selected solver results, and reduction-prediction pairs. A manifest records source-file hashes and the repository revisions inspected during import. Those revisions identify the imported archive, not necessarily the source used for each measured run. \path{tools/rebuild_main_evidence.py} regenerates the data and complete table blocks; \path{tools/plot_main_evidence.py} renders the figures. The accompanying README specifies the aggregation and exclusion policies.
 
 Auxiliary rail, scalar-placement, forced-algorithm, and runtime-dispatch controls survive partly as analysis records rather than complete per-trial datasets. Their reported effects are identified as such and are not assigned reconstructed error bars. The original IBGDA job and node identifiers are retained in \path{data/experiment-notes.md}. Preliminary NCCL transcription and plotting provenance are recorded separately in \path{data/nccl-preliminary.md}.
 
-The next measurements are defined in \path{experiments/targeted-controls.md}: complete FP64 reduction round trips and an irregular-halo replay derived from aCG communication graphs. They address the remaining comparison gaps without treating current unmeasured source changes as experimental evidence.
+The next measurements are defined in \path{experiments/targeted-controls.md}. Their priority relative to matched initiation, batching, and configuration controls is recorded in \path{experiments/missing-experiments-report.md}. These documents describe prospective work and do not turn current unmeasured source changes into experimental evidence.

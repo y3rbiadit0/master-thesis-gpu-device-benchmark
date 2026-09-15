@@ -1,21 +1,23 @@
 \chapter{Experimental Evaluation}\label{ch:m-results}
 
-\section{From Communication Regimes to Application Predictions}
+\section{From Communication Regimes to Application Evidence}
 
 The results develop the selection argument in three steps. First, isolated and repeated communication identify candidate stacks and the configurations that make them competitive. Second, a composite CG step tests those candidates alongside computation. Third, aCG determines which observations survive an irregular sparse partition, synchronization dependencies, and convergence. The common-interface results explain what is required to expose these paths through oneCCL.
 
-The principal figures and tables are regenerated from the reconciled archive described in Section~\ref{sec:reproducibility}. Benchmark curves use the median of allocation means with allocation ranges; solver scaling retains the reference study's fastest-valid-trial convention and reports MPI variability separately. Lowest point estimates are distinguished from decisive performance differences. Auxiliary configuration controls and the later NCCL study are identified where their evidence is available only as summaries.
+The principal figures and tables are regenerated from the reconciled archive described in Section~\ref{sec:reproducibility}. Benchmark curves use the median of allocation means with allocation ranges. Solver results first show median completed-trial time for every native path, then retain the reference study's fastest-valid-trial convention as a work-normalized sensitivity view and report MPI variability separately. Lowest point estimates are distinguished from decisive performance differences. Auxiliary configuration controls are identified where their evidence is available only as summaries; the incomplete later NCCL study is confined to Appendix~\ref{app:nccl-preliminary}.
 
-\section{Which Communication Paths Are Promising?}\label{sec:micro-results}
+\section{Microbenchmark Results by Communication Pattern}\label{sec:micro-results}
+
+Each pattern is presented with the complete set of measured backends for that campaign, followed immediately by the configuration and execution-contract evidence needed to interpret the curves. The main figures use representative placements; Appendix~\ref{app:complete-results} provides the complete topology panels and the data archive retains every measured size. Comparisons identify complete configured paths rather than attributing a difference to an API or invocation location alone.
 
 \subsection{Ping-Pong: Establishing the Startup Reference}
 
-The first comparison asks whether device-side invocation improves a dependency-ordered exchange. Figure~\ref{fig:m-pingpong-regimes} shows the four direct stacks. Across nodes, CUDA MPI has the lowest latency of these paths throughout the sweep. At four bytes its allocation-based median is 3.36\,$\mu$s, compared with 7.28\,$\mu$s for OSHMPI, 17.17\,$\mu$s for NVSHMEM, and 28.78\,$\mu$s for NCCL. Device invocation therefore does not remove the startup advantage of the evaluated MPI path.
+The first comparison asks whether device-side invocation improves a dependency-ordered exchange. Figure~\ref{fig:m-pingpong-regimes} shows all six measured paths. Across nodes, CUDA MPI has the lowest latency throughout the sweep. At four bytes its allocation-based median is 3.36\,$\mu$s, compared with 7.28\,$\mu$s for OSHMPI, 17.17\,$\mu$s for NVSHMEM, and 28.78\,$\mu$s for NCCL. Device invocation therefore does not remove the startup advantage of the evaluated MPI path.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/pingpong-regimes.png}
-\caption{Ping-pong latency for direct CUDA stacks within one node and across two nodes. Points are medians of five allocation means; shading spans those means. Latency is half the round-trip time.}
+\caption{Ping-pong latency for all six measured stacks within one node and across two nodes. Points are medians of five allocation means; shading spans those means. Latency is half the round-trip time.}
 \label{fig:m-pingpong-regimes}
 \end{figure}
 
@@ -29,6 +31,8 @@ The first comparison asks whether device-side invocation improves a dependency-o
 
 Within a node, NVSHMEM becomes competitive over an intermediate message range, while MPI again improves relative to it at large payloads. Table~\ref{tab:m-pingpong-inter} also shows that CUDA and SYCL MPI cannot be assumed to agree at every size: their small-message results are close to the MPI startup regime, but their large-message endpoints differ substantially. A shared MPI installation supplies a useful comparison, not a guarantee of identical execution costs.
 
+The common-interface NCCL path is also visible in this startup-sensitive pattern. At four-byte inter-node ping-pong, oneCCL/NCCL takes 33.8\,$\mu$s against 28.8\,$\mu$s for direct NCCL, approximately 17\% more. This changes the compute interface and orchestration as well as the adapter call, so it measures the complete oneCCL/NCCL stack rather than isolated wrapper overhead. The ping-pong result is consequently a small-message half-round-trip comparison, not an estimate of an initiation-only launch saving.
+
 \subsection{Halo: Repetition Changes the Trade-off}
 
 A repeated neighbor exchange offers a different opportunity from ping-pong. The fixed submission and completion cost can be spread across many exchanges, while multiple peer transfers can proceed together. Figure~\ref{fig:m-halo-regimes} contrasts isolated and steady-state execution on one and eight nodes.
@@ -36,7 +40,7 @@ A repeated neighbor exchange offers a different opportunity from ping-pong. The 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/halo-regimes.png}
-\caption{Isolated and steady-state halo latency. Steady-state values amortize a batch of 100 exchanges. Points and shading show allocation medians and ranges; payload counts two sends and two receives.}
+\caption{Isolated and steady-state halo latency for all six measured stacks. Steady-state values amortize a batch of 100 exchanges. Points and shading show allocation medians and ranges; payload counts two sends and two receives.}
 \label{fig:m-halo-regimes}
 \end{figure}
 
@@ -49,11 +53,18 @@ MPI supplies the low-startup reference for isolated exchanges. Batching makes OS
 \input{data/main-campaign/halo_1d-bandwidth-table.tex}
 \end{table}
 
-The favorable GPU-initiated regime is thus sustained neighbor work rather than universally low latency. This supports the persistent-execution hypothesis in RQ1, while the host-driven OSHMPI result shows that batching and completion policy also matter independently of invocation location. Because the paths differ in signaling and progress, these measurements do not isolate a launch-overhead saving by themselves.
+The favorable regime for the persistent, kernel-invoked NVSHMEM path is thus sustained neighbor work rather than universally low latency. The SYCL MPI and oneCCL/NCCL curves further show that portable submission paths do not remove the same isolated-versus-steady distinction. This supports persistent execution as a candidate explanation in RQ1, while the host-driven OSHMPI result shows that batching and completion policy also matter independently of invocation location. Because the paths differ in signaling, persistence, sampling, and progress, these measurements do not isolate a launch-overhead saving by themselves. The inter-node NVSHMEM result specifically describes device invocation with CPU-proxy-assisted \texttt{ibrc} progress.
 
 \subsection{Allreduce: Configuration and Payload Both Matter}
 
-For reductions, the dominant distinction is between startup-sensitive scalar work and bulk combination. NCCL-based paths lead the large-message regime (Table~\ref{tab:m-allreduce-bandwidth}). NVSHMEM normally dispatches these benchmark collectives through NCCL, so their similar throughput is evidence about that configured path rather than two independent collective algorithms.
+For reductions, the dominant distinction is between startup-sensitive scalar work and bulk combination. Figure~\ref{fig:m-allreduce-backends} shows all seven measured paths at representative intra- and multi-node placements. NCCL-based paths lead the large-message regime (Table~\ref{tab:m-allreduce-bandwidth}). NVSHMEM normally dispatches these benchmark collectives through NCCL, so their similar throughput is evidence about that configured path rather than two independent collective algorithms.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/results/allreduce-backends.png}
+\caption{Allreduce latency for all seven measured stacks at representative placements. Points are medians of allocation means and shading spans those means. The input payload is per rank; the single-rank control is discussed separately.}
+\label{fig:m-allreduce-backends}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -75,9 +86,20 @@ The discontinuity near 4\,KiB is consistent with the UCC TL/UCP source's change 
 
 The single-rank allreduce control is anomalously slow for large buffers: the auxiliary UCC data report approximately 21\,ms at 16\,MiB, despite no inter-rank reduction. It is excluded as a reference for network startup. A one-rank control removes network communication, but can still expose internal copies or reduction implementation costs.
 
+The complete backend view also exposes the cost of oneCCL/OSHMPI's symmetric staging. On \texttt{1n4g}, the four-byte allreduce medians are 20.3\,$\mu$s directly and 18.7\,$\mu$s through oneCCL/OSHMPI. At 16\,MiB, they are 364\,$\mu$s and 6509\,$\mu$s, respectively: the adapted path is approximately 18 times slower. The direct device-resident reduction and symmetric-staging adapter use different memory and completion paths. The comparison therefore identifies the cost of the evaluated integration choice, not an intrinsic penalty of the oneCCL API.
+
+This pattern demonstrates why functional interface compatibility and performance retention must be evaluated separately. The OSHMPI adapter waits for queue dependencies, stages ordinary operands through symmetric storage, performs a blocking host operation, and returns an already-complete event. Those semantics preserve correctness but remove the asynchronous opportunity retained by the NCCL path.
+
 \subsection{All-to-All: Correct the Default Before Ranking Libraries}
 
-All-to-all gives the clearest example of a configuration changing the apparent library ranking. In the paired UCC summaries, the non-UCC path takes hundreds of microseconds for tiny per-peer payloads at 16 and 32 ranks. Enabling UCC reduces these costs by approximately 17--34 times. Figure~\ref{fig:m-ucc-alltoall} shows that this gain is concentrated in the high-rank, small-message region; larger payloads can instead favor the non-UCC configuration.
+All-to-all gives the clearest example of a configuration changing the apparent library ranking. Figure~\ref{fig:m-alltoall-backends} first shows all seven measured stacks against bytes per peer, rather than the topology-dependent aggregate send-buffer size. The MPI default changes regime sharply as rank count and per-peer size increase, while oneCCL/OSHMPI's staged path remains substantially more expensive. In the paired UCC summaries, the non-UCC MPI path takes hundreds of microseconds for tiny per-peer payloads at 16 and 32 ranks. Enabling UCC reduces these costs by approximately 17--34 times. Figure~\ref{fig:m-ucc-alltoall} shows that this gain is concentrated in the high-rank, small-message region; larger payloads can instead favor the non-UCC configuration.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/results/alltoall-backends.png}
+\caption{All-to-all latency for all seven measured stacks at representative placements. The horizontal axis is payload per peer; points are medians of allocation means and shading spans those means.}
+\label{fig:m-alltoall-backends}
+\end{figure}
 
 \begin{figure}[htbp]
 \centering
@@ -117,17 +139,19 @@ At large payloads, NCCL-based paths regain the advantage. Table~\ref{tab:m-allto
 \input{data/main-campaign/alltoall-bandwidth-table.tex}
 \end{table}
 
+At the largest \texttt{8n4g} payload, direct NCCL and oneCCL/NCCL are within approximately 2\%. The adapter and SYCL orchestration are therefore much less visible at this bulk endpoint than in four-byte ping-pong. This is again a complete-stack comparison, not an isolated adapter measurement. Together with the staged oneCCL/OSHMPI curve, it shows that a common interface can retain a backend's bulk regime when it preserves its asynchronous data path, while a blocking staging strategy can change the regime entirely.
+
 These primitive results leave several plausible candidates: MPI for startup-sensitive transfers, persistent NVSHMEM for large repeated halos, and NCCL-based paths for bulk collectives. The next question is whether composing operations preserves those advantages.
 
-\section{What Survives Composition with Computation?}\label{sec:cg-step-results}
+\section{Composition in the \texttt{cg\_step} Benchmark}\label{sec:cg-step-results}
 
-\subsection{Complete-Step Performance}
+\subsection{Communication--Computation Sequence}
 
-The composite archive covers seven placements, five global grid sides, and six backends, with nine successful trials per cell. Table~\ref{tab:m-cg-step} reports the lowest allocation-median estimate. OSHMPI leads 25 of the 30 multi-rank cells, including all multi-node placements; NCCL leads the remaining five intra-node cells. The single-GPU NCCL-labeled implementation leads its controls, where the result reflects local execution and synchronization rather than network performance.
+The composite archive covers seven placements, five global grid sides, and six backends, with nine successful trials per cell. It preserves a halo--stencil--reduction sequence but not the complete CG recurrence: the two reduced scalars are terminal outputs and do not gate a dependent GPU update. Table~\ref{tab:m-cg-step} reports the lowest allocation-median estimate under that contract. OSHMPI leads 25 of the 30 multi-rank cells, including all multi-node placements; NCCL leads the remaining five intra-node cells. The single-GPU NCCL-labeled implementation leads its controls, where the result reflects local execution and synchronization rather than network performance.
 
 \begin{table}[htbp]
 \centering
-\caption{Lowest allocation-median \texttt{cg\_step} time by placement and global grid side. This is a point-estimate ranking, not a significance test.}
+\caption{Lowest allocation-median \texttt{cg\_step} time by placement and global grid side. This is a point-estimate ranking for the synthetic sequence, not a significance test or a solver-ready ranking.}
 \label{tab:m-cg-step}
 \footnotesize
 \input{data/main-campaign/cg-winner-table.tex}
@@ -182,25 +206,22 @@ At this scalar payload, a host-staged reduction can be cheaper than the device/U
 
 \subsection{What the Primitive Model Captures}
 
-Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The application prediction below uses the composite step's one-double reductions.
+Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The cross-level comparison below therefore uses the composite step's one-double reductions.
 
 CUDA--SYCL differences remain visible in the single-GPU controls, where inter-rank communication is absent. Earlier redundant queue waits were removed before the retained composite sweep, but the remaining gap cannot be assigned entirely to submission overhead or kernel arithmetic from two endpoint timings. The single-GPU result establishes a complete-implementation cost that must be considered alongside communication.
 
-\section{What Does a Common Interface Cost?}\label{sec:integration-results}
-
-The oneCCL extensions provide two kinds of evidence for RQ2: validation of the required semantics and measurements of the resulting stack. Grouped NCCL tests establish that dependent point-to-point batches, deferred events, and errors can be handled through the public interface. The completed OSHMPI adapter establishes that ordinary buffers can be accepted through symmetric staging, with blocking completion. The NVSHMEM foundation establishes bootstrap, lifecycle, and staging prerequisites only.
-
-The performance consequences depend on the operation. At four-byte inter-node ping-pong, oneCCL/NCCL takes 33.8\,$\mu$s against 28.8\,$\mu$s for direct NCCL, approximately 17\% more. At the largest \texttt{8n4g} all-to-all payload, the two paths are within approximately 2\%. Thus the common interface is more visible in a startup-sensitive operation than in this bulk-transfer endpoint. These are CUDA-versus-SYCL stack comparisons, not isolated measurements of an adapter function.
-
-For OSHMPI, memory adaptation can be more consequential. On \texttt{1n4g}, the four-byte allreduce medians are 20.3\,$\mu$s directly and 18.7\,$\mu$s through oneCCL/OSHMPI. At 16\,MiB, they are 364\,$\mu$s and 6509\,$\mu$s, respectively: the adapted path is approximately 18 times slower. The direct device-resident reduction and symmetric-staging adapter use different memory and completion paths. The comparison shows the cost of the evaluated integration choice, rather than an intrinsic penalty of the oneCCL API.
-
-The engineering conclusion is that an adapter can preserve the result and completion contract while changing the opportunity for asynchronous execution. This is useful interface compatibility, but performance retention must be checked by operation and size. The absence of public NVSHMEM collectives in the prototype prevents a corresponding timing claim for that backend.
-
-\section{Which Predictions Survive in aCG?}\label{sec:acg-results}
+\section{Complete aCG Solver Results}\label{sec:acg-results}
 
 \subsection{Complete-Solver Performance}
 
-NCCL is the fastest stable host-initiated communicator in the retained two-matrix campaign. OSHMPI's throughput is within approximately 1.5--4.6\% of NCCL at two and four GPUs, but is approximately 25--26\% lower at 32 GPUs (Table~\ref{tab:m-acg-oshmpi}). Its scalar path uses MPI, so this result cannot directly confirm or reject the benchmark's host-staged OpenSHMEM reduction advantage.
+Figure~\ref{fig:m-acg-backend-median} first presents every native multi-GPU path using median completed-trial solver time. NCCL has the lowest representative host-initiated times in the retained two-matrix campaign. OSHMPI's fastest-trial throughput is within approximately 1.5--4.6\% of NCCL at two and four GPUs, but is approximately 25--26\% lower at 32 GPUs (Table~\ref{tab:m-acg-oshmpi}). Its scalar path uses MPI, so this result cannot directly confirm or reject the benchmark's host-staged OpenSHMEM reduction advantage.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/results/acg-backend-median.png}
+\caption{Median solver time over retained residual-valid completed trials for all native aCG paths. The device-NVSHMEM series changes solver organization as well as invocation. MPI's large-scale medians expose the slow mode that a fastest-trial curve would hide.}
+\label{fig:m-acg-backend-median}
+\end{figure}
 
 \begin{table}[htbp]
 \centering
@@ -221,9 +242,9 @@ Figure~\ref{fig:m-acg-scaling} separates the stable scaling trends from MPI vari
 
 OSHMPI increasingly outperforms the host-NVSHMEM configuration. That result must be read with the application's disabled NCCL dispatch: it compares the installed native NVSHMEM reduction path, not the NCCL-dispatched path used by the default benchmark.
 
-\subsection{Scalar Reductions Transfer More Closely than Total Runtime}
+\subsection{Cross-Level Agreement for Scalar Reductions}
 
-The most direct predictive test pairs the operation actually executed rather than the communicator's name (Table~\ref{tab:m-acg-reduction-pairing}). Both the composite step and steady CG iteration perform two separate one-double global sums. The prediction uses half the composite reduction phase and compares it with the application's recorded cost per reduction.
+The most direct cross-level check pairs the operation actually executed rather than the communicator's name (Table~\ref{tab:m-acg-reduction-pairing}). Both the composite step and steady CG iteration perform two separate one-double global sums. The comparison uses half the composite reduction phase and compares it with the application's recorded cost per reduction.
 
 \begin{table}[htbp]
 \centering
@@ -245,18 +266,18 @@ Direct OSHMPI & No matched archived scalar path & Benchmark stages to host; appl
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-reduction-prediction.png}
-\caption{One-double reduction prediction versus aCG measurement. Point labels give GPU count. The dashed line is exact agreement; no model is fitted to these points. MPI observations come from the OSHMPI-halo solver.}
+\caption{One-double composite estimate versus aCG measurement. Point labels give GPU count. The dashed line is exact agreement; no model is fitted to these points. MPI observations come from the OSHMPI-halo solver.}
 \label{fig:m-acg-reduction-prediction}
 \end{figure}
 
 \begin{table}[htbp]
 \centering
-\caption{Mean absolute percentage error over five rank counts, regenerated from the retained prediction pairs.}
+\caption{Mean absolute percentage discrepancy over five measured rank counts, regenerated from the retained cross-level pairs.}
 \label{tab:m-acg-reduction-correlation}
 \input{data/main-campaign/reduction-error-table.tex}
 \end{table}
 
-The mean errors range from 7.8\% to 11.1\%. Individual cells can differ more: the NCCL Bump prediction is approximately 20\% high at eight and 16 GPUs. Figure~\ref{fig:m-acg-reduction-prediction} makes this distinction visible; a mean error is not an upper bound on every prediction. The evidence supports scalar-cost estimation across the measured rank range, not a numerical prediction of complete solver time.
+The mean discrepancies range from 7.8\% to 11.1\%. Individual cells can differ more: the NCCL Bump estimate is approximately 20\% high at eight and 16 GPUs. Figure~\ref{fig:m-acg-reduction-prediction} makes this distinction visible; a mean error is not an upper bound on every comparison. Because no model is fitted or held out and the application interval includes rank-arrival skew, the result establishes approximate scalar-cost agreement across the measured rank range, not general prediction accuracy or a numerical prediction of complete solver time.
 
 The auxiliary configuration analysis reports that disabling NCCL dispatch materially changes NVSHMEM reduction time and gives matched errors of approximately 14--21\%. The matched per-trial arm is not present in the imported default JSON, so it is not plotted as an independently regenerated prediction. Repeating that control with explicit metadata would bring NVSHMEM to the same reproducibility level as the MPI/NCCL pairs. The separately recorded UCX-threshold control changes the composite MPI step by only approximately 2--3\%, which is too small to explain the much larger application variability.
 
@@ -307,66 +328,3 @@ GPUs & SYCL/CUDA time\\
 \end{table}
 
 The ratio narrows at 16 GPUs, but the timing summaries alone do not establish why. Computation, host orchestration, and communication scaling all change their contribution to runtime. The communication-free composite controls independently show that a CUDA--SYCL implementation gap can exist without inter-rank transfers. Together, these observations motivate a matched implementation comparison with consistent correctness parsing and phase boundaries; they do not isolate a compiler penalty or establish cross-vendor performance portability.
-
-\section{Cross-Level Summary}
-
-The evidence supports selective transfer. Configured MPI and NCCL scalar costs are predicted with approximately 8--11\% mean error, but a complete ranking cannot be recovered from operation names and byte counts alone. The composite archive selects OSHMPI in most multi-rank cells, while NCCL is the fastest stable host-initiated solver path. That change accompanies different scalar primitives, completion boundaries, peers, and overlap opportunities.
-
-\begin{resultbox}[Main experimental result]
-Pattern-oriented benchmarks identify candidate regimes and can estimate matched scalar costs. Application selection additionally requires the communication schedule and its completion dependencies: a low isolated cost is useful only to the extent that it reduces exposed application time.
-\end{resultbox}
-
-For RQ1, persistent device-side neighbor work is a favorable regime, but MPI retains its startup advantage. For RQ2, common-interface support preserves functionality through concrete memory and completion adaptations whose costs depend on size and operation. For RQ3, the reduction prediction is stronger than the halo or whole-solver prediction. Complete staged scalar round trips and an irregular-halo replay are the two targeted measurements needed to test these remaining boundaries.
-
-\section{Exploratory NCCL Symmetric-Memory Results}\label{sec:nccl-preliminary-results}
-
-A later four-GPU intra-node comparison asks whether newer NCCL and symmetric buffers provide another candidate for the small-reduction regime. Table~\ref{tab:m-nccl-preliminary} retains representative gains and regressions from the supplied three-run medians. The protocol and missing metadata are described in Section~\ref{sec:nccl-preliminary-method}.
-
-\begin{table}[htbp]
-\centering
-\caption{Preliminary NCCL medians in \,$\mu$s. Plain and symmetric refer to version 2.31.2; the final column divides the 2.18.5 latency by the symmetric latency.}
-\label{tab:m-nccl-preliminary}
-\footnotesize
-\begin{tabular}{llrrrr}
-\toprule
-Operation & Size & 2.18.5 & Plain & Symmetric & Ratio\\
-\midrule
-Allreduce & 8\,B & 12.4 & 12.6 & 7.5 & $1.65\times$\\
- & 32\,KiB & 18.4 & 18.5 & 10.6 & $1.74\times$\\
- & 256\,KiB & 19.2 & 19.3 & 22.7 & $0.85\times$\\
- & 1\,MiB & 44.5 & 34.1 & 33.5 & $1.33\times$\\
- & 16\,MiB & 182.0 & 202.1 & 156.4 & $1.16\times$\\
-\midrule
-All-to-all & 64\,B & 11.1 & 13.8 & 14.0 & $0.79\times$\\
- & 1\,KiB & 11.0 & 12.7 & 12.6 & $0.87\times$\\
- & 8\,MiB & 63.9 & 68.1 & 59.6 & $1.07\times$\\
- & 16\,MiB & 102.2 & 106.1 & 89.2 & $1.15\times$\\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Small Allreduce Is the Promising Candidate}
-
-Across the supplied 4\,B--32\,KiB cells, symmetric allocation and registration improve latency by approximately 1.54--1.74 times relative to 2.18.5. At eight bytes the reduction from 12.4 to 7.5\,$\mu$s is approximately 40\% lower latency. Plain 2.31.2 remains at 12.6\,$\mu$s, so the version update alone does not reproduce this small-message gain. The advantage reverses at intermediate sizes, including 256 and 512\,KiB.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/results/nccl-preliminary-allreduce.png}
-\caption{All supplied preliminary allreduce medians. Connecting lines are guides; individual trials and uncertainty intervals are unavailable.}
-\label{fig:m-nccl-preliminary-allreduce}
-\end{figure}
-
-The eight-byte cell is a candidate for a matched FP64 experiment, not already a prediction of aCG's scalar cost: datatype, invocation mode, and completion boundary remain unresolved.
-
-\subsection{The Gain Does Not Generalize to All-to-All}
-
-Small-message all-to-all changes little between the plain and symmetric 2.31.2 configurations, and both are slower than 2.18.5 over the supplied 64\,B--32\,KiB cells. Larger messages show a modest benefit; at 16\,MiB the symmetric configuration is approximately 1.19 times faster than plain 2.31.2.
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=\textwidth]{figures/results/nccl-preliminary-alltoall.png}
-\caption{All supplied preliminary all-to-all medians. The size convention is retained from the source summary and is not equated with the main per-peer sweep.}
-\label{fig:m-nccl-preliminary-alltoall}
-\end{figure}
-
-Source-directory observations alone cannot establish which NCCL kernel produced a timing. Host collectives, grouped point-to-point calls, and user device-API kernels are different paths \cite{nvidia_nccl_collectives_2026,nvidia_nccl_registration_2026}. The reported inter-node proxy regressions and GDAKI stalls lack timing tables and diagnostic logs, so they supply no numerical comparison or established failure cause. The clearest follow-up is therefore a verified one-double intra-node reduction, followed by a reduction-only application change if its benefit persists.
