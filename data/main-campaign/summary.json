@@ -1,0 +1,48 @@
+{
+  "benchmark_cells": {
+    "pingpong": 276,
+    "halo_1d": 1512,
+    "allreduce": 1127,
+    "alltoall": 833,
+    "cg_step": 210
+  },
+  "allocations_per_cell": {
+    "pingpong": {
+      "5": 276
+    },
+    "halo_1d": {
+      "5": 1512
+    },
+    "allreduce": {
+      "5": 1127
+    },
+    "alltoall": {
+      "3": 833
+    },
+    "cg_step": {
+      "3": 210
+    }
+  },
+  "ucc_matched_cells": 537,
+  "solver_status": {
+    "valid": 507
+  },
+  "solver_by_backend": {
+    "acg-cg-mpi": 88,
+    "acg-cg-nccl": 90,
+    "acg-cg-nvshmem": 86,
+    "acg-cg-oshmpi": 90,
+    "acg-cg-single": 63,
+    "acg-device-nvshmem": 90
+  },
+  "multi_rank_cg_winners": {
+    "cuda_nccl": 5,
+    "oshmpi": 25
+  },
+  "reduction_mape_percent": {
+    "Bump_2911/cuda_mpi": 9.1783,
+    "Bump_2911/cuda_nccl": 10.4619,
+    "Queen_4147/cuda_mpi": 11.1468,
+    "Queen_4147/cuda_nccl": 7.807
+  }
+}

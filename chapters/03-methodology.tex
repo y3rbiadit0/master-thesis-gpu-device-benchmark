@@ -2,203 +2,241 @@
 
 \section{Research Design}
 
-The experimental design follows three levels of increasing application context. Isolated microbenchmarks first characterize primitive and structured communication patterns over message-size and topology sweeps. A composite \texttt{cg\_step} benchmark then executes the communication skeleton of one CG iteration. Finally, the complete aCG application combines communication with sparse matrix--vector multiplication, vector operations, convergence tests, and repeated dependencies. GPU-initiated NVSHMEM neighbor kernels and the monolithic device-side solver provide the initiation evidence for RQ1. For RQ2, direct NVSHMEM and OSHMPI measurements and their application integration expose one-sided performance and programming trade-offs relative to MPI and NCCL. The oneCCL OSHMPI backend, NVSHMEM foundation, and grouped NCCL implementation additionally provide construction and semantic evidence about a common interface; only the complete oneCCL OSHMPI and NCCL paths contribute performance measurements through that interface. RQ3 combines application-transfer evidence from the extended aCG suite with the separate CUDA--SYCL solver-time comparison.
+The evaluation follows a candidate communication path from an isolated operation to a complete application. Microbenchmarks first locate its favorable message-size and placement regimes. A composite \texttt{cg\_step} then tests whether those observations explain a sequence containing halo exchange, computation, and scalar reductions. Finally, aCG tests the prediction with a sparse partition, application dependencies, and convergence. The purpose of increasing application context is to establish which properties a benchmark must preserve to provide useful selection guidance.
 
-The unit of comparison is a complete runtime stack. ``MPI'' below means the installed GPU-aware HPC-X Open MPI over UCX, and ``oneCCL'' is always qualified by its NCCL or OSHMPI backend. This avoids attributing to an API a result that may have been caused by a transport, collective component, progress engine, or staging policy.
+The unit of comparison is a configured runtime stack. Direct MPI denotes GPU-aware HPC-X Open MPI over UCX; oneCCL is qualified by its NCCL or OSHMPI backend. Device invocation is evaluated through persistent NVSHMEM neighbor kernels and the monolithic NVSHMEM solver. These implementations differ from host-driven alternatives in more than invocation mode, so the comparison identifies performance regimes without treating every difference as an initiation-only effect.
 
-\subsection{Research Questions, Artifacts, and Evidence}
+\subsection{Research Questions and Evidence}
 
-Table~\ref{tab:m-artifact-evidence} maps the five contributions to their evidence. The SHMEM-family oneCCL contribution contains two branches with different readiness levels. Repository links identify the software artifacts, not necessarily the exact source revision of every archived run; campaign claims refer to the measured configurations described below.
+Table~\ref{tab:m-artifact-evidence} connects the research questions to the measurements and implementation evidence. For RQ2, programming requirements are assessed through allocation, remote addressing, dependency handling, completion, and validation of the adapters. This is a qualitative assessment of concrete integration work, rather than a developer-productivity experiment.
 
 \begin{table}[htbp]
 \centering
-\caption{Software artifacts and the evidence they provide for the research questions.}
+\caption{Evidence used to answer the research questions.}
 \label{tab:m-artifact-evidence}
 \footnotesize
-\begin{tabularx}{\textwidth}{lYYY}
+\begin{tabularx}{\textwidth}{lYY}
 \toprule
-Contribution & Artifact & Evidence & Boundary\\
+Question & Evidence & What the comparison establishes\\
 \midrule
-1 (RQ1--RQ3) & \href{https://github.com/y3rbiadit0/gpu-comm-benchmark}{CUDA/SYCL benchmark} & Seven stacks; primitive, composite, and direct SHMEM comparisons & Different algorithms and completion semantics; MoE unmeasured\\
-2 (RQ2) & \href{https://github.com/y3rbiadit0/oneCCL/tree/fix/nccl_group_support}{Grouped NCCL dispatch} & Group semantics, correctness tests, measured oneCCL/NCCL path & Host-initiated; no device-API comparison\\
-3 (RQ2) & \href{https://github.com/y3rbiadit0/oneCCL/tree/feat/oshmpi}{oneCCL/OSHMPI} & Implemented operations and benchmark measurements & Blocking symmetric staging; no asynchronous overlap\\
-3 (RQ2) & \href{https://github.com/y3rbiadit0/oneCCL/tree/feat/nvshmem_collectives}{oneCCL/NVSHMEM foundation} & One-/two-node bootstrap, lifecycle, and staging validation & Public collectives unsupported; no performance evidence\\
-4 (RQ2, RQ3) & \href{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}{aCG OSHMPI communicator} & Solver validation and one-sided integration trade-offs on two matrices & OpenSHMEM halo, MPI scalar reductions; monolithic NVSHMEM changes execution model\\
-5 (RQ3) & \href{https://github.com/y3rbiadit0/acg-sycl}{SYCL aCG} & CUDA--SYCL performance retention through reported solver-time ratios & NVIDIA only; distinct reporting policy\\
+RQ1 & Primitive and composite measurements; persistent NVSHMEM kernels; monolithic aCG & Favorable regimes of the evaluated execution paths\\
+RQ2 & Direct SHMEM measurements; grouped NCCL and OSHMPI adapters; NVSHMEM runtime validation & Complete-path costs and required semantic adaptations\\
+RQ3 & Matched reduction costs, solver scaling, phase measurements, and CUDA--SYCL report & Predictive accuracy, limits of halo representation, and implementation performance retention\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-RQ1 is answered through relative performance regions and their implementation context, rather than a same-algorithm initiation-only experiment. RQ2 combines timing evidence for completed direct and oneCCL paths with inspection of the implemented memory, initiation, synchronization, and progress contracts. Programmability is assessed qualitatively through the required allocations, remote addressing, completion operations, and integration changes; runtime validation establishes whether these paths function, while the NVSHMEM oneCCL foundation supplies no collective-performance evidence. RQ3 tests four outcomes: agreement of matched reduction costs, representation of halo communication, the complete solver ranking including convergence effects, and CUDA--SYCL performance retention on the evaluated platform. The preliminary NCCL study provides a candidate for later matched experiments, not an additional aCG validation result.
+The analysis distinguishes the archived performance campaign from later implementation changes. In particular, the measured OSHMPI \texttt{cg\_step} stages reductions to host memory without copying the results back to the GPU, while the measured aCG OSHMPI communicator uses MPI scalar reductions. Current source changes implement a complete staged round trip in both programs, but have no validated Leonardo performance results. They are candidates for a matched follow-up, not replacements for the archived measurements.
 
-\section{Communication Benchmark Suite}\label{sec:benchmark-method}
+\section{Platform and Evaluated Configurations}\label{sec:eval-environment}
 
-The benchmark suite is organized by pattern rather than by library. Every implementation produces a common machine-readable record containing the backend, topology, logical byte count, elapsed time, bandwidth, validation result, and distribution statistics. Backend-specific code is kept below this reporting layer, allowing equivalent operations to be launched through a common experiment matrix.
+All measurements use Leonardo's Booster partition at CINECA: four A100 GPUs per node, direct intra-node NVLink connections, and an InfiniBand HDR network, as described in Section~\ref{sec:leonardo}. One process controls one GPU. A topology label \texttt{$N$n$G$g} denotes $N$ nodes with $G$ ranks and GPUs per node. The campaign spans one to 32 GPUs.
 
-\subsection{Evaluated Stacks}
+\subsection{Runtime Stacks and Software Versions}
 
-Table~\ref{tab:m-evaluated-stacks} lists the seven measured runtime configurations. CUDA MPI, SYCL MPI, NCCL, NVSHMEM, and direct OSHMPI are built from separate source implementations. The two measured oneCCL configurations compile the same SYCL benchmark source against different NCCL and OSHMPI builds. The oneCCL/NVSHMEM foundation is evaluated for construction, bootstrap, staging, and failure behavior only and is therefore not counted as a benchmark runtime configuration.
+The benchmark compares seven source implementations or backend builds (Table~\ref{tab:m-evaluated-stacks}). The two oneCCL paths compile the same SYCL benchmark source against different backends. The oneCCL/NVSHMEM foundation is validated for runtime construction and staging only and is not an eighth performance configuration.
 
 \begin{table}[htbp]
 \centering
-\caption{Runtime stacks evaluated by the communication benchmark on Leonardo.}
+\caption{Benchmark runtime identifiers and their communication paths.}
 \label{tab:m-evaluated-stacks}
 \footnotesize
-\begin{tabularx}{\textwidth}{lYYY}
+\begin{tabularx}{\textwidth}{lYY}
 \toprule
-Harness name & Compute interface & Communication path & Launcher\\
+Identifier & Compute interface & Communication path\\
 \midrule
-\texttt{cuda\_mpi} & CUDA & HPC-X GPU-aware MPI & \texttt{srun}\\
-\texttt{sycl\_mpi} & SYCL & HPC-X GPU-aware MPI & \texttt{srun}\\
-\texttt{cuda\_nccl} & CUDA & NCCL & \texttt{srun}\\
-\texttt{cuda\_nvshmem} & CUDA & NVSHMEM & \texttt{srun}\\
-\texttt{oshmpi} & CUDA & OSHMPI over HPC-X/UCX & \texttt{srun}\\
-\texttt{sycl\_oneccl} & SYCL & oneCCL over NCCL & \texttt{mpirun}\\
-\texttt{sycl\_oneccl\_oshmpi} & SYCL & oneCCL over OSHMPI/HPC-X & \texttt{mpirun}\\
+\texttt{cuda\_mpi} & CUDA & GPU-aware HPC-X MPI\\
+\texttt{sycl\_mpi} & SYCL & GPU-aware HPC-X MPI over USM\\
+\texttt{cuda\_nccl} & CUDA & NCCL\\
+\texttt{cuda\_nvshmem} & CUDA & NVSHMEM\\
+\texttt{oshmpi} & CUDA & OSHMPI over HPC-X MPI\\
+\texttt{sycl\_oneccl} & SYCL & oneCCL/NCCL\\
+\texttt{sycl\_oneccl\_oshmpi} & SYCL & oneCCL/OSHMPI\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-One process controls one GPU. A rank wrapper derives the local rank from Open MPI, Intel MPI, or Slurm variables and sets \texttt{CUDA\_VISIBLE\_DEVICES} to that rank. Slurm allocations request eight CPU cores per process. Open-MPI-based runs disable Slurm's one-core binding so that UCX, Open MPI, and library progress threads are not starved. The oneCCL/NCCL path uses its matching bundled MPI launcher because mixing MPI launch and runtime installations is unsafe.
-
-\subsection{Patterns and Message Sizes}
-
-Table~\ref{tab:m-benchmark-patterns} summarizes the measured patterns. Four microbenchmarks sweep powers of two from the startup-latency regime into the bandwidth regime. The application-inspired benchmarks use controlled problem descriptions, and \texttt{cg\_step} additionally sweeps its local grid size to expose the transition from communication- to computation-dominated execution.
-
 \begin{table}[htbp]
 \centering
-\caption{Communication patterns and default benchmark ranges.}
-\label{tab:m-benchmark-patterns}
+\caption{Software versions and roles in the main campaign. Source-built adapters are identified by repository and branch in Chapter~\ref{ch}; exact measured revisions are not available for every archived run.}
+\label{tab:m-eval-versions}
 \footnotesize
-\begin{tabularx}{\textwidth}{lYYY}
+\begin{tabularx}{\textwidth}{lYY}
 \toprule
-Benchmark & Communication signature & Default range & Timed/warm-up iterations\\
+Component & Version or configuration & Role\\
 \midrule
-\texttt{pingpong} & One peer, half round-trip time & 4\,B--16\,MiB & 100/20\\
-\texttt{halo\_1d} & Two-neighbor periodic ring & 16\,B--16\,MiB aggregate & 100/20\\
-\texttt{allreduce} & Global float32 sum & 4\,B--16\,MiB & 100/20\\
-\texttt{alltoall} & Equal block for every peer & 4\,B--256\,KiB per peer & 100/20\\
-\texttt{cg\_step} & Halo, stencil, two 8-byte sums & Grid side 512--8192 & 50/10\\
-\texttt{moe} & Variable-count dispatch and combine & 16,384 tokens/rank & 100/20\\
+Native toolchain & NVHPC 24.5, CUDA 12.4 & CUDA benchmarks and aCG\\
+SYCL toolchain & DPC++ 6.3, GCC 12.2, CUDA 12.2 & SYCL benchmarks and solver\\
+HPC-X & 2.19; Open MPI over UCX & Direct MPI and OSHMPI substrate\\
+UCC & 1.4.0 & Optional MPI collective component\\
+NCCL & 2.18.5 & Direct and oneCCL collectives\\
+NVSHMEM & 2.11.0, \texttt{ibrc} & Host- and device-invoked SHMEM\\
+Intel MPI & Bundled with the oneCCL/NCCL build & Launch and bootstrap; NCCL carries payload\\
+OSHMPI/oneCCL & Source-built extensions & Symmetric allocation and backend adaptation\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-The ping-pong benchmark reports one directional payload and half the round-trip time. The halo benchmark reports the aggregate logical volume of the two sends and two receives; both isolated exchanges and batches of 100 steady-state exchanges are measured. Allreduce reports the logical input size and ring-equivalent bus bandwidth. All-to-all reports a per-peer size, while its aggregate byte field includes every destination, including the local block. These conventions are not interchangeable, so comparisons are made within a pattern rather than between bandwidth values from different patterns.
+MPI and OSHMPI share an MPI installation and UCX settings, but use different operation mappings and completion schemes. Sharing a transport framework does not isolate interface overhead: MPI RMA and two-sided operations can select different protocols and progress behavior. Similarly, comparing CUDA NCCL with SYCL oneCCL/NCCL includes compute-runtime and adapter differences.
 
-The \texttt{cg\_step} benchmark block-distributes a two-dimensional grid by columns. Each iteration packs boundary columns, exchanges the nonperiodic west/east halo, computes a four-neighbor stencil, computes two local dot products, and performs two separate double-precision global sums. It intentionally omits CG vector updates and convergence. Grid sides of 512, 1024, 2048, 4096, and 8192 are swept; the logical halo volume scales with the side and excludes the reductions. With \texttt{GPU\_BENCH\_CG\_PHASES=1}, a second pass measures pack, halo, computation, and reduction separately. The pass synchronizes at each phase boundary and therefore removes overlap available to the unsplit loop. Its sum is diagnostic and is never substituted for the headline \texttt{usec} value.
+Native and direct MPI jobs use \texttt{srun}; oneCCL jobs use the MPI launcher matching their build. A rank wrapper derives the local rank and selects its CUDA device. Allocations request eight CPU cores per process, with binding configured to leave progress threads runnable. The oneCCL/NCCL bootstrap uses the TCP OFI provider across nodes; this does not make TCP its NCCL payload transport.
 
-The MoE benchmark implements top-1 routing with uniform, locality-biased, and hotspot distributions. It is part of the suite's design but is excluded from the quantitative conclusions in this chapter because the inspected tuned result set contains no complete MoE campaign.
+\subsection{Transport Availability and Verification}\label{sec:ibgda-check}
 
-\subsection{Topology Matrix}
-
-Topology identifiers use the form \texttt{$N$n$G$g}, where $N$ is the node count and $G$ the GPUs and ranks per node. Ping-pong uses \texttt{1n2g} and \texttt{2n1g}. Halo additionally uses \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}. The collective and application-inspired benchmarks also include \texttt{1n1g} as a no-communication control. The largest benchmark cell therefore contains 32 ranks on eight nodes. Single-node cells exercise NVLink, \texttt{2n1g} isolates an inter-node pair, and the remaining cells combine intra- and inter-node traffic.
-
-\subsection{Timing, Validation, and Statistics}
-
-Except for ping-pong, each rank records one elapsed-time series. Sample $i$ is reduced using the slowest rank,
-\begin{equation}
-t_i = \max_{r \in \{0,\ldots,P-1\}} t_{i,r},
-\end{equation}
-because a distributed step cannot finish before its slowest participant. The reported latency is the arithmetic mean of this reduced series; quartiles, median, standard deviation, minimum, and maximum describe the same samples. Ping-pong instead reports half of rank zero's round-trip series.
-
-The ping-pong, halo, and allreduce datasets normally contain five independently scheduled jobs per benchmark cell and three trials within each job. Across-job summaries first average the trials from one job and then report the median, quartiles, and sample standard deviation over job means. The analyzed all-to-all and final \texttt{cg\_step} datasets instead contain three jobs with three trials per cell; \texttt{cg\_step} covers 210 topology, grid-size, and backend cells. Every benchmark performs an untimed correctness check and combines the rank-local verdicts globally; every final \texttt{cg\_step} trial passed.
-
-\section{Runtime Configuration and Tuning}\label{sec:runtime-method}
-
-The MPI and OSHMPI configurations use the UCX PML, disable the legacy OpenIB BTL and HCOLL, and enable Open MPI's CUDA support. Single-node jobs select \texttt{sm,cuda,self}; multi-node jobs select \texttt{sm,rc,cuda,self}, service level~1, and two rendezvous rails. GPU Direct RDMA is requested explicitly. The benchmark uses \texttt{get\_zcopy} with a 1024-byte rendezvous threshold. Although each Leonardo node exposes four \texttt{mlx5} devices, a controlled two-versus-four-rail comparison supports the two-rail production setting: four rails harvest otherwise idle adapters for some one-GPU-per-node transfers, but reduce CUDA MPI halo bandwidth by 4--9\% when four GPUs per node already occupy the available HCAs. OSHMPI is unchanged in that saturated regime.
-
-UCC is controlled per operation. The installed library reports version~1.4.0. It is enabled for allreduce and for the tuned MPI all-to-all because it accelerates device collectives over most of their measured ranges and removes a severe small-message all-to-all collapse at 16 and 32 ranks. The policy is not uniformly optimal: on multi-node allreduce, UCC is slower below 64\,KiB and faster at and above that threshold. It is disabled for \texttt{cg\_step}; the paired eight-byte reduction sweep shows gains of 30--50\% within one node but penalties of 25--49\% on the multi-node topologies that determine the selected default. It remains disabled for MoE, whose all-to-all-v path has not been measured. This policy is part of the evaluated stack rather than a post-hoc change to individual points. A short \texttt{UCC\_COLL\_TRACE} run identifies dispatch as \texttt{CL\_BASIC \{TL\_UCP\}} for CUDA all-to-all; because it used one warm-up and two timed iterations, its first-use UCX connection costs make its timings unusable, and only the dispatch record is retained as evidence.
-
-The direct OSHMPI benchmarks additionally select where reduction operands reside. The standalone allreduce defaults to CUDA symmetric operands with UCC enabled, preserving device residency for its full payload sweep. In \texttt{cg\_step}, the reduction-memory switch defaults to \texttt{staged}: fields and halo buffers remain CUDA-resident, and the dot-product kernels produce two device-resident partials, but the reduction phase copies those two doubles to host symmetric memory and calls \texttt{shmem\_double\_sum\_to\_all} on host operands. The synthetic step does not consume the reduced values in a later kernel, so its timed path contains no return copy to the device. The alternative \texttt{device} mode allocates the partials, results, and work arrays from the OSHMPI CUDA symmetric space and reduces them directly, but it requires UCC. Without UCC, OSHMPI reaches a host Open MPI reduction operator that cannot access the device pointers, so the benchmark rejects that combination instead of allowing it to fail. The staged and device paths are therefore reported as distinct configured variants rather than silently pooled.
-
-NCCL retains its default algorithm and protocol selection; multi-node runs set service level~1. The oneCCL/NCCL configuration uses one worker, automatic worker affinity, and NCCL for payload communication. NVSHMEM uses MPI bootstrap, the \texttt{ibrc} remote transport, a 1\,GiB symmetric heap, NCCL collective dispatch, and no IBGDA. Its persistent inter-node ping-pong and halo kernels cap the cooperative grid at eight blocks to avoid overwhelming the host proxy. Direct OSHMPI uses a 1\,GiB symmetric heap, GPU features enabled, and the UCX OSC component. The oneCCL/OSHMPI configuration uses a 2\,GiB heap, a 256\,MiB staging arena, and an 8\,MiB point-to-point slot per peer.
-
-The word \emph{tuned} must be interpreted cautiously. The current harness encodes these policies, but the aggregated JSON artifacts do not preserve a complete environment snapshot, source revision, node list, or placement record. They also store the selected final configuration rather than UCC on/off as a case axis. Consequently, the UCC effect sizes rely on the separately documented paired campaign and cannot be reconstructed from the final aggregate alone; no tuned-versus-untuned difference is inferred from backend curves collected under unknown settings.
-
-\subsection{Measured IBGDA Availability}\label{sec:ibgda-check}
-
-IBGDA availability was checked directly on Leonardo compute node \texttt{lrdn3445} in job~55764638. Table~\ref{tab:m-ibgda-check} separates prerequisites already supplied by the system from the two site-level driver settings that block the transport. The version requirements follow NVIDIA's NVSHMEM installation guidance \cite{nvidia_nvshmem_install_2026}.
+The NVSHMEM path was checked at two levels: inspection of the driver prerequisites and runtime logging of the selected transport. Table~\ref{tab:m-ibgda-check} records the relevant observations against the installation guidance \cite{nvidia_nvshmem_install_2026}. Operational identifiers and diagnostic provenance are retained in the experiment records rather than used to explain the result.
 
 \begin{table}[htbp]
 \centering
-\caption{IBGDA prerequisite check on Leonardo.}
+\caption{Recorded IBGDA prerequisite observations in the evaluated Leonardo environment.}
 \label{tab:m-ibgda-check}
+\footnotesize
+\begin{tabularx}{\textwidth}{lYY}
+\toprule
+Prerequisite & Reference requirement & Recorded observation\\
+\midrule
+NVIDIA driver & At least 510.40.3 & 535.274.02\\
+Peer-memory support & \texttt{nvidia\_peermem} loaded & Loaded\\
+MLNX\_OFED & At least 5.0 & OFED-internal-23.04-1.1.3\\
+InfiniBand interfaces & Supported \texttt{mlx5} interfaces & Four devices, one port each\\
+Peer mapping override & Enabled for the documented path & Not reported in driver parameters\\
+Stream memory operations & Enabled for the documented path & Disabled\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+A two-node diagnostic run reported the \texttt{ibrc} transport. Together with the recorded configuration, this establishes that the evaluated device-issued inter-node requests were serviced by a CPU proxy. The missing prerequisite settings are consistent with the reported lack of IBGDA support on Leonardo \cite{trotter_cpu-_2025}; an \texttt{ibrc} trace by itself would establish transport selection, not the reason another transport was unavailable. Driver requirements and alternative NIC-handler modes must be checked against the actual library release before a future GPU-posted experiment.
+
+\subsection{Runtime Configuration and Sensitivity Controls}\label{sec:runtime-method}
+
+MPI and OSHMPI use UCX, with HCOLL and the legacy OpenIB component disabled. Single-node transfers select shared-memory, CUDA, and self transports; multi-node transfers additionally enable reliable-connection networking, service level 1, and two rendezvous rails. The benchmark requests GPUDirect RDMA and uses \texttt{get\_zcopy} with a 1024-byte rendezvous threshold. A separate rail-count comparison and UCC on/off controls assess these choices.
+
+UCC is enabled for standalone allreduce and the selected all-to-all configuration and disabled for \texttt{cg\_step}. This is a fixed per-pattern policy, not a best-of-two selection at each plotted point. The UCC comparison is a separate paired configuration dataset; its results explain where the policy helps and where it incurs a penalty. Diagnostic tracing is excluded from performance aggregation because tracing and first-use connection setup change the measured interval.
+
+NCCL retains default algorithm and protocol selection. NVSHMEM uses MPI bootstrap, the \texttt{ibrc} transport, a 1\,GiB symmetric heap, and NCCL collective dispatch in the benchmark. Its persistent inter-node neighbor kernels cap the cooperative grid at eight blocks to limit proxy request pressure. Direct OSHMPI uses a 1\,GiB heap and the UCX RMA component; oneCCL/OSHMPI uses a 2\,GiB heap, a 256\,MiB staging arena, and an 8\,MiB point-to-point slot per peer.
+
+OSHMPI's standalone allreduce uses CUDA symmetric operands with UCC enabled. The archived \texttt{cg\_step} instead copies each device scalar to host symmetric memory and reduces it there. A separate device/UCC variant changes operand placement, allocator, and collective configuration together. These variants are kept distinct because their difference cannot be attributed solely to reduction execution.
+
+\section{Measurement and Statistical Protocol}
+
+\subsection{Completion Boundaries and Correctness}
+
+Timed intervals include completion rather than only submission. MPI paths include blocking communication or request completion and the required device synchronization; NCCL paths wait for stream completion; oneCCL paths wait for returned events. SHMEM paths include the completion and synchronization required by their exchange protocol. Persistent NVSHMEM batches additionally include device-side signaling and waits. Setup, initialization, and the final correctness checks are outside the timed intervals.
+
+An isolated halo sample completes one exchange. A steady-state sample amortizes a batch boundary over 100 exchanges while retaining the protocol's required internal synchronization. These are different execution contracts, so the amortized result is not an estimate of raw network latency. Likewise, \texttt{cg\_step}'s phase instrumentation runs separately from its unsplit timing and introduces additional synchronization.
+
+Each implementation checks received or reduced data against its expected result and combines rank-local verdicts globally. The composite benchmark checks its stencil and dot products. The archived OSHMPI scalar check validates host reduction results; it does not establish the cost of returning those results to a subsequent GPU consumer.
+
+\subsection{Samples, Trials, and Independent Allocations}
+
+Except for ping-pong, each rank records a local elapsed-time series, and sample $i$ is summarized using the slowest rank:
+\begin{equation}
+t_i=\max_{r\in\{0,\ldots,P-1\}}t_{i,r}.
+\end{equation}
+The arithmetic mean of this series is the trial latency. Ping-pong instead reports half of rank zero's round-trip time. Repeated iterations within a trial and repeated trials within an allocation are not independent samples of cluster placement.
+
+For the principal benchmark curves, trial means are first averaged within each allocation. The plotted center is the median of those allocation means, and shading shows their minimum--maximum range. Ping-pong, halo, and allreduce cells contain five allocations with three trials each; all-to-all and \texttt{cg\_step} contain three allocations with three trials each. Ranges describe observed variation, not confidence intervals. Small differences with overlapping ranges are not treated as decisive backend advantages.
+
+The archived phase records contain aggregated phase means rather than per-allocation phase samples. Phase tables therefore compare those means with the stored unsplit mean, while headline curves use the allocation-based median. The UCC on/off CSVs likewise retain summary means and are analyzed as a separate configuration comparison. These reporting levels are stated explicitly rather than combined into one uncertainty estimate.
+
+\section{Communication Patterns and Composite Step}\label{sec:benchmark-method}
+
+\begin{table}[htbp]
+\centering
+\caption{Benchmark patterns and measurement ranges. Iteration counts are timed/warm-up defaults.}
+\label{tab:m-benchmark-patterns}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYYl}
 \toprule
-Requirement & Needed & Observed & Status\\
+Pattern & Operation & Size range & Iterations\\
 \midrule
-NVIDIA kernel driver & $\geq 510.40.3$ & 535.274.02 & available\\
-Peer-memory module & \texttt{nvidia\_peermem} loaded & loaded & available\\
-MLNX\_OFED & $\geq 5.0$ & OFED-internal-23.04-1.1.3 & available\\
-InfiniBand devices & \texttt{mlx5} & four devices, one port each & available\\
-\texttt{PeerMappingOverride} & 1 & absent from driver parameters & blocked\\
-\texttt{NVreg\_EnableStreamMemOPs} & 1 & 0 & blocked\\
+\texttt{pingpong} & Dependency-ordered peer exchange & 4\,B--16\,MiB & 100/20\\
+\texttt{halo\_1d} & Periodic neighbor exchange & 16\,B--16\,MiB aggregate & 100/20\\
+\texttt{allreduce} & Float32 sum & 4\,B--16\,MiB & 100/20\\
+\texttt{alltoall} & Equal block per peer & 4\,B--256\,KiB per peer & 100/20\\
+\texttt{cg\_step} & Halo, stencil, two FP64 sums & Global side 512--8192 & 50/10\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Both blocked settings are controlled through the site NVIDIA driver configuration and require a driver reload; they cannot be changed inside a Slurm job. A \texttt{2n1g} NVSHMEM ping-pong probe with \texttt{NVSHMEM\_DEBUG=INFO} consequently reported only \texttt{ibrc.cpp} transport lines and no IBGDA module. The inter-node RMA measurements in this thesis therefore exercise a CPU proxy that posts work requests to the NIC. This is not specific to the present campaign: Trotter et al.\ report the same absence of IBGDA support on Leonardo and MareNostrum~5 \cite{trotter_cpu-_2025}. The installed NVHPC~24.5 module supplies NVSHMEM~2.11.0, which also predates the CPU-assisted IBGDA NIC-handler route available in the 3.x series. Finally, the runtime defaults \texttt{NVSHMEM\_REMOTE\_TRANSPORT} to \texttt{ibrc}; a future IBGDA experiment must change that selection as well as enabling \texttt{NVSHMEM\_IB\_ENABLE\_IBGDA}. Changing only the latter would silently continue to measure \texttt{ibrc}.
+Ping-pong uses \texttt{1n2g} and \texttt{2n1g}. Halo adds \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}; collectives and the composite step also retain \texttt{1n1g} controls. Not every declared backend has every measured pattern: oneCCL/OSHMPI has no composite-step data. The suite also implements variable-count MoE traffic, but no complete MoE campaign is available for quantitative conclusions.
 
-\section{oneCCL Extensions}
+Payload conventions are operation-specific. Ping-pong uses one directional payload. Halo counts two sends and two receives. Allreduce reports input bytes, with bus bandwidth normalized by $2(P-1)/P$. All-to-all reports bytes per peer on its size axis and the whole per-rank send buffer, including the self block, for aggregate bandwidth. Bandwidth is recomputed from the stated payload and latency; these different conventions are not compared as physical link rates.
 
-\subsection{Grouped NCCL Point-to-Point Operations}
+\subsection{What the Composite Step Represents}
 
-The oneCCL NCCL backend is extended so that \nolinkurl{ccl::group_start} and \nolinkurl{ccl::group_end} dispatch to \nolinkurl{ncclGroupStart} and \nolinkurl{ncclGroupEnd}. The implementation handles nested groups, propagates backend errors, and returns events associated with the deferred NCCL work. This is required for mutually dependent NCCL send/receive batches and is used by the halo and all-to-all implementations.
+The composite benchmark block-distributes an $S\times S$ global grid by columns. Each iteration packs boundary columns, exchanges a nonperiodic west/east halo, computes a four-neighbor stencil and local dot products, and performs two separate global sums of one double each. The side $S$ takes values 512, 1024, 2048, 4096, and 8192. At fixed $S$, increasing rank count reduces local work; at fixed rank count, increasing $S$ increases local work quadratically and halo length linearly.
 
-\subsection{OSHMPI Backend}
+The benchmark preserves the operation sequence but omits CG vector updates, changing search directions, and convergence. Both local dot products are available before the global reductions, and the archived loop does not use the reduced scalars to form the next iterate. Thus it tests a communication/computation composition, not the complete dependency graph in Table~\ref{tab:m-cg-dependencies}. In particular, the archived staged OSHMPI path omits the host-to-device result copy required by a GPU consumer.
 
-The added OSHMPI backend is selected with \texttt{CCL\_BACKEND=oshmpi}. oneCCL collectives map to OpenSHMEM team operations where an equivalent exists: barrier to team synchronization, allreduce to typed reductions, broadcast to \texttt{shmem\_broadcastmem}, allgather to \texttt{shmem\_fcollectmem}, and all-to-all to \texttt{shmem\_alltoallmem}. Operations without a direct equivalent require composition: all-to-all-v uses one-sided puts plus synchronization, rooted reduce discards the non-root outputs of an allreduce, and reduce-scatter combines an allreduce with a local slice.
+With phase reporting enabled, a second pass measures pack, halo, computation, and reductions separately. Synchronization at phase boundaries changes both scheduling and overhead. The difference between the phase sum and unsplit time is consequently an instrumentation-sensitive diagnostic, not a direct overlap measurement.
 
-The backend initializes OSHMPI lazily and verifies that the requested rank mapping matches \texttt{SHMEM\_TEAM\_WORLD}. It uses a no-op key-value store because process management already establishes the PEs. Ordinary oneCCL buffers are staged through a grow-only symmetric arena by default; a direct path is implementation-specific and therefore not used as the portable semantic baseline. OSHMPI operations are host-driven and blocking. Pending SYCL dependencies must complete before entry, and the returned oneCCL event is already complete. Group calls preserve correctness but cannot fuse work as the NCCL backend does.
+\section{oneCCL Integration and Validation}
 
-\subsection{NVSHMEM Backend Foundation}
+\subsection{Grouped NCCL Submission}
 
-The separate NVSHMEM prototype is selected with \texttt{CCL\_BACKEND=nvshmem} when oneCCL is built with optional NVSHMEM support. It accepts only CUDA-backed SYCL device communicators; host communicators continue to use the native backend. The implementation validates device and context membership, reuses oneCCL's key-value store to distribute an NVSHMEM unique identifier, checks PE/rank agreement, tracks whether oneCCL owns NVSHMEM initialization, and creates one process-global fixed symmetric arena. Device and shared USM buffers can be copied through deterministic chunks in that arena without requiring application-side NVSHMEM allocation.
+The NCCL adapter propagates \texttt{ccl::group\_start} and \texttt{ccl::group\_end} to the corresponding NCCL calls. Validation covers dependent send/receive batches, nested groups, deferred completion events, and error propagation. The relevant criterion is that a complete batch can be submitted and its completion observed correctly; halo and all-to-all benchmarks then exercise the resulting path under load.
 
-The implementation was validated in three bounded stages on Leonardo. A mixed DPC++/NVCC spike executed an NVSHMEM on-stream reduction on a native CUDA stream extracted from a SYCL queue and observed completion through a SYCL event on one and two nodes. Backend-selection tests then verified optional builds, CUDA communicator construction, native host-communicator behavior, and explicit rejection when NVSHMEM support is absent. Finally, one- and two-node runtime tests covered UID bootstrap, communicator reuse, shared/device USM staging below and above arena-lane boundaries, expected host-pointer rejection, and ownership-safe finalization.
+\subsection{OSHMPI Adapter}
 
-This status is narrower than the OSHMPI backend. Public oneCCL barrier, collective, point-to-point, and split operations still report unsupported-operation errors; collective dependency handling and returned-event semantics remain unimplemented. No oneCCL/NVSHMEM performance result appears in this thesis. The standalone validated collective spike is host-enqueued through \texttt{nvshmemx\_*\_on\_stream}, not kernel-initiated. Together, the spike and runtime foundation establish compiler, bootstrap, memory, and lifecycle prerequisites for a later collective implementation and a separate device-initiated prototype.
+The OSHMPI adapter maps collectives to OpenSHMEM operations where equivalents exist and composes the remainder. For example, all-to-all-v uses puts and synchronization, rooted reduce discards non-root allreduce outputs, and reduce-scatter retains a slice of an allreduce result. Ordinary application operands are staged through a grow-only symmetric arena. The adapter validates rank agreement with the supported world team.
 
-\section{Application-Level Validation with aCG}\label{sec:acg-method}
+Pending SYCL dependencies complete before the host-driven OpenSHMEM call. The returned event is already complete, so the adapter satisfies completion correctness but does not preserve asynchronous submission. Grouping retains call semantics without NCCL-style launch fusion. Benchmark measurements include this staging and synchronization, which are part of the implemented common-interface path.
 
-aCG is a suite of GPU-accelerated iterative solvers based on Conjugate Gradient and pipelined CG \cite{trotter_cpu-_2025}. This work extends its CUDA host-initiated solver with an OSHMPI communicator. The controlled campaign compares host-initiated MPI, NCCL, NVSHMEM, and OSHMPI versions of the same solver, and includes the monolithic device-side NVSHMEM solver as a separate execution-model experiment. The result tree contains 507 completed logs: 354 strict four-communicator trials, 90 device-NVSHMEM trials, and 63 single-GPU controls. The device variant is informative about GPU initiation but is not a strict communicator substitution.
+\subsection{NVSHMEM Runtime Foundation}
 
-The sparse matrix is partitioned once with METIS and the same stored partition is reused by every communicator. This prevents partition variation from changing halo volume or load balance. Two SuiteSparse matrices are used: Bump\_2911 with 2,911,419 rows and 127,729,899 full symmetric nonzeros, and Queen\_4147 with 4,147,110 rows and 329,499,284 full symmetric nonzeros. Runs use 1, 2, 4, 8, 16, and 32 processes, corresponding to one GPU per process through eight four-GPU nodes.
+The NVSHMEM prototype validates CUDA-backed SYCL communicator selection, UID distribution through oneCCL's key-value store, runtime ownership, symmetric staging, and finalization. A separate mixed DPC++/NVCC experiment executed an on-stream reduction and observed completion through a SYCL event on one and two nodes. Runtime tests additionally exercised communicator reuse, device/shared USM staging, and explicit rejection of unsupported configurations.
 
-Every trial uses a manufactured solution with seed~101, relative residual tolerance $10^{-6}$, zero absolute tolerance, and a maximum of 100,000 iterations. Three trials are launched per job. Following the reference aCG evaluation, the primary report selects the fastest converged trial and computes FLOP/s per GPU from the matrix dimensions, nonzeros, and executed iteration count. Throughput is preferred to solver time when comparing communicators because floating-point reduction order can change the number of iterations. A second, median-based analysis is retained as a sensitivity check rather than mixed into the primary ranking. For MPI, whose regimes can change within one allocation, job-level minimum, median, and maximum are reported instead of treating a pooled median as a representative execution.
+These tests establish prerequisites for a backend. Public collective, point-to-point, barrier, and split operations remain unsupported, and collective dependency/event handling is incomplete. The prototype supplies integration evidence for RQ2 but no collective-performance measurements or device-initiated oneCCL result.
 
-\subsection{OSHMPI Communication Path}
+\section{Application Validation with aCG}\label{sec:acg-method}
 
-The OSHMPI port allocates CUDA-resident symmetric halo buffers through the OSHMPI space extension. Remote buffer offsets are exchanged once through MPI. Each halo exchange then synchronizes the CUDA stream, enters a global barrier, issues one blocking put per recipient, calls \texttt{shmem\_quiet}, enters a second barrier, and unpacks the received data. Scalar reductions synchronize the stream and use CUDA-aware \texttt{MPI\_Allreduce}; they do not use OpenSHMEM reductions.
+\subsection{Problem and Execution Matrix}
 
-This path is deliberately simple but has an important consequence: the complete transfer finishes in the halo-begin function before the local sparse matrix--vector product starts, so OSHMPI cannot overlap halo communication with local computation. By contrast, host NVSHMEM enqueues put-with-signal and reduction operations on the stream, while the monolithic NVSHMEM variant issues communication from GPU code. OSHMPI is not available to the device-side solver because the required CUDA atomics and signal implementation are not functional in the evaluated upstream version.
+The aCG suite provides CG and pipelined CG implementations \cite{trotter_cpu-_2025}. This campaign compares the host-initiated CG solver with MPI, NCCL, NVSHMEM, and OSHMPI communicators and separately evaluates the monolithic device-NVSHMEM solver. Both matrices use fixed METIS partitions reused across communicators: Bump\_2911 has 2,911,419 rows and 127,729,899 full symmetric nonzeros; Queen\_4147 has 4,147,110 rows and 329,499,284 full symmetric nonzeros. Runs use 1, 2, 4, 8, 16, and 32 GPUs.
 
-The aCG campaign shares the benchmark's HPC-X and UCX policy but retains two historical differences for comparability with already collected results: the UCX rendezvous threshold is 16,384 bytes, and \texttt{NVSHMEM\_DISABLE\_NCCL=1}. The latter forces host NVSHMEM reductions away from the NCCL-dispatched path used in the microbenchmark and is treated as a configuration limitation, not as an inherent property of NVSHMEM. If the solver performs $K$ iterations, its counters contain $K+1$ halo exchanges and $2K+2$ allreduces because setup and finalization add one operation of each kind. The steady iteration nevertheless has exactly the same high-level skeleton as \texttt{cg\_step}: one halo exchange followed by two eight-byte global sums.
+The manufactured solution uses seed 101, relative residual tolerance $10^{-6}$, zero absolute tolerance, and a limit of 100,000 iterations. The retained archive contains 507 completed solver logs: 354 host-communicator trials, 90 device-NVSHMEM trials, and 63 single-GPU controls. These counts describe available completed records; incomplete attempts do not become successful trials by omission. Backup copies are excluded from the analysis.
 
-\subsection{Application Metrics and Correctness}
+\subsection{Measured OSHMPI Path and Configuration Matching}
 
-The primary metrics are solver time and GFLOP/s per GPU. CUDA-event profiling additionally reports sparse matrix--vector multiplication, dot product, vector update, residual norm, copy, halo, allreduce, and residual ``other'' time. These labels are not all direct operation costs. The halo column brackets only the wait remaining after potential overlap; OSHMPI completes communication before that interval, so most of its communication appears in ``other''. NVSHMEM can fuse communication into the matrix--vector phase. Allreduce includes both collective execution and rank-arrival skew.
+The measured OSHMPI communicator allocates CUDA symmetric halo buffers, exchanges remote offsets during setup, and executes a stream synchronization, global barrier, blocking puts, quiet, and a second barrier before unpacking. The transfer completes in the halo-begin function before local SpMV. Its scalar reductions use CUDA-aware \texttt{MPI\_Allreduce}. Consequently, the application's OSHMPI label identifies a halo implementation, not an OpenSHMEM scalar-reduction measurement.
 
-Correctness requires successful termination and a relative residual below $10^{-6}$. Iteration counts, residuals, and manufactured-solution error are retained for every communicator. They are used to distinguish numerical effects of reduction order from communication corruption.
+The solver uses a 16,384-byte UCX rendezvous threshold and disables NCCL dispatch beneath NVSHMEM. These differ from the benchmark defaults. Separate sensitivity controls assess their effects; the archived default NVSHMEM reduction is not treated as a configuration-matched solver prediction. The monolithic device solver also changes computation and synchronization organization, so it is evaluated as an execution-model variant rather than a strict communicator substitution.
 
-\subsection{CUDA--SYCL Performance Retention}
+\subsection{Solver Metrics and Prediction Accuracy}
 
-The SYCL implementation developed in this work addresses the performance-retention part of RQ3 through a separate implementation comparison. MPI provides its distributed runtime and halo exchange, while a solver option changes only the scalar reductions between MPI and oneCCL. Its available report uses median solver time and covers Bump\_2911 through 16 GPUs, so those values are reported separately and are not pooled with the fastest-trial CUDA campaign. Performance retention is assessed through the reported SYCL-to-CUDA MPI solver-time ratios at each GPU count: a ratio of one indicates equal time, and a ratio above one indicates additional time in the SYCL implementation.
+Solver time is the time-to-solution measure. Time per iteration and analytical throughput help distinguish execution cost from changes in convergence. Following the reference study, the primary scaling view selects the fastest residual-valid completed trial per matrix, backend, and rank count. For standard CG, the analytical work is
+\[
+W(K)=2(K+1)\,\mathrm{nnz}+2(5K+1)n,
+\]
+where $K$ is the executed iteration count, $n$ the row count, and $\mathrm{nnz}$ the full nonzero count. Per-GPU throughput is $W(K)/(P T)$; it is not a hardware-counter measurement. All retained trial times remain available, and MPI variability is shown by allocation medians and ranges rather than a line connecting rare fast trials.
 
-The comparison also serves as a portable-compute control for interpreting communication rankings. The composite benchmark's communication-free cases provide supporting evidence about kernel and submission costs, but do not isolate the causes of the complete solver's performance gap. The available configurations and distinct reporting policies constrain attribution and statistical comparison. The resulting evidence concerns performance retained by this SYCL implementation on NVIDIA A100 GPUs, rather than performance portability across accelerator vendors.
+Correctness is checked from the recorded residual relative to the initial residual and the requested tolerance, together with successful completion. Manufactured-solution error is retained as a separate numerical diagnostic. Missing correctness fields are distinguished from failures. The parser does not infer convergence solely from a process exit code.
 
-\section{Preliminary NCCL Version and Memory-Path Comparison}\label{sec:nccl-preliminary-method}
+Phase timers have backend-dependent meanings. The halo timer brackets the wait remaining at halo-end, whereas OSHMPI's blocking communication appears mainly in \emph{other}. NVSHMEM may include communication in its SpMV interval, and allreduce timing includes arrival skew. These columns cannot simply be added into an overlap-free network-cost model.
 
-A separate exploratory \texttt{nccl-tests} study compares three configurations on one Leonardo Booster node with four A100 GPUs: NCCL~2.18.5 from NVHPC~24.5 with \texttt{cudaMalloc}; NCCL~2.31.2 with \texttt{cudaMalloc}; and NCCL~2.31.2 with \texttt{ncclMemAlloc} and symmetric window registration. The available author-supplied note, \emph{GDAKI) Results}, reports median latency over three runs. All 21 allreduce and 19 all-to-all size rows are transcribed in \path{data/nccl-preliminary.csv}, with provenance in the adjacent \path{nccl-preliminary.md}. These are summary data from a later experiment, not additional samples of the main seven-stack campaign.
+For scalar prediction, half of the stored two-reduction \texttt{cg\_step} phase at side 512 is compared with aCG's accumulated allreduce time divided by its recorded operation count. The latter includes operations outside the steady loop: a run with $K$ iterations records $2K+2$ reductions. MPI is paired with the MPI scalar calls in the OSHMPI-halo solver, and NCCL with the NCCL solver. Mean absolute percentage error over the five matched rank counts is
+\[
+\mathrm{MAPE}=\frac{100}{5}\sum_{P\in\{2,4,8,16,32\}}
+\left|\frac{\widehat{t}_P}{t_P}-1\right|.
+\]
+This is a descriptive phase-cost check across increasing scale, not a fitted or held-out prediction of total solver time. Matching eight bytes in the float32 microbenchmark alone does not establish equivalence to a one-double sum; the composite-to-solver pairing matches datatype as well as payload.
 
-The three-way comparison distinguishes an observed version change (2.18.5 plain versus 2.31.2 plain) from a combined allocation/registration change within 2.31.2. It does not isolate allocation, registration, or algorithm selection individually. The note labels the last configuration ``LSA'', but symmetric registration can be used by host-called collectives as well as by user device-API kernels \cite{nvidia_nccl_registration_2026,nvidia_nccl_device_2026}. Without the tested source revision, launch commands, implementation selector, and kernel trace, the invocation mode is unresolved; this thesis therefore calls it the \emph{symmetric configuration}.
+\subsection{Supporting CUDA--SYCL Comparison}
 
-The summary does not record datatype, reduction operator, process/thread layout, in-place mode, timing/completion boundary, warm-up counts, correctness output, or inclusion of setup costs. It reports 1.0--1.1-fold run spread except for a 1.5-fold anomaly at 4\,B in plain NCCL~2.31 allreduce, attributed in the note to warm-up. Individual trials and the spread definition are unavailable, so no confidence intervals or error bars are reconstructed. The 8\,B allreduce cell is not assumed to represent one FP64 scalar. Size labels are retained exactly: the all-to-all bandwidth at 16\,MiB is consistent with total per-rank buffer size and a $(P-1)/P$ bus factor at $P=4$, but this convention needs confirmation from the original records before comparison with the main per-peer sweep. Reported speedups below are recomputed as reference latency divided by symmetric latency using the rounded medians.
+The separate Bump\_2911 report compares CUDA and SYCL solver-time medians at 1, 4, 8, and 16 GPUs, using three repeats per configuration. MPI supplies distributed execution; the SYCL implementation also supports a selectable oneCCL scalar-reduction path. The reported CUDA--SYCL ratios use medians on both sides and are kept separate from the main fastest-trial campaign.
 
-\section{Reproducibility Policy}\label{sec:reproducibility}
+The available comparison report contains timing and iteration summaries, but its CUDA parser does not populate the convergence flag or normalized residual. The resulting zero converged-count field represents missing classification, not demonstrated nonconvergence. Until the original comparison logs are reprocessed, these ratios are retained as supporting implementation timings rather than a newly verified equal-accuracy comparison. Kernel, memory, and orchestration contributions are not isolated by the ratios alone.
 
-The cluster directories in both repositories are the executable specification of the experiments. They record module stacks, build presets, launcher choice, topology matrices, process-to-GPU mapping, transport variables, solver flags, and result-reduction scripts. OSHMPI and oneCCL must use the same MPI installation, and the aCG campaign prints the selected transport configuration. Remaining provenance gaps in the archived aggregates are reported explicitly rather than reconstructed from assumptions.
+\section{Exploratory NCCL Protocol}\label{sec:nccl-preliminary-method}
 
-For the preliminary NCCL study, the archived transcription and plotting script reproduce the presentation only. They do not establish the missing runtime metadata or replace the raw trial logs. The figures are generated from the CSV by \path{tools/plot_nccl_preliminary.py} at the repository root.
+A later intra-node study compares NCCL 2.18.5 with ordinary allocation, NCCL 2.31.2 with ordinary allocation, and NCCL 2.31.2 with \texttt{ncclMemAlloc} and symmetric window registration on four A100 GPUs. The available summary contains three-run median latencies for 21 allreduce and 19 all-to-all sizes. Comparing versions and comparing the two 2.31.2 configurations answer different questions; the latter still combines allocation and registration.
+
+Symmetric buffers do not establish that user kernels invoked NCCL's device API \cite{nvidia_nccl_registration_2026,nvidia_nccl_device_2026}. Datatype, exact source and launch configuration, completion boundary, warm-up, correctness output, and individual trial timings are unavailable. No uncertainty intervals are reconstructed, and the supplied eight-byte cell is not assumed to be one FP64 sum. The study identifies candidates for follow-up rather than modifying the main campaign's ranking.
+
+\section{Reproducibility and Evidence Boundaries}\label{sec:reproducibility}
+
+The reconciled archive in \path{data/main-campaign/} contains benchmark allocation summaries, all retained aCG trial records, selected solver results, and reduction-prediction pairs. A manifest records source-file hashes and the repository revisions inspected during import. Those revisions identify the imported archive, not necessarily the source used for each measured run. \path{tools/rebuild_main_evidence.py} regenerates the data and table rows; \path{tools/plot_main_evidence.py} renders the figures. The accompanying README specifies the aggregation and exclusion policies.
+
+Auxiliary rail, scalar-placement, forced-algorithm, and runtime-dispatch controls survive partly as analysis records rather than complete per-trial datasets. Their reported effects are identified as such and are not assigned reconstructed error bars. The original IBGDA job and node identifiers are retained in \path{data/experiment-notes.md}. Preliminary NCCL transcription and plotting provenance are recorded separately in \path{data/nccl-preliminary.md}.
+
+The next measurements are defined in \path{experiments/targeted-controls.md}: complete FP64 reduction round trips and an irregular-halo replay derived from aCG communication graphs. They address the remaining comparison gaps without treating current unmeasured source changes as experimental evidence.

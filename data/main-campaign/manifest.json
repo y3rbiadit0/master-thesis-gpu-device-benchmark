@@ -1,0 +1,2644 @@
+{
+  "schema_version": 1,
+  "input_repository_revisions": {
+    "benchmark": "c8ed32b890420ec360397d240cd12b54aaa6c093",
+    "acg": "314700ff2333f912c6d69027044a029805c41344"
+  },
+  "measured_source_revision": null,
+  "benchmark_policy": "median of within-allocation trial means; range over allocation means",
+  "phase_policy": "stored phase means; per-allocation phase samples unavailable",
+  "solver_policy": "fastest residual-valid completed trial per matrix/backend/rank count; retain all trials",
+  "excluded_directory": "acg-cg-oshmpi-backup-mpi (backup, not an independent campaign)",
+  "sources": [
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/1. microbenchmarks/pingpong/points.json",
+      "sha256": "3408995e852379c59e2ce4d4545fd9f22bb8df3cce37ae4a9c0d59485f3be89d"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/1. microbenchmarks/halo_1d/points.json",
+      "sha256": "c545b5d6c3b3e11de81b21c86e406a4c83ceae7f4f21870d9ea4d8a699656291"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/1. microbenchmarks/allreduce/points.json",
+      "sha256": "1fdc3ea0eefbe3475bc0a7ccbe65bd06a82778b4fd2cf9707dfdc3a23c1c9f6e"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/1. microbenchmarks/alltoall/points.json",
+      "sha256": "f559df0dc56c49b2f0e458d2edda36a6405e00c557d90824c92a85e71a38765e"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/2. application_benchmark/cg_step/cg-points.json",
+      "sha256": "8468d1cfa226573232a719314a8afab1baadf06a390023c0a15c7e50ddfafa14"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/3. ucc_comparison/ucc-on.csv",
+      "sha256": "49e841b46a3ef83c8845a4a896ab60c5d819c3342692f62d8d945b5309b885dd"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/3. ucc_comparison/ucc-off.csv",
+      "sha256": "ecd816675dad6e2a9748e3fef9e8fc8bfc9a46071530d0e480c317ba16e94993"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/resume.md",
+      "sha256": "6cce4acca176a8a5ac92c3400546bdaf0dfe8e0fa33072eb0824bc6dbd0ea8db"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/acg-correlation.md",
+      "sha256": "69c821830cf8c440c13b175b224fb216b17576e970ccae70aefa701877066a62"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407806-1-stderr.txt",
+      "sha256": "383e880812c243e75f7334948666737bd1784f5b247afd07ab5b04e31bb014dd"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407806-2-stderr.txt",
+      "sha256": "5fef69fa9b6960c2b7ba6d25465cfa3527de855612e3ed40f64cf28c931e636d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407806-3-stderr.txt",
+      "sha256": "da6b21be6b504ee4b54b56940b3fc892ef182432822b9a2f152801c3c4fe4e6e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407812-1-stderr.txt",
+      "sha256": "650a0aaef408d156ae5269c8650e660d8fb13c9af7006930a9cf86f15b638a86"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407812-2-stderr.txt",
+      "sha256": "dba3568f8470074df14417647e5d169e65ba5bcffcc999df3abe5f3b5384c601"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407812-3-stderr.txt",
+      "sha256": "97feb6d9a9bd6507912ceff34cb48284d27c8a9727e37c57edf113205e4d044a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407822-1-stderr.txt",
+      "sha256": "9c4cee4412329a2588ff9ab3a342faa2da599e7af4b5b8cc40b624b7597ff767"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407822-2-stderr.txt",
+      "sha256": "816a17c52c161ebe3e3a6612ce7471341a746fca73f622cb75f7cf8d43e5a368"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407822-3-stderr.txt",
+      "sha256": "69512f5faa39f493e9792ecd68eecdcedcbb630f8b20ca3d7c483e53f1a79172"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407807-1-stderr.txt",
+      "sha256": "04d756d09dfc8888a262c7ba1d1cd95a87228ae0c8e420f37a1e8f083b7c41d6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407807-2-stderr.txt",
+      "sha256": "8b3d240955659b75abf60be404959fd9878c909798a5e5188f3ba5872ce16cc8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407807-3-stderr.txt",
+      "sha256": "dca2bbbb8493c40b70ebd37d003d77dc3327bac548921682901916bed148cf0a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407813-1-stderr.txt",
+      "sha256": "4c42d1f247ed1ba941bfdd4ff2b81a81bb7b6bf56446b513d60d101b677245ec"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407813-2-stderr.txt",
+      "sha256": "e9638e3a02d9d5bbac0572834f9e49edd743fff7bac741d7ea08baaa0a85ff4d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407813-3-stderr.txt",
+      "sha256": "0ba628b6522590eb3be13ec37ae7cf20a684c6a390b5528a6cb7e06a862385cd"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407823-1-stderr.txt",
+      "sha256": "5bc9dbb76837fa8112b22f98bd1766d7b0594ba27bd033023ac78fd9cba53ab3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407823-2-stderr.txt",
+      "sha256": "c5060e10283ac632c54884dd5e3fd7fc124fb732d54ee3ec3fd9854dddd60a8b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407823-3-stderr.txt",
+      "sha256": "723e51682e4f1c5b4a5a301cc252e9fda94d8c625a1b41caacada213efef3196"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407808-1-stderr.txt",
+      "sha256": "4bd80c9953b7caf1259393f8717b725a54784a39ad976b5f86449431879d9c2c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407808-2-stderr.txt",
+      "sha256": "b2e64e90f298edb7dabfd3faf34c8d7072758ee71b12d1a62a05c439a8435e04"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407808-3-stderr.txt",
+      "sha256": "8b8fa95ff5b5d8e55c79a9e1ddb525b925f6e19ce7b656c2703afaf0cf1b5cf4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407815-1-stderr.txt",
+      "sha256": "ce1badfc2e4281bb559de80542acfcdb9cf0ab508db210814ed1dc68a219ceb8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407815-2-stderr.txt",
+      "sha256": "b517d401654ef7145fdefb12878156bf1c1684bb6fb29c12beea8b38454f72a7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407815-3-stderr.txt",
+      "sha256": "b1bc43b105955f099208f3915973216edb442abf92842f0f5193e7b78f5f9ee2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407824-1-stderr.txt",
+      "sha256": "42ec348c4995a2e349d91b3abcf3df412fe71dff003610fa060420844b70d0e2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407824-2-stderr.txt",
+      "sha256": "e087820eaae621364c01cfeffb1452eecac560d7fe727fc3750b1ffdff603b3f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407824-3-stderr.txt",
+      "sha256": "c2be28e3e4561c67210afa46a6a25b72192f35757bbce80e8b31f5ebf3505d79"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407809-1-stderr.txt",
+      "sha256": "1988ea9000708c38a3bcab4d3bfc99970089f9bba3c73d3a5544ed75c6dba578"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407809-2-stderr.txt",
+      "sha256": "a868f9e7fbbc77014d0b420f59448ce726ee178fe47581d46a69b8bc6aa5b06f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407809-3-stderr.txt",
+      "sha256": "49beaa0ec588b8cab8fde909fdba3cc0d781c1411149b0b92e48895eab2921ea"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407816-1-stderr.txt",
+      "sha256": "bd0a1c10a8cb460d61e6ea395b407a8ff2370fa995ac689c4879493ac56b7c64"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407816-2-stderr.txt",
+      "sha256": "dcbf71087bea5958671fad1c77761a38579491bc1231907be68d0cdc97f40e86"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407816-3-stderr.txt",
+      "sha256": "a8a32b5d85fda9d5177f08eedbe358224414b4a9b8b43b0f2b4889636e418a90"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407826-1-stderr.txt",
+      "sha256": "f71052d5e363e826cd9341ddeffe80ac1c21b5440e7c5afecee52e24a0159eb0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407826-2-stderr.txt",
+      "sha256": "9f7f830117f1851415f6ac79a7e8a4147b55e4cbc1cb6526236b8bfd047ec771"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407826-3-stderr.txt",
+      "sha256": "d4d534a6560811c214c510270ed34a99c4b992f355d97e1ce6fc8627c06a7ec1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407810-1-stderr.txt",
+      "sha256": "7f7f5f49530e1ff5de75b658ab56528f8cf2fdd6a1df91bab926a22dac3d1ace"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407810-2-stderr.txt",
+      "sha256": "3999d34594d8337f8b42bb6cd29dcc2e0c72e27c57df416a75fcfbaf3548dcd8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407810-3-stderr.txt",
+      "sha256": "92231f7a194240ddfcb12e0d5dc17f62b6d1ec06de0a2ebd9406de5f171933e2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407817-2-stderr.txt",
+      "sha256": "cc3d32ff76ce279192f8010fdf296f999e82d77376f303efa399e1a775514f0e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407817-3-stderr.txt",
+      "sha256": "8a05188a9fcdae18e02f36e9272493c625379f5bbd15151cbf15589a72788d02"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407827-1-stderr.txt",
+      "sha256": "29ebd04bdb4e4cefe24b87b890b1ce62469ed65e1819fe287fe2744fe1dc9bbc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407827-2-stderr.txt",
+      "sha256": "11df735826bd42a62fe0644bf092cc233ff85efd0f140dbbfb0c1dcde92638c0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407827-3-stderr.txt",
+      "sha256": "aa77d7154dd9bc97428891fe4f679a4bf6b75b9aecc2bc201b78e410651340c0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398871-1-stderr.txt",
+      "sha256": "028c478358837765052a736605a21388f6af3e85fed3a839ffe70cc7daf67eaa"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398871-2-stderr.txt",
+      "sha256": "abd2bc6def1153c32829de18c00ae9110e8c3e37ad644fe9a15d4fb485b76024"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398871-3-stderr.txt",
+      "sha256": "d0eef372648aaf7e4396ae470a2cdfdebadab4653606a1f5d0792ab886a614f3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398877-1-stderr.txt",
+      "sha256": "60940b59e6802947062da0ef2213c023aa7a2d89c21e8b42ee4f9f6af02f1b4b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398877-2-stderr.txt",
+      "sha256": "d58d876ae25d71d97752e8ad1ed50d0ac78c9741f5f3ed04a16914872b372668"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398877-3-stderr.txt",
+      "sha256": "3220f259632756558c98937623d99b313231f4bad7303122189aa3c31404539b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398883-1-stderr.txt",
+      "sha256": "2a5eb719be80a35663a95402f3969ff28373cebf71cca426c50300d963b7e3f9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398883-2-stderr.txt",
+      "sha256": "3939faea323c05d0d14e9edebbedc2e9b2424b2fee413faa07d988f5fdee695a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398883-3-stderr.txt",
+      "sha256": "b335cd864c4d83ce1db3dfd53c0f61f8dd4609525ac29ff3b59f5a57a15d38a5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398872-1-stderr.txt",
+      "sha256": "1eed5199d2a6f7032b5c61527874ffa81ce91ae095efb4a20e6ee47027058eb5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398872-2-stderr.txt",
+      "sha256": "0512ccfdea66510e4bc04b98c463bd72b63336cd0751bd66db6269581d991846"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398872-3-stderr.txt",
+      "sha256": "a0df49e929f2cc2072d68b3cb4b50fcfbcac607bb38054fcb82abd0877ca4f79"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398878-1-stderr.txt",
+      "sha256": "e928f25f707c6a2a2577b3fbadab18542984eeeaa1784423f30d5d724f08504b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398878-2-stderr.txt",
+      "sha256": "97b52c2c65071cc2f2e4244c83a3b189fdfa4357941a3d76ed725c4b2418d493"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398878-3-stderr.txt",
+      "sha256": "1fa65e450cae5c53881c2661c0bc94402852df251bb2513d808c77ae0855aef2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398884-1-stderr.txt",
+      "sha256": "4f0fad1d12699387b349b9016727934da460d80d0510459f2d9785eb62adebcd"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398884-2-stderr.txt",
+      "sha256": "051f29b52481a3cd3424e76298a243766f9dd3860dd4a5a1ce2a8bb73281213d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398884-3-stderr.txt",
+      "sha256": "8183a0a89ddb5729664581d6d976e9c5deaeb6ed53d55556bb8ea4370315bdd8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398873-1-stderr.txt",
+      "sha256": "2543af84a1ae89c4f03fc4c740a550cd7d3728afa1f99100b890648b14fe68ef"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398873-2-stderr.txt",
+      "sha256": "a37763d2477ddd19f0037e9152c4fb5dc684ab0489426333b25e9b12cda67444"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398873-3-stderr.txt",
+      "sha256": "e151127898d8baf11d51940d0201ab166a4e0485e66ab99104f7f99c6f23a02e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398879-1-stderr.txt",
+      "sha256": "2023b617bddb132fa5ab302994d974fd60983887d44129ca6a9ef2a319b86636"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398879-2-stderr.txt",
+      "sha256": "d7f5129c323e338c94f91ef1080b19a3246b9396bedf2f9e512c941dbc568b42"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398879-3-stderr.txt",
+      "sha256": "38e44131851dabdc97928304fc9c5a9cdbe35bb249f4494f3b87f90e1077befd"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398885-1-stderr.txt",
+      "sha256": "ca824b1b35d94d265004c2abb9f6e793a776f7d144771cb7f5f8dacd37e7a630"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398885-2-stderr.txt",
+      "sha256": "829fad703a0eec2ec267965353248218e1941cef45295996f375265f4a320a25"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398874-1-stderr.txt",
+      "sha256": "8f8d56e754cd3c7bd63cde79609aa5f75da7d84995fef1e040bec6f85204e608"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398874-2-stderr.txt",
+      "sha256": "a40562e405d3ddfc1b5e44034096badbe4d76faf090dad3e5cb73ea26a20bd8b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398874-3-stderr.txt",
+      "sha256": "3a203aa615121f9c7be053157fcad28c461733fb8fdcc6b572f71bf67944afcd"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398880-1-stderr.txt",
+      "sha256": "acfe2064fb80a91f5c1ce204452ff9cf43d7388efec96a6a989c9e4057ff8fd7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398880-2-stderr.txt",
+      "sha256": "adbb8624ccc7840c134b2dace673a6ca18b8c13acdba9f31671e38ae6041a6ff"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398880-3-stderr.txt",
+      "sha256": "72efdab2c18f4acceffc4c56d83aca286eb07dfa2331cc7cbca2b6cd3648b6d5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398886-1-stderr.txt",
+      "sha256": "8359cad107e1c9a85122409f2871c4d28b73ecf5829f205eef60d3a9ba5dbfc2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398886-2-stderr.txt",
+      "sha256": "f9beecf6aa7bf626b5165b4f2e4fe9cea2d31853d8860b2d1a295c3e2b47250c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398886-3-stderr.txt",
+      "sha256": "6dd6085c572d9af1fbe2c9b60177cd3f379bbb16f77d3b509b2baa322978ab00"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398875-1-stderr.txt",
+      "sha256": "fb548daf018dc6ef8cc0a551b0f5584c8e345baf80f4871cf581f292635a947a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398875-2-stderr.txt",
+      "sha256": "108cada229bc5efd58e2a421e9ebdd30c1f4bc2ea1dfa55928ae21c0020bda5b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398875-3-stderr.txt",
+      "sha256": "72ac40dd44bc71d0160244d91e45d79c37eef648baa20366514c13c9c21ea5f3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398881-1-stderr.txt",
+      "sha256": "ea00f79a966c8c5b5ff2c6d2d1ead5a19f00cee6f8521fe5b1a0a4f399d0051d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398881-2-stderr.txt",
+      "sha256": "0c51fa9f100f855e4c845358975ddb09168245e460e56d0dde783c555bb832d7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398881-3-stderr.txt",
+      "sha256": "88aee51f6595bfe347b55c5e8b940b616121cacb01938ac31f600b10957c3f30"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398887-1-stderr.txt",
+      "sha256": "a629cc016a0fd2f194f2464ab8dd1dd91f486f45ec8291486a739bd3f08a1077"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398887-2-stderr.txt",
+      "sha256": "acf8a227342b8c948c5cf59595ece8c4da3f6c527b194e4f05097bcf3515f107"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398887-3-stderr.txt",
+      "sha256": "4a5d33a2cb1bb8c7c722ebb6db92c1f004a1d734a3cece8ad72094f22a43b7f9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407131-1-stderr.txt",
+      "sha256": "72e765a02603fbcba2d457295fb1bf53f5925814e8c1272b0f49153dc692f508"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407131-2-stderr.txt",
+      "sha256": "68ba7ee614c302ff2597861b72ff2680d23c6c46ad6c72579e56716d538861ee"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407131-3-stderr.txt",
+      "sha256": "36e782fb9d7eb237badc7cd4159ec50e6ee4d1f25e847af954f09c93787044a1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407174-1-stderr.txt",
+      "sha256": "25e83f7258679707a066791c14b85d0e09539ee2a1a013c005d68d28368fe1b6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407174-2-stderr.txt",
+      "sha256": "f28b263e00e6f8421da5e8354a6f755bdaa6ca00640265cf60e9a0ccdba2ee06"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407174-3-stderr.txt",
+      "sha256": "f30cf48ecf04d8d7dcf91e525dc3f65474279a4b69b092f449d36f5596ae4c24"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407197-1-stderr.txt",
+      "sha256": "bc92f35fc165ff15b6dbc504ad5f17c5c389277230a2eef310252f9dfc127887"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407197-2-stderr.txt",
+      "sha256": "89a2a4f64039f97d28597ca02783a62961366e6eac1ec275675f0cba8f39e0b7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407197-3-stderr.txt",
+      "sha256": "5ca2fcc31caf0998a536bc20e9a567b072f1b781d611208286f428d42ac3fa57"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407133-1-stderr.txt",
+      "sha256": "7e5c3da86f83b70482a773677867ebcacf1b60ccf8b1587a74eacd08585884c2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407133-2-stderr.txt",
+      "sha256": "b45159f5eb7aa0edc7126fdbbb6c82e110693863d54bdf3123b1c0fd37e1325b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407133-3-stderr.txt",
+      "sha256": "6f5185bc41c624f086dc64835665ee6ef9cea3e79c4d77cb786056111f1e0ad5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407176-1-stderr.txt",
+      "sha256": "c1d2954a6f977102dea599ca8fc432a742dbfc8f03f52ca99fcd746446ad7209"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407176-2-stderr.txt",
+      "sha256": "9eda25c1b8eeefb92ddc6aff9befec086792730ab1ca5a4bf59126c7ec015468"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407176-3-stderr.txt",
+      "sha256": "8bb94f4f8fc6f25409eb9773125317cb55ae2fa25faab1804764713c3d2e8e72"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407198-1-stderr.txt",
+      "sha256": "473fd016cdd40bd642f28331cef925b0fd1775fba070229dfe477759fe63716d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407198-2-stderr.txt",
+      "sha256": "1e41cb58459c30c5c6aee0a237ac19d74f91e7241ac5a0c8524c237cc27f70db"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407198-3-stderr.txt",
+      "sha256": "c62eb9ceda2e9edb679c2b723b23aa6e0251f15afbb9ae474dc89eafb536c9e0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407137-1-stderr.txt",
+      "sha256": "0a410b809019a3935b50340694e5b402152a264c8562e321b78db09d0da41a07"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407137-2-stderr.txt",
+      "sha256": "4473bf282e243040323dcbf4ef3009267b44e6eddb67d23616e4792c8294c74b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407137-3-stderr.txt",
+      "sha256": "74ed9cd7316492f0af3efe2692f64cb36785d1dcb8fadba5c7adb483d1f5c826"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407177-1-stderr.txt",
+      "sha256": "f3a7a86149a54b430661e03cc0225311e9236c2bc0b94c2f8491d2a73c75a3b3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407177-2-stderr.txt",
+      "sha256": "5ec621fc12fc0a6b3f208f40f1950a3d7751fbd3cbf783fcef080a9d3e6cc7e5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407177-3-stderr.txt",
+      "sha256": "cc984dcfec9d82ad118b7d0b1d83658d0a8726d73536682aaaa0c926a54fda53"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407199-1-stderr.txt",
+      "sha256": "6953faa2795dd007872532b72262f1d0c9ff5420a8a0b08121a5eead4575dffe"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407199-2-stderr.txt",
+      "sha256": "6b09eb7fa46b972b8dbf8a00ed8018f980291f8bd3b7cbaee07cbf60883b82d8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407199-3-stderr.txt",
+      "sha256": "0330e67f6bb9e2970dec7e46818b73b735d1f90aa170c8fc6cb6720594fa2eec"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407138-1-stderr.txt",
+      "sha256": "069683df2edd93f7b16e1173fef615b9d4819a133359de3c982c53e02426355f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407138-2-stderr.txt",
+      "sha256": "31a3fbc69ee42fbb786167384a7a8faff6e9e4958bbd7b976a455e866f12b4b8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407138-3-stderr.txt",
+      "sha256": "3408a015647dcc3232859fd351d5af037adc0203049368be1d9a8ec5adb29dd3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407180-1-stderr.txt",
+      "sha256": "6a835faf8d0a893be1316840faa50d0c4db0b82e035ea2f49fef4238210021dc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407180-2-stderr.txt",
+      "sha256": "43c7bb60fd91737ef9bba66628d649dfa6aa50228ce096f6c31167d47a4a4b85"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407180-3-stderr.txt",
+      "sha256": "21aa666fc0b7c1cc0492717b54bf461e66ffb61d4394b5a0fcbde4233c583010"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407200-1-stderr.txt",
+      "sha256": "290b5178729a4c67d60537dda79e1fde952c77d3b569ed37029423a4a9ae2cce"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407200-2-stderr.txt",
+      "sha256": "5a58fb315ea4bba45e455bcfe88e767c4201728dbcf3518f649b3bba952fe1eb"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407200-3-stderr.txt",
+      "sha256": "07aa94097bbdd4c665ee58bf84e5aa4a7aa58790621ef79acbb9e11ef715ffc7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407139-1-stderr.txt",
+      "sha256": "45f5c1e546de9caa04eb40ad4c81114cea4e5bc08888e1d85313d6f0511c47ea"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407139-2-stderr.txt",
+      "sha256": "f3f0dd5f8cef71ea769ce837f08eb11ebbab9b7747cfced6d8e521b5776fcb9c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407139-3-stderr.txt",
+      "sha256": "bad29d4c2b04c2a650f3dd82de3862e8c6d722141ad2a364e491e5972365c308"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407181-1-stderr.txt",
+      "sha256": "4d28df0b4ae1830c418c4dfffaefbeac6feb5604a096851527e0e40ea6046c44"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407181-2-stderr.txt",
+      "sha256": "d996dd2d53d39bd40629adf97183d8f4e13bdaf2388e76af7210aa27dd308e0c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407181-3-stderr.txt",
+      "sha256": "45dd6c22678f1995c950a5a386bd3bfefd6ed9e869c924eae314e2eb88c757a1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407202-1-stderr.txt",
+      "sha256": "b12951efe245b9b44e50ccb1be659ac797a7fe9b3257aba9b01564334e0117bd"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407202-2-stderr.txt",
+      "sha256": "b8f051fa37e1ad53bdb60458dd7a207aa18fad93aaddf08cbccb1f686f63e954"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407202-3-stderr.txt",
+      "sha256": "fa6c7d38a2e0bc96cb2e2d3bbd9d15e50dca63899dbdad70844a078839ce7df3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398423-1-stderr.txt",
+      "sha256": "87cbc0ec7e2efa1fda1f7aee9a4941bf169b99f1f1d5c55da7bf59b6fbdc5181"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398423-2-stderr.txt",
+      "sha256": "6ade63934ed9ebc607ce72f060a5a4facd925c813897dd34ce78ec59f41e9c3a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398423-3-stderr.txt",
+      "sha256": "2c11048392c5f2bd95f164d08f4c8e351a36c436f1ed79f8cf27d41051c50c30"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398430-1-stderr.txt",
+      "sha256": "14c758589b532b68258bb2659f5abcc53078fe954ec94e1de5ab1d8b0114ac18"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398430-2-stderr.txt",
+      "sha256": "6d833e27205c65351e47c752b90029cc77b4110c01e73bf7c7b0a2cfcffc19b6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398430-3-stderr.txt",
+      "sha256": "5a3f17a8f18ccd98b5eda74d8c6c77a3ff1134936048ea7cd5849cc5fffbedb7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398436-1-stderr.txt",
+      "sha256": "994c805d5f2a1c4128cf8eb458b7711f9facd84b0fc608d3af7f508357911acf"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398436-2-stderr.txt",
+      "sha256": "39236ec76876eaf8d361683be3bb1f7ae820336d940218f57b693187558aa250"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55398436-3-stderr.txt",
+      "sha256": "755f37188e360ee809b5805f7a79465f122ebc0db59ad57c7aa233c942425d65"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398424-1-stderr.txt",
+      "sha256": "e72414ad16eeb71235e159ccf20bb88f103ead8d73fa7553eab0e547271e21cd"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398424-2-stderr.txt",
+      "sha256": "9c325f6da053e5cf076fb462b5b3f6b17a7d15acfab32291329a39083e7da6b1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398424-3-stderr.txt",
+      "sha256": "2e6eada8b3342f12d1acf0ee38b42660ff993ca2ee9f1932f3769238e72d7ee5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398431-1-stderr.txt",
+      "sha256": "24623cbd37d3e783ce29d45a2415082b66359acac7bf0a7811180c06af4e01e9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398431-2-stderr.txt",
+      "sha256": "6d04da80bdfa73034bb5ae88e9ba7b6dee98da123032629d82657eb1d2d9aa61"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398431-3-stderr.txt",
+      "sha256": "1820fd9536b3f79efb267d5c341def4799694ca80e431e55634aa5b95cac82f6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398437-1-stderr.txt",
+      "sha256": "8f810bb0d73fd9f95b00022c6974554955b33432d1a3b11dbe26617c663626b4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398437-2-stderr.txt",
+      "sha256": "873c47cda62f43ddfea642135c68f149c184629ab5f8665d3e49436a1e92e93a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55398437-3-stderr.txt",
+      "sha256": "4b89f9ec3ad89ff00dbf35dd52bcfaaf9facca98af039d05e3768a27b1680f99"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398426-1-stderr.txt",
+      "sha256": "f76c7217b035162f40ae0e7dd6010e85f02afa1652dc8a13473d766288a57978"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398426-2-stderr.txt",
+      "sha256": "86aa94c5a1d6da33b5d7a40c11893ef5fd30d6669eee611bcac37d91ca113018"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398426-3-stderr.txt",
+      "sha256": "6f5d364d9a6ea1cfb76f9bfbfcc012a1e46b60b3ae560dade09bcc7a5e00ba1f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398432-1-stderr.txt",
+      "sha256": "04abd62817aed74bf1819f56c02a28160aa30106b6d9256fe8e34ecca3d187d2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398432-2-stderr.txt",
+      "sha256": "a15b96dc51b20da4163415287925a7104ca37da5fab4c8c14d374faace68498b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398432-3-stderr.txt",
+      "sha256": "db84cc84b4a27bee8dc9505daf88a9feb19966372c135a4efb080fc67685246c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398439-1-stderr.txt",
+      "sha256": "a21ac9289f359400d72878614232f275f5c7621c050757eea8e6bba8700dee35"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398439-2-stderr.txt",
+      "sha256": "a071646f3a7956363ebbf846121727a70c2e1fe11c7e8ced68efb0918d32499b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55398439-3-stderr.txt",
+      "sha256": "ca5a8a7ec691d8a5ca8ac086a6f038e3ce7b219e9b048a766f8d2d5f46a788ef"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398427-1-stderr.txt",
+      "sha256": "241da975e31e234b592521dfc7d0e34e760fab85edaca3b0496dfd2edaa7f8fa"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398427-2-stderr.txt",
+      "sha256": "94fbb27ae50d4349f2a4aa3ecbfbcafd0be543bdb129eff7509fbe74de0eaf99"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398427-3-stderr.txt",
+      "sha256": "abb3d6c6bfd00ec72bb49a39464609ad817cd6e9b7ce81d5e0b1d2245f6594cc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398433-1-stderr.txt",
+      "sha256": "ee0c39b67a5847a3cca8892f6ce16afb07cebe469d458a3354c54c9351b521e4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398433-2-stderr.txt",
+      "sha256": "77d161a411c3ea2beb07f983ac358a28116cda90be716711abf31689ce86c713"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398433-3-stderr.txt",
+      "sha256": "db4161d54d759a786fd3ef2664a9486ba3ec901e070ab4476b29d7b81560cf75"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398440-1-stderr.txt",
+      "sha256": "b0eedaf96fe2647f5d55107162f1b6b8424d76b5ac86875be7c8b2b650b11783"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398440-2-stderr.txt",
+      "sha256": "ca664aaad5906d250ef900223e3ac3f3b15738bec60dae23f68456fcee86c7d3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55398440-3-stderr.txt",
+      "sha256": "7fe1400acbbdbfa90e1a65aee847fa4e3156561b5d2d1c5084987c2257ecfd4a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398428-1-stderr.txt",
+      "sha256": "d8e19f4c8e501902292c37237c9b6fa6c50d55ea4c2689a3c21441e555d43948"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398428-2-stderr.txt",
+      "sha256": "dd711232eccc15f715792fcca41c3eb919c345e09c82338b433cce3c9c887061"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398428-3-stderr.txt",
+      "sha256": "71a746fb1cfa08c86c5970c0d95c86a4a9704d8e0f33c82116bb2debfa8dc05e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398434-1-stderr.txt",
+      "sha256": "329f610c14b5274ced2ba246a2c514b9264d05568e7ff93ee9fb3368293ab118"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398434-2-stderr.txt",
+      "sha256": "9c1192dcbcf319847b0f9c635c1eb2787a6f0a68d38b4a0eb0fc454d4fffe0af"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398434-3-stderr.txt",
+      "sha256": "6c850562b6f6f1fb4f43e232850f05350b76bfb9c639a7bbded630a5b930ac7d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398441-1-stderr.txt",
+      "sha256": "5c8711a2ca2573e2adabebcb1cda90eed21bf3826b2ec95244ca6aad0665ebbf"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398441-2-stderr.txt",
+      "sha256": "3f002ca42846578f7b6bee0ee01b20f17f53af3e0d3f404707094bef6aefe717"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55398441-3-stderr.txt",
+      "sha256": "267fa204bb97ed5fb8dd30a4a4490138ec8a9bb1527c6bf59a6a09338355cec8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407142-1-stderr.txt",
+      "sha256": "5868a13c5156a58cb35339b43b95c1eec382c5514a1224110f7a3ccffbeca0dc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407142-2-stderr.txt",
+      "sha256": "998c496e70947451fc3ca987631d9f52725cb0184ba3ae0c078cf1235f850b22"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407142-3-stderr.txt",
+      "sha256": "b41aedc25b40c1f275d758e120537c3f4069a09c80811384c20ab9dae8ffb00d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407182-1-stderr.txt",
+      "sha256": "4f1a7a52bc8f54914ab7c74e01c44426a39a6cb78e52d0a38fdc540c2c294aea"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407182-2-stderr.txt",
+      "sha256": "0cb73c7ae0f4d2678a5468d4e7f23b0e8659153dba6cc5a1149adad179ff463d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407182-3-stderr.txt",
+      "sha256": "f367e088b606c90f0feed92f4fe0d16158576521cc8e6fda5e3dbea1d513f52a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407203-1-stderr.txt",
+      "sha256": "5ef7fdea8ab774270272fcb612396990c6dfb43ff739abf4548910f59513446d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407203-2-stderr.txt",
+      "sha256": "d6bcc2e4bab2aa65cdcc1fbb037cdadb8aa18fcb230a48a93c772d56a441dcc8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407203-3-stderr.txt",
+      "sha256": "41cb01294b3796428d20f73f8e1d636ec086ce8ed93a9a17da54362953f49d91"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407145-1-stderr.txt",
+      "sha256": "9e012fd6bbe305cebfa4399fde825f0fdd58f86bb0ac2c8b26b8dcdfec43263b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407145-2-stderr.txt",
+      "sha256": "1c5ebc424021bc7b7423bd1737608a06a88a8a0faf324fec4632286d8440e3ec"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407145-3-stderr.txt",
+      "sha256": "7c5c248520858bc1c47658fcab39ad4bf3ab3fbe89e22cdd745e8bbdd696b12e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407185-1-stderr.txt",
+      "sha256": "d3bb2202855aa5c765a971c4e2da1ad26a79fabccd86b524d728ba537a99a958"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407185-2-stderr.txt",
+      "sha256": "f03c506ae7ec11647e001d47849eb517b614417f682efaaae4e4b390c576ab0b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407185-3-stderr.txt",
+      "sha256": "af0f3a3053d8a7c2e0ff7bb23cc382eaa474963fa129aa32785f7f1151df2647"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407204-1-stderr.txt",
+      "sha256": "1c13d5f609b686da2fd8af566c6208451abfaf969ba9b907ae0d88cfbdca8f7d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407204-2-stderr.txt",
+      "sha256": "5c5f53acb12e1997bbac9e15b5d2946f1ffab3a58c4d1a3a777fed0e3be19ce2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407204-3-stderr.txt",
+      "sha256": "a313b7883015fbaa21554ad9131730a420ed48920ee3d136796db72b0f6eab74"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407146-1-stderr.txt",
+      "sha256": "0ba58c7f9cc8b7f3dfcbdbc87e780b9db28353f092d351427e94e25ad7b71a78"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407146-2-stderr.txt",
+      "sha256": "4d3a271afcc0457eb0b8dab53ab7eebe672faef2833d3d41758e379e09745760"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407146-3-stderr.txt",
+      "sha256": "d937b839a15d7a3d8e225d9409b74fbb440fe8c1109cadbb2a6a10ef5fca198a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407186-1-stderr.txt",
+      "sha256": "d2757ea150880af3cfeb2b7e2c9411de30572cb202cb7e42c1c49a70b2346445"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407186-2-stderr.txt",
+      "sha256": "b783b434bd51e17bcff1680b828452334e00b5a54725859f69761055b0456924"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407186-3-stderr.txt",
+      "sha256": "a35eb84a6b408b9ff96d203750c1116c5746b555cff9cc6281be0e6a1dce329d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407205-1-stderr.txt",
+      "sha256": "95d0c6a4df0cd8e261259848da3cacdd42cb6b4b4b502488612768e91983044b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407205-2-stderr.txt",
+      "sha256": "4be00a44c6a4d015dc3c26d0917aac417d785034ecf0f4d225f5a86e552cc9ac"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407205-3-stderr.txt",
+      "sha256": "c0dba624348169d6c5a58f2aafb83aacb34f70253b50eae6972884a8c59c34f7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407152-1-stderr.txt",
+      "sha256": "4d567038576fab22127c6fa6459c8b267ee407639e98166b63958814ed4e3015"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407152-2-stderr.txt",
+      "sha256": "dd189794667e4c62d35471d5490365c8cf97ca5f7274b4c162d97324fe8286c3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407152-3-stderr.txt",
+      "sha256": "bb0b483d4c69f43289115192bbbfb7159d13b4b86bbb420613db8e362b96fe7a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407187-1-stderr.txt",
+      "sha256": "e0e460af0f0b8efc86d1e820fdd1dae7edda31b4f78082b4688979fd10642426"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407187-2-stderr.txt",
+      "sha256": "6be3af3cf53280c44068bafaab4c738e2558c8959d8949f2a7ed8fca5519e507"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407187-3-stderr.txt",
+      "sha256": "49ff571184445c93eda7e977d876c00cb53f3f9dbdd96c445b4996fbbd98555c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407206-1-stderr.txt",
+      "sha256": "e208433b2916e52b6da3cfd2aa701a5259b000e3d367239c5839e0ab090e6d63"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407154-1-stderr.txt",
+      "sha256": "2dadd3673445883717638d316744f797261f9b70f5110ff344d03336060ea06e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407154-2-stderr.txt",
+      "sha256": "373b24016c6958a062dcd537bb5f506d9efa3ba4f8f584b68d9d0d77330b0ce3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407154-3-stderr.txt",
+      "sha256": "cded90b2fb64450599792edc07b10605135dfcab645aeb82875699052a4e9f2c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407190-1-stderr.txt",
+      "sha256": "66910de36d59dbc95b77b60b7943d30b5a24c18399f58528c20cf36683a34401"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407190-2-stderr.txt",
+      "sha256": "b96db1434e232c81d5de6541742a47c64ca558ec75b96e9469eefcf6acf94f92"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407190-3-stderr.txt",
+      "sha256": "9dd2933cb2ff15b00f640665856f584a04240cb10adf265e224cad586de5976c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407207-1-stderr.txt",
+      "sha256": "627cbeded70c3e06deaef8c01a56fd593213a016ee1a8789d9e019cbdc8fdd2c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407207-2-stderr.txt",
+      "sha256": "c659a842caafe6ff7bd8e10bd3f56b7024459de657f318713459d0aa2d65d0ec"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407207-3-stderr.txt",
+      "sha256": "6e160294908a49780d07d3f94bbf704d58c3efbd9571fc01bc9a71566cd4d089"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399441-1-stderr.txt",
+      "sha256": "62f29c8ad270eb3ea50c49cc66da0583d8ccfe7ca99393f581062890bff39bf0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399441-2-stderr.txt",
+      "sha256": "ab6217e470703e906778afc28f97310081f67e21fafb9251106741f5a0466116"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399441-3-stderr.txt",
+      "sha256": "d464a1fc3af1e2e8be434c177db640e6d61a4e6e7730c8ea106d7b6fdaa6515f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399452-1-stderr.txt",
+      "sha256": "c1fb6ed7b2c38bc05e0d0edaaffddf9b3dadf83865eec0d5259a2012c9661be4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399452-2-stderr.txt",
+      "sha256": "39202e1cb7dc8b4d6ab3a8efc401de29d14b6e3e9b60c60461142fc1bed8d896"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399452-3-stderr.txt",
+      "sha256": "06ee838539543cf4dadf9cd3b20fba6ac90c2736b2c8715079005b0952327c97"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399467-1-stderr.txt",
+      "sha256": "054d2af063ddcec321601bd518d5960865b3f7a0370840eb5057e6ff82db6079"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399467-2-stderr.txt",
+      "sha256": "9da0e724c7e56d89d4746f4df4865e40216d38abc8d8d4773e1209ddb90aecae"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399467-3-stderr.txt",
+      "sha256": "7c8de7d3f0e4242efc105f5903141f3d2981b4504e389cb3bd6a7d03e4ce9e4f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399442-1-stderr.txt",
+      "sha256": "1547c3f1ee2c28ba9a146f5740963d6c30bdcd19d49024a3896a39bd75136776"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399442-2-stderr.txt",
+      "sha256": "eddc7fbee6226083f2b6d2e8ad80d653a8d9253814b97659b54b389205884f30"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399442-3-stderr.txt",
+      "sha256": "756944cf1e0ff367c52850c0f5f222ae5512abfab287a8a5a20f3d765a14d51b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399453-1-stderr.txt",
+      "sha256": "184bd3dc6f8d97048f61575cda183a2de8bc0a9836716b7e5afa4ab8624f41f8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399453-2-stderr.txt",
+      "sha256": "30974541f5cff41f723f44698fb48d3dfd4912adf53c5abce60dc635bc5efcc7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399453-3-stderr.txt",
+      "sha256": "3f985ada66162b737f783787690af83b03ce761acfd79423c359765d82b7c758"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399468-1-stderr.txt",
+      "sha256": "7442638b28162d748b7c2cc70820a25aff3c018b573f715ca19d66dab1f52cbe"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399468-2-stderr.txt",
+      "sha256": "4c6765e01e3bea877a7d979d4d5ab75264896ee11de97271a70c8e1c33abe2b3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399468-3-stderr.txt",
+      "sha256": "a52eac2a429cf0641122dd0c5419e8effb029ae29d53fa44bfe410e1737e6e61"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399443-1-stderr.txt",
+      "sha256": "02d34536868e5618920033de4d1438648c6065ac2d724cf36b3f54a360145f3f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399443-2-stderr.txt",
+      "sha256": "1c221199864cbdbea4b1b6556ef005e86f2ca9ed95b2007a22e61c5b9652ff32"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399443-3-stderr.txt",
+      "sha256": "663aeadf09ece24b2e5546fc17391d3caa83acf107daf0acedfa406bac48e452"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399454-1-stderr.txt",
+      "sha256": "fff9f936218a63e7c87ba58bbc0360f2a51845e6ce94b3daa6d4a58afed73bfa"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399470-1-stderr.txt",
+      "sha256": "9f34b3058b245a7ab41f24c213e097488c8fe932034d67aae9d63abdaa6bda40"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399470-2-stderr.txt",
+      "sha256": "21f2468c9d9079d41043682adb361de9346b5d3ed05fdc6df06cf445c9874a15"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399470-3-stderr.txt",
+      "sha256": "3b3b00e8b87a6d75a008bf13471d9701a45cf81a4ddb75c2e64bc6d2f4f718f5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399444-1-stderr.txt",
+      "sha256": "509c9454dbb3105b6c7de2f5eaec95b0f181f63864ef2a2c6534328c9052b07d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399444-2-stderr.txt",
+      "sha256": "3dca0afdef94c54c748606df5a7ac6d31f08b119fc35c86b987bda0c9109d981"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399444-3-stderr.txt",
+      "sha256": "3eefac5148435d40026d47fef0eb868f061ed45875c9af72c24191ceb4bd90f5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399456-1-stderr.txt",
+      "sha256": "d7b33e92c75464e5a60226c2fbd38576c36cfacc5a668c882dc8cdd4350fbf97"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399456-2-stderr.txt",
+      "sha256": "79727bc1d5d387cb8dc502a3f546e65990b0356b660d0e129ea4f7cda8c4da1b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399456-3-stderr.txt",
+      "sha256": "515855426a2e022f12e2cb6a96a3af9243e1aaf017a4f4a0525651e4480ed462"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399471-1-stderr.txt",
+      "sha256": "731f99f4d053499d2dd6a378dffaa4895f3bf9c23933003073906ac8682f71ff"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399471-2-stderr.txt",
+      "sha256": "af873a13f11229b26f8b9c77b85f3b44f6cac261f890e8a0d9aab223a50017ad"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399471-3-stderr.txt",
+      "sha256": "1b751c2a009c9df95221853213b137348fe9ee4a009cdfbba013ad46bdcf362b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399445-1-stderr.txt",
+      "sha256": "0262f3d45ee458bc6e8a2391e4d4a0d185a6bf022775e6c6ceb9fd7627624bf6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399445-2-stderr.txt",
+      "sha256": "b8fec176a1abab7051282acba226e91477092f462a8e8ddf7f8cf8553016f12e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399445-3-stderr.txt",
+      "sha256": "0f6af5877ecdff98c1fae988c255261846594ba6adfb13d0550faa1c410026f0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399457-1-stderr.txt",
+      "sha256": "4b440f9f718e9c195bd252b1f08768efca92c086d6e3fecf166d24117d49ae90"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399457-2-stderr.txt",
+      "sha256": "a50bf0b8b0d70d3c1950eab03b6e13cc47ddfa8ff446a55fa0740d00f4feaf74"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399457-3-stderr.txt",
+      "sha256": "40a2947b8c14057209e517258db70d9613cf73eb704f2c79d03e3dee619e3cee"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399472-1-stderr.txt",
+      "sha256": "20ca3c4b18078ebb2d84840c2cbc6a94663061954ac399de046ae9a4becaa330"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399472-2-stderr.txt",
+      "sha256": "075b1537849c9b040d3feb2d98bd14d1a68eb3afde19e757beb7c708f8475982"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399472-3-stderr.txt",
+      "sha256": "ec8820dc2bf19951ec7ec0deaf287caeb6d7ea52ee8ea4b4d14f930bc62a369d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216554-1-stderr.txt",
+      "sha256": "4c7b3501f90d89655628495b8acf8feed578f9df24d3165b5b6dd3c7c58f1e7c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216554-2-stderr.txt",
+      "sha256": "1e648c065e35a07ee114b9fc5c714533f41d40fd1387e9edcd23089d1f34b95e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216554-3-stderr.txt",
+      "sha256": "95f085ee1722579d3e157cd7137960af968ccb177d705960cafab557553da812"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216560-1-stderr.txt",
+      "sha256": "4809afea763818e02c10d6be7945b5941277ddc736aab32c1ddd4d8950405fc8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216560-2-stderr.txt",
+      "sha256": "3ca05438b8b48cf56d92147a4ff434149413509c5d068b4f1179b4c0acd50e74"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216560-3-stderr.txt",
+      "sha256": "8f5a96aca5bed597d93a4f2e4386239f68b87e87d7669bea78c09d8714041e86"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216568-1-stderr.txt",
+      "sha256": "ca364ee910f77c5b2eb85618cd4e9573d3742d5a973ce978f33c445d580136c0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216568-2-stderr.txt",
+      "sha256": "8958708a0592cbbfe8ded9b3a06f51b2cb1e082b2941b35caeee86d60003f4fc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216568-3-stderr.txt",
+      "sha256": "9858373cf73a5e5e58bbd061962be0fdc7430daf14a82f585d194769c3466712"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216555-1-stderr.txt",
+      "sha256": "0f5685910d4a2bed5273b743253a2b81b23f32d54c9a8c39a4418b7000091175"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216555-2-stderr.txt",
+      "sha256": "7fa367ca6b724c10727c40378f5910468e2e4ee6db345ee981763de02c4e86a6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216555-3-stderr.txt",
+      "sha256": "d61638d5dccee06891c2878d12fe37b72a15c1841ded4b3607bfb78772a05fac"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216563-1-stderr.txt",
+      "sha256": "023cc3cc97d8e231c327552da55271d3839a326b52ed2105360b80c57606eda7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216563-2-stderr.txt",
+      "sha256": "4b8f366fbb5cb4d92c24c3aa72e332fe1a2cb816fe85532c827c29d0f2a27598"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216563-3-stderr.txt",
+      "sha256": "667e5360e01ce99b76e1e0c1bf486afbd147748099258d9b2ceb89cba6249a7b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216569-1-stderr.txt",
+      "sha256": "188779d1bc0302d8554191803adab4a0df1695c8265f38803e5e69a963ebcef5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216569-2-stderr.txt",
+      "sha256": "8537a49baef93d3a91ec2108fdff74c20c642e04f9d240e337f8a0bcf7f22e16"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216569-3-stderr.txt",
+      "sha256": "86d134ef88ada9b14755a092b1735583e3325de10c3e81e943e8f8fd5e2c18c2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216556-1-stderr.txt",
+      "sha256": "34dc7248cbd49d7aad7e91626203e2d82502011988bf19b9350986c1ef5987f6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216556-2-stderr.txt",
+      "sha256": "4c87fd5e6000e77a81ab88868ab2d522b7f2c0048569fe5a446b9cf4285e0e04"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216556-3-stderr.txt",
+      "sha256": "1375c98330ef9342ca673144a7078d61a4bb1ff76dc7c964eb1acb8e493c93b7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216564-1-stderr.txt",
+      "sha256": "e8b223d24425f00daf98edeee938c88e6ad2d39afac30e999bc06f2ffd199dd9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216564-2-stderr.txt",
+      "sha256": "f322f6844f4bd856d49faf62ee74c2206e4bbe309e31e0b9b371f5a4f4815bac"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216564-3-stderr.txt",
+      "sha256": "6d4d3cf6312fc16e81bb453b8196db80c054ff49b0c1ea6cfe4b9b3203a810a5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216570-1-stderr.txt",
+      "sha256": "c02631ca47e5b0853ae31590a70c9b066e878cfefc06e60e319c5435e58b091a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216570-2-stderr.txt",
+      "sha256": "3de71a8d917add4a07a583d86c5835545d0361945e74a5659d850d80d4b8a988"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216570-3-stderr.txt",
+      "sha256": "0edf771baaba8d742541eb1d23d331f7f8ba55c7734a9aab87815d161c5373e3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216557-1-stderr.txt",
+      "sha256": "e62c74bb9b75e2fc5129483609c78318c59a99219751c328157a302fb24390b0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216557-2-stderr.txt",
+      "sha256": "639018fceda23a8c747e2d416fd682f9fa2198fecfae68513d6b95bcf0e2255d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216557-3-stderr.txt",
+      "sha256": "f62a314acb430d6f39fd66835d7b27c6427f5274e930811216f7b132c8b13bb3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216565-1-stderr.txt",
+      "sha256": "eebbbe3d615bf64b6651e82ce1e31fa180cfc64b3079634241bdee86be197c8d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216565-2-stderr.txt",
+      "sha256": "87b3a23988018dae85c3d3d900a20adaa850f81112bf5c2336d552e5b8ce6921"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216565-3-stderr.txt",
+      "sha256": "1d3f46e30e3dcf2f221bb15669476114df5c4a1341f5a0c7625120c29304de15"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216571-1-stderr.txt",
+      "sha256": "cf0fd7908595c2a7f70d96e18c5123a0e92ea3f8ad6acb3f4e0cd870b571b3cc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216571-2-stderr.txt",
+      "sha256": "4a60a14689299f955b9ad95f6ac06c4b8857984f93d78c53ba1a973767cbec24"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216571-3-stderr.txt",
+      "sha256": "e54544c088c9ccb221a99688b613e8bb0ca8acd778b5a63e80975594a82f52fa"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216558-1-stderr.txt",
+      "sha256": "ddb04a27ca1f48ee6186a5e9fd519d563561ad4ac7e2d82871ba3ebfa1dc5e07"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216558-2-stderr.txt",
+      "sha256": "840040592d1d97b6d90e5b2abfcc375d9b947addbfc609319bcb1594b43f3483"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216558-3-stderr.txt",
+      "sha256": "be448dd80e9f74dcb667a5e71f8f68d6ee835437c482d6fa740d5588e0430d03"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216566-1-stderr.txt",
+      "sha256": "aad5bbb24c0493b0e63c2914fad82ab611dd06287fdb2f22090c766745adc7af"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216566-2-stderr.txt",
+      "sha256": "ec9cf587dcb81d9360772311370d6bd930bca9a214966f447e273a32a5728893"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216566-3-stderr.txt",
+      "sha256": "9a1c1baef7675dc05d9b8027d8c76d8633480d0b58abaad47fbd7bb3be43141b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216572-1-stderr.txt",
+      "sha256": "009287065ee246ebdbf5759c51b3ab6dac21ffdd24044f61df56fd7f1f4b1d92"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216572-2-stderr.txt",
+      "sha256": "c500598cd01ad8ad0816a75722c7148b5bb4b38afea12c75d8cceb610997d201"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216572-3-stderr.txt",
+      "sha256": "f9f8609df494c735e49390e38c38b45d75dab1d67e5f009cf3389151da6686a4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216574-1-stderr.txt",
+      "sha256": "8f98207e716eace18f086b509e8fd08e2a67170da35911197eb2a2170e048caa"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216574-2-stderr.txt",
+      "sha256": "cf82e1fa6835b2069a11889bf21cd1c15dfda2d6aa3aad02dfdaf067127722b7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216574-3-stderr.txt",
+      "sha256": "f608f2c10ba8ea761d2f254a7b4da704e1de714109418b837a76ed29712f28ba"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216580-1-stderr.txt",
+      "sha256": "e7e0a120cc40c8f76e659655095d629513c8f182c8dc683f2d40e47e638bbad4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216580-2-stderr.txt",
+      "sha256": "e922c976bb9692ba1a3b5b5e971cb88bd5424078e120f19cfd01412744cc0cae"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216580-3-stderr.txt",
+      "sha256": "d5d348ac6fd0d458dc973667bb9377845e72dec43d0addd9c6a8553ede33c2dc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216586-1-stderr.txt",
+      "sha256": "a16d881405b93c27a3667815a3174e6658ad6d824c5af26a0289fe37f196129f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216586-2-stderr.txt",
+      "sha256": "26123b83979cda07dce7f50ee8366953d6577a77199622f110cd6d29add97845"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216586-3-stderr.txt",
+      "sha256": "fbb1b21edc12e07a6bc07cfa038d078a0b439ea6b30c971235a493bda1440261"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216575-1-stderr.txt",
+      "sha256": "95dfb5fe9586d04d456ffb62570d931344474ad52b3480115d3c2fc06fafae42"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216575-2-stderr.txt",
+      "sha256": "2f6c6ebcfae90c183b8f3904453369642abd42d87e4aae9e6799f0feb833dc84"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216575-3-stderr.txt",
+      "sha256": "a817dd0bd0c42fbfaa571214fd8ff35dd957ad9168d9e6ffa3ce73fe5fed88f7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216581-1-stderr.txt",
+      "sha256": "2bb35116490faea52ef6e04eef8a2bdbd15dd653de56b88d6f2207a3ea09f2f1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216581-2-stderr.txt",
+      "sha256": "04198eaa1f0b1a2c102c51c11ec5d8390784bd425c5f112c3df1e08bc46563a7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216581-3-stderr.txt",
+      "sha256": "d5e4a78fc08ad292cf049a1c695a01487c9ca1a9baf328b1b90bacf3d12a08d0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216587-1-stderr.txt",
+      "sha256": "7135d9443d8c52910c892477c12afe726f454e26e51f63ae32170f6ba69575c7"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216587-2-stderr.txt",
+      "sha256": "5acadda1084751ed66df6595f936340aa2c1401b65676690e5f8925ed697332c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216587-3-stderr.txt",
+      "sha256": "fe0c9c6925f9b2f4eacd56fdb37bc9a5b90524ff944af861a8806e7a0495f34d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216576-1-stderr.txt",
+      "sha256": "e8d3e128703cc7038a50b687062105f3a2b3022daa138e41a47cba8573e9d700"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216576-2-stderr.txt",
+      "sha256": "6b8878eafb9b54bcbb2c03b1178ff946e5fc2f2877c60c60174eb15f341653ca"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216576-3-stderr.txt",
+      "sha256": "8bea8ce5474d61f0bbf6d4fc5e526d4133a5f1ecc4e7c0578bd126367f54e5f8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216582-1-stderr.txt",
+      "sha256": "ca9c43d9325da69ea88bb72b67383e72f8655804050be2697ae4f62073e56025"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216582-2-stderr.txt",
+      "sha256": "d71e4d1d112365a4beb3e3c738f6434e4b7db0578c3b4d7498762ac7eeee3a59"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216582-3-stderr.txt",
+      "sha256": "931f43e8a1c54a3ec6609fa7d5b212c251c25cd1038089042ff21baa2b252b45"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216589-1-stderr.txt",
+      "sha256": "199ee312a9d12f07c2bcd84e00fc753b9886e0fbb329a60d23cb88cf56b0189f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216589-2-stderr.txt",
+      "sha256": "b1ffd344f62b0e88aa06e3a8e55da7e082fe06c9253b68795c1d92b96158aab6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216589-3-stderr.txt",
+      "sha256": "9adc5d841ffc95b5563c6ccdbe6e761b33748a0390468e44bf6658f58433a92b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216577-1-stderr.txt",
+      "sha256": "fd27cfe799912047c053d9f6e1abf9be19f41198a7156fcdb785f83867fd1986"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216577-2-stderr.txt",
+      "sha256": "ea2d7a2ca4de7dedd4e0c9b1d7c1066ae6ca7b3205439046b3e2191368c334d6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216577-3-stderr.txt",
+      "sha256": "2123578dde65134ccd1105782eb14b91471f54feda0ea02d35c1bc572b500271"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216583-1-stderr.txt",
+      "sha256": "4d542a507c30c54c262c975f0eea636136fd386039eeea67379e2f07b5122d65"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216583-2-stderr.txt",
+      "sha256": "a72209e83a8b8e468ee3f4ee813f6218dd2d70ad3f18883bd684362e3bc14e90"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216583-3-stderr.txt",
+      "sha256": "7be7b722aaf4271d6d7c2095f6e73d302f15d5037d09f9312b4e660ee5a2b3db"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216590-1-stderr.txt",
+      "sha256": "b790e7eaedc2188f3e68e87ad19aa5a890f0cab056e871703b1566d866085340"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216590-2-stderr.txt",
+      "sha256": "fbf5b8d88befa10b7d6fe194278787f0ef5b1b12a6b42b0d614cc5dbb01101b4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216590-3-stderr.txt",
+      "sha256": "062b69bd25a7a29cfff08ee5addd585a2cfe843b518a5037f18cc9140092d31c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216578-1-stderr.txt",
+      "sha256": "c3058ff277983665d369cb4bf2af584f999caf0cf6c29b0d43a56a64f5833cc8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216578-2-stderr.txt",
+      "sha256": "03ee5a4be4fece2d38c072721b6e4b972e08979acc4caab78d811437f77e61d3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216578-3-stderr.txt",
+      "sha256": "4fd68fe51cd56b2831a937866a133d3ab5079de179c20179a0617b7d94b5bd7a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216584-1-stderr.txt",
+      "sha256": "2d4e5e2e65e2f4b3da309d2f5fe96216fda79c7dba5b67536844118869ea87f4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216584-2-stderr.txt",
+      "sha256": "c1122b472956cb015c0f69e8344e52d330b3be74d8473f0a1eb277c2d4081942"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216584-3-stderr.txt",
+      "sha256": "f8a2c0c30ee6391cea25467247d4132becabb5262eefd21d74075db722e73451"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216591-1-stderr.txt",
+      "sha256": "6103a22116a527d89200748317e9062975f9c46e74ad0360d196f4db58465aaa"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216591-2-stderr.txt",
+      "sha256": "967610e528d32fb5c5ef0964c056073fefa7df6154d975de6641bf89d0f04967"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216591-3-stderr.txt",
+      "sha256": "56d4c5644a395662d5ccc7fd1393ae978c65bed337febe06b702adfc2c723d7c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405538-1-stderr.txt",
+      "sha256": "5874a6fffb371b69cc73f154ca7fc9987c742a2102574830ee4f04e0d4d30797"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405538-2-stderr.txt",
+      "sha256": "2ef8de25a22a167e8f387b0ef0259af1690da882bfda6a6d392581877c647a8f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405538-3-stderr.txt",
+      "sha256": "209230a4e852b203c5a986027ccfd599ad7f2b5a45f15b9dadd24a90429da962"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405564-1-stderr.txt",
+      "sha256": "2d50a2cf734084d58ef5ac4952ac6ca0a4447f6bd61202edfb6b41234af66f87"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405564-2-stderr.txt",
+      "sha256": "5648efa0fb2913e2ae7b956a12bce2ec2254b50bc8081e722524774d6edaa381"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405564-3-stderr.txt",
+      "sha256": "8f5307d558747b6a368604b66914afcb1ff2bcff666a91210f5c0e9e62e132b9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405571-1-stderr.txt",
+      "sha256": "8053a9531013a96c592c1b69254051d5b480b07e970eb9613e133d20c852b6f9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405571-2-stderr.txt",
+      "sha256": "ed82d74628cef6bdd8136c0ca7f396f12deaa0dca08e62a6f5c510a4e753e0d1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55405571-3-stderr.txt",
+      "sha256": "55b6b61e45f8456086c4e17b94fb34d1d3259abd98a8c569332dd69a19ebf3fc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407173-1-stderr.txt",
+      "sha256": "f937829eeb491d01d1d60049fa067d078a579c766cd4d3fcfb96f3081b838c37"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407173-2-stderr.txt",
+      "sha256": "3b98940c64d787b77b9bfb21a335fb96ec6c7dccf16433b55592098bd12bb3f5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407173-3-stderr.txt",
+      "sha256": "48861f484becd48b43175b74e924d5695f80e093e46555e450f0d8aa13983f57"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407196-1-stderr.txt",
+      "sha256": "bd4bb99f8e6704a2ee07463c96e4f84a96e54dcda88f94867b2d8aa58e68b395"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407196-2-stderr.txt",
+      "sha256": "d012c129479a0f81d3aead403edc65423375c8377dd78a74bc0f69c023d1f5db"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407196-3-stderr.txt",
+      "sha256": "9348e6e8fd3024d86dd8dee82c16d60b8f9f2f1ebb2f0b6c1aca4e4118911360"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407214-1-stderr.txt",
+      "sha256": "56d892e4de2ade6038a2f8b7fee488064a5081e6499b77a68dacd3b09e3d913f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407214-2-stderr.txt",
+      "sha256": "4e750282f666230785447508127a9e0eef19de637fcf77e8a78a01e86b8c5d78"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407214-3-stderr.txt",
+      "sha256": "f87789f22d9315c13622c0f93e94a49e3ac039a783ded990e367ea69e4123c34"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407811-1-stderr.txt",
+      "sha256": "a9f30d5470c402aef96d0499c2399cdbe3b17608077198581dc123ab842aa93d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407811-2-stderr.txt",
+      "sha256": "0d03f608cfb98d7fa168783c00ea6e8ba905c8adb78de45909d8d0310a353378"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407811-3-stderr.txt",
+      "sha256": "15df60345236df33e04c668b6d78906febe8c6d8c1d87ba7a24bc647d06fb4fe"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407819-1-stderr.txt",
+      "sha256": "68e495268210d927e8689501a15ff8f3024679545654575c4c4dc60726b38c9f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407819-2-stderr.txt",
+      "sha256": "821fb75d9e92b74c202bf10ebad6735ebb23d06c35064a6d7e316341680dfab0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407819-3-stderr.txt",
+      "sha256": "8102e08740c8ab1e597b30373eb808568dbdb43bf0369f15cf6c36cce0498c99"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407828-1-stderr.txt",
+      "sha256": "2b07c6a44265debc43b6b896806571bd97d4561591aeee57d3d79127353fbd19"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407828-2-stderr.txt",
+      "sha256": "d9ace09c87ae98ac8a0b02192e64d239c0f277c4a483d58bfd0bc476bb4fb0c0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-55407828-3-stderr.txt",
+      "sha256": "1033bc6544a553ea4f4c3ef5f5299a3e98d10196986671b9cf7b6c1c7d476e1d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398429-1-stderr.txt",
+      "sha256": "e31acbb27063686f88c36e51cb16d7930704c6bdd733c51f660dc7a441faadc3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398429-2-stderr.txt",
+      "sha256": "af6255d51deab246f23ef6d716e5924a55b40017917ea8bf5e05d2d810a3d715"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398429-3-stderr.txt",
+      "sha256": "ff7e42d9ddbda5b35db7ef317470d337c9a2f246638fe43e26dd1884324e1c51"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398435-1-stderr.txt",
+      "sha256": "35f3064be469a23097fa961e3137c7d6ee8fd97a151a84dd0bbc9e66de1b4e4c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398435-2-stderr.txt",
+      "sha256": "1605b372ddaf3ca86aa041847a4a798f01de59952941e5d1f99841529c9a0365"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398435-3-stderr.txt",
+      "sha256": "28f8f323ed37351ca9bc891f9d15fc6a8213b358c43f499c9e8afc8b561bd1a1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398443-1-stderr.txt",
+      "sha256": "d62fd60389b9586ad7f38f0b12812e674adc5ef51620e629cb41cd62d22a8ae8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398443-2-stderr.txt",
+      "sha256": "ec0dad4e4a3d8b6f18b5fa8e249f05903eab98cf11b755537a9a4d69e3ccc213"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398443-3-stderr.txt",
+      "sha256": "002184f06b16b9f90168bfb4206cbaf67d544b959d0707c297bbc1a269380680"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398876-1-stderr.txt",
+      "sha256": "bfa1b28aeb62ff33d595d29182a47353c8c95abed8e45c707611054bd656cd28"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398876-2-stderr.txt",
+      "sha256": "4c3b54ae801da6407f78246064c56f3ddf36562b4b2e945230a30b18a6c2991e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398876-3-stderr.txt",
+      "sha256": "1c59c180af8bd342bb71cea06738f578ea03cba326f5eb766e2d5df8a000eb3e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398882-1-stderr.txt",
+      "sha256": "7eba5caf28b66fe413593860f735584eab8015d31b57107a2705987089cec796"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398882-2-stderr.txt",
+      "sha256": "de0f59c4102ce2a23d9d79b40d316131282b6bb6a35f7cf86d9b360be8de82bf"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398882-3-stderr.txt",
+      "sha256": "9ca4d758ad920d429757b9fac8299d9c14f463b924e301cf9950c637c07dad2c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398888-1-stderr.txt",
+      "sha256": "3268b5f516e747602ff99f2f5dc192fc47371956c2447833a73dc5f17c467ca1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398888-2-stderr.txt",
+      "sha256": "bb67080923af1a762e9bfcc053b2eaab65e181342a3873661ddcb88f94def636"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55398888-3-stderr.txt",
+      "sha256": "cf02e37898059e4dcfc82304b971a53843287694b9e7c6b82133674bd68214cb"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399451-1-stderr.txt",
+      "sha256": "e8f98e8e423f0fcb9a32a8f891ac8c3c9778565e1fd0d40fc9e331f62b416f54"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399451-2-stderr.txt",
+      "sha256": "85c59b4e679b814ea94f9af15fac4ba8ee96f10a5a5e8b4e9681d9d7f6e119da"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399451-3-stderr.txt",
+      "sha256": "0429b05969ecc24450ba0ed55aac747dd814de4f4e4591e65e2b56497c7b74aa"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399466-1-stderr.txt",
+      "sha256": "1fe9aba1f41b055319ce0821843f033e7760b9263cdcede31fdbe71dbcd84bd1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399466-2-stderr.txt",
+      "sha256": "49db3569f4f862e587190c47830d56b8514c742bd1e38a4e2ec9c9a26263dab8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399466-3-stderr.txt",
+      "sha256": "177a6735143de49a9ab852c3f387f4f03c1049b5a8507ded2c6ba9ffbd82a644"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399479-1-stderr.txt",
+      "sha256": "c7842046db915d81f316215678622853b6796da54bbbac9b0d5db816161c7a51"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399479-2-stderr.txt",
+      "sha256": "48e38a2c204a358449098fde7b6babffe93530b4fb1a86a996245b178dd640f0"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55399479-3-stderr.txt",
+      "sha256": "0213b5b0098af55bfe81489c9dba135cd28c6df0012edbaefa45b1b78d47d122"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55403993-1-stderr.txt",
+      "sha256": "d325602e80b4ef1f4ce06983761248c2b33397827692f53352c1fa0706d8f0ae"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55403993-2-stderr.txt",
+      "sha256": "660fb46e0859e5cde53404d89288c4a4048b8c148b9b74edf2e37d85f983da7b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55403993-3-stderr.txt",
+      "sha256": "61a7051cf553767399a564ee6f7ec6a6c0ac0e59a035b3e5948b6956e0facfee"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55404003-1-stderr.txt",
+      "sha256": "bd0891dc949483c2af8879310544f1ccb217c5178e26c2b905e887845c5ab29e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55404003-2-stderr.txt",
+      "sha256": "035e956bb5a4b2f4f6d1223bc579f42f637b12b0d480c66c8a9b031f773d648c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55404003-3-stderr.txt",
+      "sha256": "5a362233ab6325272a175533e23eb9c592a2877fb67f60ad9091b7b71ffea656"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55404011-1-stderr.txt",
+      "sha256": "0c45cd8da52cf59f90b922895bee48aecabf41579689eec08fae1d19cb4fdb6b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55404011-2-stderr.txt",
+      "sha256": "40a7ccf470b3570e7a65ac85db816ffc2065f7cadbc5fb6d1a224ca53b28b9d1"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-55404011-3-stderr.txt",
+      "sha256": "a9da8ca060e9323ca6f84cb7735d059841afedfed9893eaa12bdcbcd2c4f5850"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407156-1-stderr.txt",
+      "sha256": "3f3abf9ce376c0d15259a2da2a739208f53eefb477698c7c027c569bbc8541ef"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407156-2-stderr.txt",
+      "sha256": "823305a7275107f38737d813f016a24f05c788a150a2fb97761c2f723ada1e17"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407156-3-stderr.txt",
+      "sha256": "841b5c454540d8fa775b8c447c0074c0335e37ac2004b74687b1363b0a8b9735"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407191-1-stderr.txt",
+      "sha256": "7173d3341105d286a7f5b53fad9e50aab075e1fcd577210e5cc342b55f8c1dbe"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407191-2-stderr.txt",
+      "sha256": "1aa35d39b7def43fc6681e3ef9e9d7abedfb9e71827c4927067dc9070adefff9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407191-3-stderr.txt",
+      "sha256": "f237276979e67da7004b0a92f17a15b15307ed05670397a386064f5c3e5b3b73"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407208-1-stderr.txt",
+      "sha256": "5443a5cb4eb6ab9cf8c79fa3cad20c4dd08ca049881dfd2eef66b16fd800b974"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407208-2-stderr.txt",
+      "sha256": "3ce6f5270b4e33bbc2f5bf1ffcb18c07916ae0ce26c308534f703037d4142a66"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-55407208-3-stderr.txt",
+      "sha256": "0c4ba65497aebac0a7da2d80cf2420537fa16ca1fe2feda02892f631475ecbaf"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407159-1-stderr.txt",
+      "sha256": "958e26c42ecca68ca7b3796f8a698ddd4ac53874f0ee09071fde06412bac7089"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407159-2-stderr.txt",
+      "sha256": "75ece3e8c706a82e028d734eb1594cbc0bf1292125525b0ccf4aff51b8903ab8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407159-3-stderr.txt",
+      "sha256": "6ef468d5a78bc76debbf58fd4cfacb1a5d1e23e8cfeeb35d57cc88d3371f7d8d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407192-1-stderr.txt",
+      "sha256": "357672838438c66b1fc362135d2d1befe3c619643927478ac9b6cda0ef64f77d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407192-2-stderr.txt",
+      "sha256": "9239aef4e4779530bfd013f65a1cd8a4879945dc85b91f0bd840ebdf37280601"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407192-3-stderr.txt",
+      "sha256": "e678185ef748d80c5b5f109c1c89bf3748afe0914c16dc6acaa3a8fa40165e4b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407209-1-stderr.txt",
+      "sha256": "fff19e2a41586d8ff8bafc4c9f6b6da98f5abe716b0eb7356d94c043507abb0d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407209-2-stderr.txt",
+      "sha256": "75b2e4ca941a03f0d0a7e8c400b18f61bd618757a141db39bd8769f893b31ec2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-55407209-3-stderr.txt",
+      "sha256": "0003074053009ce4a54a7bb9abfea9a60db9fcef398c4000f6be171076537654"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407163-1-stderr.txt",
+      "sha256": "938bfe94bcd9096518febfab35a758484386c64620e94c58ff6d9663bc2c710e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407163-2-stderr.txt",
+      "sha256": "b3dec3891f6e458b2f3162c5571bb8447dcf92678dda3b1c589a5daef2d92bb5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407163-3-stderr.txt",
+      "sha256": "8415f0c3de2600d45fb98874ed8041742645286ac00a8e9aa293f4459463aef6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407193-1-stderr.txt",
+      "sha256": "058ef3aa3dfcc61e8f7e97e5cb0e21bce0839343389fb956ae2063ea6337f254"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407193-2-stderr.txt",
+      "sha256": "3f5fa75fce5c27dab610876350163e429f078719cd23d6376864b186f4d356ab"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407193-3-stderr.txt",
+      "sha256": "82efba1f0ab2c15130db1a047d3a19645efb0e44f89894ac7dcdb577778c95e8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407210-1-stderr.txt",
+      "sha256": "e207a6952d06464c6ae71247e28dfd44201c7cc5357c2cd47a955366bfab7e6e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407210-2-stderr.txt",
+      "sha256": "93c7a3b7a09e4154381f0f169bdace9aff3f63a08c28868fe4c33a1fdc4a1ab2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-55407210-3-stderr.txt",
+      "sha256": "5e1a4a637752ac805b3717002da0b514527f00b9b92f8b32229d3668da1c9722"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407166-1-stderr.txt",
+      "sha256": "8adadc83c16bbe88ab44f9ce293fa1a7bb2b88cf6c366c47b78166bd0a1d9262"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407166-2-stderr.txt",
+      "sha256": "32c281f3564c485fed17cde81fc0cc67278ecbdcf24b6eb71e6016d274df848f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407166-3-stderr.txt",
+      "sha256": "1a07f777a1f7e1b77bf949013142a346aa0f55f53ca0036f9f52c0e561222257"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407194-1-stderr.txt",
+      "sha256": "4b92ce581c4259cb55a2b6b95703cb5f07caeda4415ce2c57263a8d00365128e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407194-2-stderr.txt",
+      "sha256": "37042b4ae7299447de32f7376d031024623cc51e0800eff6d604602c87af002b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407194-3-stderr.txt",
+      "sha256": "1d1738255469f14cc31c400dded705696bf567d3933c2ca82f1879a906ea1eab"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407212-1-stderr.txt",
+      "sha256": "e3a35d67adc876c8154e2b5123e9edcead746b3942a6e52a67028e5df738cde4"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407212-2-stderr.txt",
+      "sha256": "90a84215697fcdae2c57a3403ab6610f3be303c046500f7f08c429544e9fc54a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-55407212-3-stderr.txt",
+      "sha256": "40fe09995c375710cf27a052cfeab27c8cb007572b47e758a718932b74642f0d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407167-1-stderr.txt",
+      "sha256": "b175e02bb1f1fc1673d1b0835b1dc2715250e3e2c0eb245a8aa5f1963b230c1e"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407167-2-stderr.txt",
+      "sha256": "a433c1dcdf24620135590ed1a23c1a76c9ae18b7ea13e31e9abfab54ff313bf9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407167-3-stderr.txt",
+      "sha256": "0333920e5461ac03828676902fd6ce69a9091a681be7a108d33a59089e9c2010"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407195-1-stderr.txt",
+      "sha256": "7795c64774aeb8f2efd0392e9cfa5a1ad37211b2ffe98d016bcfa54eb379ee6c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407195-2-stderr.txt",
+      "sha256": "51fdffdab0fea339839e257a6a6511bed316b85d1a7e21668fb004010330387b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407195-3-stderr.txt",
+      "sha256": "4c4efccadbfccc18ffdc383015bada5f3e5def730e4a98772baac60fc8e90d39"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407213-1-stderr.txt",
+      "sha256": "e7ecfa6c0f924bf53885b700bd044c51f62c92c52512104ec3b5628a319d48cf"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407213-2-stderr.txt",
+      "sha256": "6ab44e813a2982bd27896bd41fad003b4dc35185560e8aa2befb756007a7da41"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-55407213-3-stderr.txt",
+      "sha256": "c6e36e0fe0e3624cf582ce43b4c7390b5fc65fcd7997fad6fe308df6e262b571"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399446-1-stderr.txt",
+      "sha256": "0aa1c1617b745df2395db703a3cfa45743add5565400aa4387471df207b3831a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399446-2-stderr.txt",
+      "sha256": "8f4f98f5d39d5fde4b4a7b5b34630ab305677497125a8a92e496a1c3baae8b0c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399446-3-stderr.txt",
+      "sha256": "d1fed90d47ea91349935765ff1fd45e2c5341c86245018372c6d4b26260c1d16"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399458-1-stderr.txt",
+      "sha256": "7d612cdc53b7f9517c76485c7bca0ec2f349bf86e9297d0e69181634e58ba26f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399458-2-stderr.txt",
+      "sha256": "1607aaafe90cac6a7bf5a2896c6bc874c3c8cf16311d66c8231a8687a52b2aea"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399458-3-stderr.txt",
+      "sha256": "6a48d28d631fe9d5c77ccd455b33abde8f008bce14c1759c8eab886233135e2a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399473-1-stderr.txt",
+      "sha256": "46f6b947c7c87e387ddc2caed34018efa4dfd6499b492a6c352ed1ea98a49881"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399473-2-stderr.txt",
+      "sha256": "bdc9e783ae2592601d81a317714b391c0b9b651f25cf145171da02e2eb6f17ef"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-55399473-3-stderr.txt",
+      "sha256": "3bece0fc985efe11b4b4357ee4bfd7c641afa273e5131681ec380129f086768f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399447-1-stderr.txt",
+      "sha256": "7771ca6aa79120c96a5b6cf29bff8a497999eaa8b469a35e755ead90c6579364"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399447-2-stderr.txt",
+      "sha256": "f4ff3d3726e4c0937cca0a496afad97c10f0566f709d25b811b82a3f18b41d38"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399447-3-stderr.txt",
+      "sha256": "bcc5a4aaf8866492ecf857b9cb4779cccef65ada04d21f31c1086b1c82eab3ef"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399459-1-stderr.txt",
+      "sha256": "7e2c796329caeaa6d035984ec46cca659a98e7b08f1dc120dee0157a6756380b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399459-2-stderr.txt",
+      "sha256": "8b618f5a6cc1168bf450ab0afce6243c019a71958f15f60eaaa62079d304d4f3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399459-3-stderr.txt",
+      "sha256": "a8af8fe5c088b999ee8496ed6710393134a036e364c1c797f21ee260725f3832"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399475-1-stderr.txt",
+      "sha256": "3bf6794956500c7ff7916738ccc1e00f5cd2754ec385f54086c4bdf5d3aae5c3"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399475-2-stderr.txt",
+      "sha256": "d71d0a704c37e7b2d1ea5cf751f9719e63a70687b511570804e06388a1a99705"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-55399475-3-stderr.txt",
+      "sha256": "8dd69788cdbb2c256abbbac09b702aea9b4b1e9020765956d444612e8d96c492"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399448-1-stderr.txt",
+      "sha256": "d3f25ae0842ea76f08a9ce871f613fd5c49ad85d45c11abcc2a76b26801293f9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399448-2-stderr.txt",
+      "sha256": "6112c688fdecad84a5ec07f8df4a66e85f246c79a3499c13bcfdd1411fbd92e6"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399448-3-stderr.txt",
+      "sha256": "918ad6805fdd7a599255c88ab40882d174a383714beb74e5407910ce09f67c45"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399462-1-stderr.txt",
+      "sha256": "695e4bfb9a8a7ecf07ecabee545dbe27020d41e116b2fea5d8018c8823ea770a"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399462-2-stderr.txt",
+      "sha256": "9bed28cb7ff8e38f10b54a5f286f7fcf4290aa19191bc6b022ab434867afde0c"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399462-3-stderr.txt",
+      "sha256": "8ffb521bf040edd698c339effb0341aba896dcb48569f488bf93c54ce2c36179"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399476-1-stderr.txt",
+      "sha256": "c12d9374b7df0e8f5112dd1dea92f5c1ecf51827549de4f93139db76f96b207b"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399476-2-stderr.txt",
+      "sha256": "eb0207e0ff685bf8f2f49d5014ed33f9a43865518ecf47110ad8ca49368f031f"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-55399476-3-stderr.txt",
+      "sha256": "9def35d916ec77ba5bd7ff55bdf58ca3b2ef0491a295372a072a1482d0af8af2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399449-1-stderr.txt",
+      "sha256": "da687e1521d37775c1fd742093d52b10ef3577cb0780f14b6d427bfa0fdc6fca"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399449-2-stderr.txt",
+      "sha256": "db7c71f52857a37b79ec7a0baf9e8554cf526e7e13ad03516ed85c8ec628fa30"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399449-3-stderr.txt",
+      "sha256": "2df74820053bf37f0f6b4086803bbc48a21ddd669ac6064adf121e6a83c047ad"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399463-1-stderr.txt",
+      "sha256": "5a5e8cc2add21897452a0daff95cf0210589c57f77eff1f69be8502f448c2532"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399463-2-stderr.txt",
+      "sha256": "e9d3e88d65895c6904a757b34491031a3c28e5a02c118d8e92c69e002aa54424"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399463-3-stderr.txt",
+      "sha256": "3d477814e26d3b831d768ff95432585d90aed696ebf1a7c2de5ab9cc53e4ed25"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399477-1-stderr.txt",
+      "sha256": "819443b2e13edb74a16165a41f8b584acf1abf328114f427cae1220b6ac9e19d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399477-2-stderr.txt",
+      "sha256": "4c04b10fafdf0f0e7ea0c93390f712c4acd9de2a9e2c053bea81e2b310c9f5fd"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-55399477-3-stderr.txt",
+      "sha256": "5a795d824c9b12be10a18b0b01fb8984cf1e9de3e4da966fb5b5f0e409b74794"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399450-1-stderr.txt",
+      "sha256": "88ab4668fbe97a7c8b618974bc4acb36b726a7466b5aab74bf0016df76ea5dfe"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399450-2-stderr.txt",
+      "sha256": "872c58ef220d8de203ab2bfb2d7d964dd2133305fb2b6f3ed00d4956d781ddb5"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399450-3-stderr.txt",
+      "sha256": "a3f233a4a3e5e671595da3fb1031343dad35ff17e4f3d6dfa431c8ebc2bc0cae"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399464-1-stderr.txt",
+      "sha256": "45e0a1d0c7e5aaac1fe78e3066b3c8a19c3d6eb77eea20db04212e420f4ca4f2"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399464-2-stderr.txt",
+      "sha256": "e8e463605e13471977e62a5eb8649995818a015c3b68a0edce99f95c96f5d7ca"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399464-3-stderr.txt",
+      "sha256": "d5a7822d95362722b3c40519acb18c7c97f3b2c2c44c85253bbb6b30b2c16541"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399478-1-stderr.txt",
+      "sha256": "0c0efedf6a2640af2ec83a949740fa1f87149532bff4f8b878112a03d6f371ce"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399478-2-stderr.txt",
+      "sha256": "fbe4ed10bf0bfdc441b719cbd59f67e4cccbc2a4d5cd1baae8f23b9f4ac9a776"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-device-nvshmem/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-55399478-3-stderr.txt",
+      "sha256": "846bc7e2852c57648e0d0a074f0909d87663e4aee98fd2664015111d427994ed"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-56216554-2-stdout.txt",
+      "sha256": "6040a7a9920d8d12e7f4783ca14620394d69ae5b80315f40b38632ef717022e8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-56216555-1-stdout.txt",
+      "sha256": "a2a38bcfe6688ce206af4e811574f5bcc50977d8dce102a7c842082dffd208a8"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-56216564-2-stdout.txt",
+      "sha256": "44d2c505c9e6b2f999b99862e8d4df34fa8a36d9f946b12aec5973510198ad52"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-56216557-3-stdout.txt",
+      "sha256": "8916c077a46ececa0b2a6cfe23880602866b34a5ddff01f95c09def047da124d"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-56216572-3-stdout.txt",
+      "sha256": "f04f855fc0d05401e73fc29d60004c7c76a70f510fbd8e69d2d4215e712a7bfc"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-56216574-2-stdout.txt",
+      "sha256": "55fd4e522677cc33d859f024b4f854f751bd98d205ae6b201ba11f7b0ba0f017"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-56216581-2-stdout.txt",
+      "sha256": "2350d017e64f89535e9e636b652eaabf272d737a57ca1dae94368c1bcbe04d38"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-56216582-2-stdout.txt",
+      "sha256": "279814d0896bcf3f524c8e50423e5f1ed2c9fdc8c0a56ff2960979bd40c1da32"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-56216590-1-stdout.txt",
+      "sha256": "3ce61efbbe75f81546e66e1c2b30426d77990f59ab737e6e9484232d24351af9"
+    },
+    {
+      "repository": "acg",
+      "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216591-3-stdout.txt",
+      "sha256": "323b359fc8965fe5fdb6630f108c9a6a11314da8ac6ecafc6d253f39f8d64f29"
+    }
+  ]
+}
