@@ -14,7 +14,7 @@ The first comparison asks whether device-side invocation improves a dependency-o
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/pingpong-regimes.png}
+\includegraphics[width=\textwidth]{figures/results/pingpong-regimes.png}
 \caption{Ping-pong latency for direct CUDA stacks within one node and across two nodes. Points are medians of five allocation means; shading spans those means. Latency is half the round-trip time.}
 \label{fig:m-pingpong-regimes}
 \end{figure}
@@ -24,13 +24,7 @@ The first comparison asks whether device-side invocation improves a dependency-o
 \caption{Inter-node ping-pong latency on \texttt{2n1g}, including SYCL paths. Values are allocation-based medians in \,$\mu$s.}
 \label{tab:m-pingpong-inter}
 \footnotesize
-\begin{tabular}{lrr}
-\toprule
-Stack & 4\,B & 16\,MiB\\
-\midrule
-\input{data/main-campaign/pingpong-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/pingpong-table.tex}
 \end{table}
 
 Within a node, NVSHMEM becomes competitive over an intermediate message range, while MPI again improves relative to it at large payloads. Table~\ref{tab:m-pingpong-inter} also shows that CUDA and SYCL MPI cannot be assumed to agree at every size: their small-message results are close to the MPI startup regime, but their large-message endpoints differ substantially. A shared MPI installation supplies a useful comparison, not a guarantee of identical execution costs.
@@ -41,7 +35,7 @@ A repeated neighbor exchange offers a different opportunity from ping-pong. The 
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/halo-regimes.png}
+\includegraphics[width=\textwidth]{figures/results/halo-regimes.png}
 \caption{Isolated and steady-state halo latency. Steady-state values amortize a batch of 100 exchanges. Points and shading show allocation medians and ranges; payload counts two sends and two receives.}
 \label{fig:m-halo-regimes}
 \end{figure}
@@ -52,13 +46,7 @@ MPI supplies the low-startup reference for isolated exchanges. Batching makes OS
 \centering
 \caption{Peak steady-state halo bandwidth computed from allocation-median latency, in GB/s. The numerator is aggregate logical halo volume, not one NIC's traffic.}
 \label{tab:m-halo-bandwidth}
-\begin{tabular}{lrrr}
-\toprule
-Topology & CUDA MPI & CUDA NVSHMEM & OSHMPI\\
-\midrule
-\input{data/main-campaign/halo_1d-bandwidth-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/halo_1d-bandwidth-table.tex}
 \end{table}
 
 The favorable GPU-initiated regime is thus sustained neighbor work rather than universally low latency. This supports the persistent-execution hypothesis in RQ1, while the host-driven OSHMPI result shows that batching and completion policy also matter independently of invocation location. Because the paths differ in signaling and progress, these measurements do not isolate a launch-overhead saving by themselves.
@@ -71,20 +59,14 @@ For reductions, the dominant distinction is between startup-sensitive scalar wor
 \centering
 \caption{Peak allreduce bus bandwidth in GB/s, recomputed as input bytes divided by allocation-median latency and multiplied by $2(P-1)/P$.}
 \label{tab:m-allreduce-bandwidth}
-\begin{tabular}{lrrr}
-\toprule
-Topology & CUDA NCCL & CUDA NVSHMEM & CUDA MPI\\
-\midrule
-\input{data/main-campaign/allreduce-bandwidth-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/allreduce-bandwidth-table.tex}
 \end{table}
 
 The UCC control explains why MPI's result cannot be summarized by a single library label. Figure~\ref{fig:m-ucc-allreduce} shows a size-dependent trade-off. UCC improves large reductions, but incurs penalties in part of the small-message range. The exceptions include an intra-node region around 4\,KiB; its benefit is not uniform even on one node. On the larger multi-node configurations, the crossover back to a benefit occurs around 64\,KiB.
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/ucc-ab-allreduce.png}
+\includegraphics[width=\textwidth]{figures/results/ucc-ab-allreduce.png}
 \caption{Paired UCC allreduce summary means. Ratios above one favor UCC. Selected topologies show both the intra-node exception and multi-node crossover. The SYCL \texttt{8n4g} series is absent because no matched pair was retained.}
 \label{fig:m-ucc-allreduce}
 \end{figure}
@@ -99,7 +81,7 @@ All-to-all gives the clearest example of a configuration changing the apparent l
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/ucc-ab-alltoall.png}
+\includegraphics[width=\textwidth]{figures/results/ucc-ab-alltoall.png}
 \caption{Paired UCC all-to-all summary means. The payload axis is bytes per peer. The large high-rank benefit and the smaller large-message penalty motivate treating configuration as part of stack selection.}
 \label{fig:m-ucc-alltoall}
 \end{figure}
@@ -132,13 +114,7 @@ At large payloads, NCCL-based paths regain the advantage. Table~\ref{tab:m-allto
 \caption{All-to-all aggregate bandwidth at 256\,KiB per peer, in GB/s. The numerator includes each rank's self block.}
 \label{tab:m-alltoall-bandwidth}
 \footnotesize
-\begin{tabular}{lrrrr}
-\toprule
-Topology & CUDA MPI & CUDA NCCL & CUDA NVSHMEM & oneCCL/NCCL\\
-\midrule
-\input{data/main-campaign/alltoall-bandwidth-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/alltoall-bandwidth-table.tex}
 \end{table}
 
 These primitive results leave several plausible candidates: MPI for startup-sensitive transfers, persistent NVSHMEM for large repeated halos, and NCCL-based paths for bulk collectives. The next question is whether composing operations preserves those advantages.
@@ -154,18 +130,12 @@ The composite archive covers seven placements, five global grid sides, and six b
 \caption{Lowest allocation-median \texttt{cg\_step} time by placement and global grid side. This is a point-estimate ranking, not a significance test.}
 \label{tab:m-cg-step}
 \footnotesize
-\begin{tabular}{lccccc}
-\toprule
-Topology & 512 & 1024 & 2048 & 4096 & 8192\\
-\midrule
-\input{data/main-campaign/cg-winner-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/cg-winner-table.tex}
 \end{table}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/cg-step-relative.png}
+\includegraphics[width=\textwidth]{figures/results/cg-step-relative.png}
 \caption{Composite-step time relative to CUDA MPI at the same global grid side and placement. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack.}
 \label{fig:m-cg-relative}
 \end{figure}
@@ -183,13 +153,7 @@ Table~\ref{tab:m-cg-phases} uses the separate synchronized phase pass at \texttt
 \caption{Archived mean \texttt{cg\_step} phase costs on \texttt{4n4g}, side 512, in \,$\mu$s. Step is the unsplit mean; gap is phase sum minus step.}
 \label{tab:m-cg-phases}
 \scriptsize
-\begin{tabular}{lrrrrrrr}
-\toprule
-Backend & Pack & Halo & Compute & Reduce & Sum & Step & Gap\\
-\midrule
-\input{data/main-campaign/cg-phase-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/cg-phase-table.tex}
 \end{table}
 
 For NCCL, the phase sum is approximately 166.3\,$\mu$s and the unsplit mean 107.7\,$\mu$s. Their 58.6\,$\mu$s difference is about 35\% of the phase sum, or 54\% of the unsplit time. The denominator changes the percentage. More importantly, the gap includes synchronization introduced by instrumentation and variation between passes; it cannot be reported as a measured overlap fraction.
@@ -243,18 +207,12 @@ NCCL is the fastest stable host-initiated communicator in the retained two-matri
 \caption{OSHMPI-halo aCG results from the fastest residual-valid trial. Relative columns compare analytical throughput, not solver-time ratios.}
 \label{tab:m-acg-oshmpi}
 \footnotesize
-\begin{tabular}{llrrrr}
-\toprule
-Matrix & GPUs & Time (s) & GFLOP/s/GPU & vs NCCL & vs host NVSHMEM\\
-\midrule
-\input{data/main-campaign/acg-oshmpi-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/acg-oshmpi-table.tex}
 \end{table}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/acg-campaign-summary.png}
+\includegraphics[width=\textwidth]{figures/results/acg-campaign-summary.png}
 \caption{aCG scaling and variability. Left: analytical throughput of fastest-valid trials normalized to the one-GPU reference. Right: MPI solver time by allocation, with median markers and trial minimum--maximum ranges. The dashed device-NVSHMEM series changes solver organization as well as initiation.}
 \label{fig:m-acg-scaling}
 \end{figure}
@@ -286,7 +244,7 @@ Direct OSHMPI & No matched archived scalar path & Benchmark stages to host; appl
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/acg-reduction-prediction.png}
+\includegraphics[width=\textwidth]{figures/results/acg-reduction-prediction.png}
 \caption{One-double reduction prediction versus aCG measurement. Point labels give GPU count. The dashed line is exact agreement; no model is fitted to these points. MPI observations come from the OSHMPI-halo solver.}
 \label{fig:m-acg-reduction-prediction}
 \end{figure}
@@ -295,13 +253,7 @@ Direct OSHMPI & No matched archived scalar path & Benchmark stages to host; appl
 \centering
 \caption{Mean absolute percentage error over five rank counts, regenerated from the retained prediction pairs.}
 \label{tab:m-acg-reduction-correlation}
-\begin{tabular}{lrr}
-\toprule
-Reduction path & Bump\_2911 & Queen\_4147\\
-\midrule
-\input{data/main-campaign/reduction-error-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/reduction-error-table.tex}
 \end{table}
 
 The mean errors range from 7.8\% to 11.1\%. Individual cells can differ more: the NCCL Bump prediction is approximately 20\% high at eight and 16 GPUs. Figure~\ref{fig:m-acg-reduction-prediction} makes this distinction visible; a mean error is not an upper bound on every prediction. The evidence supports scalar-cost estimation across the measured rank range, not a numerical prediction of complete solver time.
@@ -317,13 +269,7 @@ The regular halo and composite step do not reproduce aCG's exchange. The synthet
 \caption{Application halo signatures reconstructed from the fixed sparse partitions. Volume is mean outgoing KiB per rank and exchange, excluding reductions.}
 \label{tab:m-acg-halo-signatures}
 \footnotesize
-\begin{tabular}{lrrrr}
-\toprule
-Matrix & GPUs & Mean neighbors & Max neighbors & Send KiB/rank\\
-\midrule
-\input{data/main-campaign/halo-signature-rows.tex}
-\bottomrule
-\end{tabular}
+\input{data/main-campaign/halo-signature-table.tex}
 \end{table}
 
 The nominal halo timer cannot resolve this difference by itself. It measures only the wait at halo-end. For OSHMPI, communication has already completed in halo-begin, so a small halo column coexists with a substantial cost in \emph{other}. Dividing the full payload by that residual wait produces an apparent bandwidth, not a physical transfer rate. A comparison of isolated halo latency with this column would therefore compare different intervals.
@@ -405,7 +351,7 @@ Across the supplied 4\,B--32\,KiB cells, symmetric allocation and registration i
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/nccl-preliminary-allreduce.png}
+\includegraphics[width=\textwidth]{figures/results/nccl-preliminary-allreduce.png}
 \caption{All supplied preliminary allreduce medians. Connecting lines are guides; individual trials and uncertainty intervals are unavailable.}
 \label{fig:m-nccl-preliminary-allreduce}
 \end{figure}
@@ -418,7 +364,7 @@ Small-message all-to-all changes little between the plain and symmetric 2.31.2 c
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=\textwidth]{results/nccl-preliminary-alltoall.png}
+\includegraphics[width=\textwidth]{figures/results/nccl-preliminary-alltoall.png}
 \caption{All supplied preliminary all-to-all medians. The size convention is retained from the source summary and is not equated with the main per-peer sweep.}
 \label{fig:m-nccl-preliminary-alltoall}
 \end{figure}

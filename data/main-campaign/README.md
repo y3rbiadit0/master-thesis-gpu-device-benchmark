@@ -55,7 +55,9 @@ rendering the main figures does not require the sibling repositories.
   These are replay **inputs**, not replay performance measurements.
 - `halo-signatures.csv`: mean/max outgoing neighbor count and mean send KiB per
   exchange. Byte volume is one-directional and excludes reductions.
-- `*-rows.tex`: generated table bodies consumed directly by the thesis.
+- `*-table.tex`: complete generated `tabular` blocks, including headers and rules.
+  Include these inside a `table` float but outside any `tabular` environment;
+  row-only `\input` calls can interfere with alignment parsing and file hooks.
 
 ## Selection and reconciliation
 
@@ -94,3 +96,11 @@ The separate SYCL comparison and preliminary NCCL medians have different data
 availability and remain outside this archive's primary solver ranking. The SYCL
 report uses medians on both sides; its CUDA convergence-count field is incomplete
 because the original parser does not populate the convergence flag.
+
+## Inscrive Git import
+
+Figure references use explicit project-root paths such as
+`figures/results/pingpong-regimes.png`, so asset discovery does not depend on
+interpreting `\graphicspath` inside the style file. Sync the generated table
+files and figures together with the chapter. `tools/check_thesis.py` checks these
+paths and rejects row-only includes inside table alignments.
