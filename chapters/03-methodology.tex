@@ -2,7 +2,7 @@
 
 This chapter details the experimental methodology designed to rigorously evaluate and compare the performance of distinct communication backends on GPU-accelerated clusters. It outlines the complete evaluation environment, detailing the hardware architecture, the specific software stacks and library versions employed, and the critical runtime variables used to tune each backend. By establishing this foundational framework, the chapter ensures that the subsequent comparative analysis between host-driven and device-initiated communication models is both reproducible and robust.
 
-\section{Research Planning}
+\section{Research Planning}\label{sec:research-planning-levels}
 
 The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three levels, and the campaign was executed in that order, because each level uses the preceding one to choose what is worth measuring:
 
@@ -20,17 +20,56 @@ The fundamental unit of comparison throughout this evaluation is a configured ru
 
 Because device-driven implementations differ from host-driven alternatives in much more than just their invocation mechanism, this methodology is designed to identify broader performance regimes. This ensures we do not incorrectly attribute all performance variations solely to the overhead of host-versus-device initiation.
 
-\subsection{Execution Procedure}\label{sec:execution-procedure}
+\subsection{Experiment Parameters}\label{sec:execution-procedure}
 
-All benchmark measurements were produced by the unified benchmark suite contributed by this thesis (Chapter~\ref{ch}), available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}, using the scheduler harness it ships under \path{cluster/}. The harness owns the experiment defaults, per-benchmark collective policy, process-to-GPU mapping, and result collection; the machine-specific compiler modules and transport tuning are isolated in \path{cluster/leonardo/}, so the same experiment definition can be resolved on another system without editing the harness.
+One benchmark measurement is defined by the eight parameters in Table~\ref{tab:m-experiment-parameters}. They fall into three conceptual groups: what is being measured, how long a single observation lasts, and how many times that observation is repeated. Only the third group carries statistical meaning, and conflating it with the second is the most common way a communication measurement overstates its own precision.
 
-The unit of execution is a \emph{cell}: one $(\text{benchmark}, \text{backend}, \text{topology})$ combination. Valid cells are declared explicitly in \path{cluster/harness/matrix.sh} rather than inferred from which binaries exist, so an exclusion such as ping-pong's absent four-rank case is reviewable. Submitting a cell produces one scheduler job on a fresh allocation, which loads the runtime settings for that backend, binds one rank per GPU, and then executes the benchmark.
+\begin{table}[htbp]
+\centering
+\caption{Parameters defining one benchmark measurement, and the values used in this campaign.}
+\label{tab:m-experiment-parameters}
+\footnotesize
+\begin{tabularx}{\textwidth}{lYl}
+\toprule
+Parameter & Role in the measurement & Campaign value\\
+\midrule
+Pattern & Communication operation or sequence under test & Six (Table~\ref{tab:m-benchmark-patterns})\\
+Stack & Compute interface and communication path & Seven (Table~\ref{tab:m-evaluated-stacks})\\
+Placement & Node and GPU count; one rank drives one GPU & Seven, \texttt{1n1g}--\texttt{8n4g}\\
+Payload & Message size or application problem size & Per pattern (Table~\ref{tab:m-benchmark-patterns})\\
+\midrule
+Warm-up iterations & Untimed executions preceding measurement & 20; 10 for \texttt{cg\_step}\\
+Timed iterations & Executions averaged into one sample & 100; 50 for \texttt{cg\_step}\\
+\midrule
+Trials per allocation & Process launches sharing one placement & 3\\
+Independent allocations & Scheduler jobs with separate placements & 5; 3 for \texttt{alltoall} and \texttt{cg\_step}\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-Each cell was submitted as \textbf{five independent repetitions}: five separate scheduler jobs, each acquiring its own allocation and therefore its own node placement and network routing. Within a job the benchmark is executed three times, and each of those trials runs untimed warm-up iterations before its timed iterations (Table~\ref{tab:m-benchmark-patterns}). One cell therefore contributes 15 trial records grouped under five allocations. This nesting matters for the statistics: repeated iterations inside a trial and repeated trials inside one allocation share a placement, so only the five allocations are independent samples of it. Section~\ref{sec:samples-method} defines how the levels are aggregated.
+\paragraph{What is measured.} The first four parameters identify a \emph{cell}: one $(\text{pattern}, \text{stack}, \text{placement})$ combination, swept over the payload axis. Placement is expressed as $N$ nodes by $G$ GPUs rather than as a single rank count, because two configurations with equal rank counts can use entirely different interconnects; \texttt{1n4g} and \texttt{2n1g} are the deliberate pair that separates those effects. The collective policy that applies to a pattern, such as whether UCC is enabled, is fixed per pattern rather than chosen per point, and is described in Section~\ref{sec:runtime-method}. A few patterns add their own controls, such as the halo's isolated and steady-state sample counts, \texttt{cg\_step}'s phase pass, and MoE's routing cases.
 
-Two patterns in the retained archive depart from that default. The all-to-all and \texttt{cg\_step} sweeps were reconciled from a snapshot with three allocations of three trials each; their allocation counts are reported as measured rather than as the intended default. No result is reweighted to hide the difference.
+\paragraph{How long one observation lasts.} Each measurement runs untimed warm-up iterations before its timed iterations. Warm-up is necessary because the first use of a communication path is not representative of its steady cost: buffer allocation, connection establishment, symmetric-heap registration, and the runtime's algorithm selection all happen once and would otherwise be charged to the first sample. The timed iterations then average per-iteration scheduling jitter. Neither parameter is a repetition in the statistical sense. Both occur inside one process launch, on one allocation, over one set of established connections, so increasing either narrows the reported spread without sampling any additional source of variation.
 
-Execution order follows the three levels above. The isolated microbenchmarks were run first and swept powers of two over the full size range, which fixed the payloads and placements that the later levels needed to reproduce: \texttt{cg\_step}'s scalar reductions were matched against the allreduce sweep, and its halo against \texttt{halo\_1d}. The application microbenchmarks were then run over the same placement set, followed by the aCG campaign described in Section~\ref{sec:acg-method}. Profiled runs use a dedicated result name with a single trial and never enter any performance summary, because tracing changes the measured interval.
+\paragraph{How many times it is repeated.} Two genuine repetition levels sit above the timed iterations. A \emph{trial} is a fresh process launch within the same allocation; repeating it exposes run-to-run variation such as initialization order and transient contention, but the nodes and network routes stay fixed. An \emph{allocation} is a separate scheduler job, which the scheduler may satisfy with different nodes and different routes through the fabric. Because placement is the dominant source of variation between two people running the same benchmark on the same machine, only the allocation level samples the quantity that reproducibility depends on.
+
+Each cell was therefore submitted as \textbf{five independent repetitions} of three trials each, giving 15 trial records grouped under five allocations, and the summary statistics give every allocation equal weight regardless of how many trials it contributed. Section~\ref{sec:samples-method} defines that aggregation. Two patterns in the retained archive depart from the default: the all-to-all and \texttt{cg\_step} sweeps come from a snapshot with three allocations of three trials each. Their allocation counts are reported as measured rather than as the intended default, and no result is reweighted to hide the difference.
+
+\paragraph{Execution order.} The campaign followed the three levels of Section~\ref{sec:research-planning-levels}. The isolated microbenchmarks ran first and swept powers of two over the full size range, which fixed the payloads and placements the later levels had to reproduce: \texttt{cg\_step}'s scalar reductions were matched against the allreduce sweep, and its halo against \texttt{halo\_1d}. The application microbenchmarks then ran over the same placement set, followed by the aCG campaign of Section~\ref{sec:acg-method}.
+
+\subsection{Harness Support for the Methodology}\label{sec:harness}
+
+Applying the parameters above by hand, across seven stacks and seven placements, would make the protocol a property of the operator's discipline rather than of the experiment. Each stack needs a different toolchain, launcher, and set of transport variables, and an inconsistency in any of them would be indistinguishable from a performance difference in the results. The benchmark suite contributed by this thesis (Chapter~\ref{ch}), available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}, therefore ships the methodology as an executable harness under \path{cluster/}, whose structure separates the experiment definition from the machine it runs on. The harness owns the parameter defaults, the per-pattern collective policy, the process-to-GPU mapping, and result collection; compiler modules and transport tuning for a specific system live behind a cluster interface in \path{cluster/leonardo/}, so the same experiment can be resolved elsewhere without editing the harness. Five properties turn the protocol into something the tool enforces:
+
+\begin{itemize}
+    \item \textbf{The matrix is declared, not inferred.} \path{cluster/harness/matrix.sh} lists the valid cells explicitly, so an exclusion such as ping-pong's absent four-rank case is a reviewable statement rather than a missing directory. A cell or the complete matrix can be inspected without submission, which makes the resolved parameters auditable before any allocation is consumed.
+    \item \textbf{Parameters are set once per pattern and inherited by every stack.} Iteration counts, warm-up, trial count, and collective policy are defined in the pattern's experiment definition, so all seven stacks are measured under identical settings by construction rather than by repetition of a command line.
+    \item \textbf{The rank-to-GPU mapping is launcher-independent.} A wrapper derives the local and global rank from whichever launcher variable is present and pins one GPU per rank. This matters because the oneCCL builds require their own launcher: without normalization, the portable stacks would differ from the native ones in process mapping as well as in communication path.
+    \item \textbf{Every trial log is self-describing.} Each run records the job and node list, the binary, launcher, timeout, stack, and runtime, together with the communication-relevant environment: UCX transport and rendezvous settings, Open MPI component selection, and the resolved NCCL and NVSHMEM versions. A result that cannot state which configuration produced it cannot support a comparison between configurations.
+    \item \textbf{Incomplete trials cannot become results.} Each trial writes to temporary files that are promoted to result files only on a successful exit status, with timeouts distinguished from other failures. A run that hangs or fails is retained under its temporary name for inspection but is never visible to the aggregation step, so a partial record cannot be counted as a completed trial.
+\end{itemize}
+
+Two further separations are partly conventional rather than enforced, and are stated as such. Profiling perturbs the measured interval, so a profiled campaign uses a dedicated result name and a single trial; the harness does not refuse other combinations, but it records the profiling mode in every log, so a profiled run can always be identified and excluded. Library-version comparisons are keyed by version into separate build and result trees, which does prevent two versions of the same library from sharing a binary or being averaged into one cell.
 
 \subsection{Research Questions and Evidence}
 
