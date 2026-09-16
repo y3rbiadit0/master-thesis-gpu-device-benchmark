@@ -401,7 +401,7 @@ The multi-GPU variants run on 2, 4, 8, 16, and 32 GPUs, using the \texttt{1n2g},
 
 \subsection{Solver Environment}\label{sec:acg-environment}
 
-Two builds of the solver are used. The CUDA solver provides every result of the benchmark-to-solver comparison. The SYCL solver is used only for a supporting CUDA--SYCL comparison, which runs Bump\_2911 on 1, 4, 8, and 16 GPUs and compares solver-time medians over three repeats. Because the two builds also differ in communication libraries, and the CUDA runs of that comparison lack a recorded convergence classification, its ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead.
+Two builds of the solver are used: the CUDA solver provides every result of the benchmark-to-solver comparison, and the SYCL solver is used only for a supporting CUDA--SYCL comparison.
 
 \paragraph{CUDA solver.} This is the CUDA implementation of aCG by Trotter et al.\ \cite{trotter_cpu-_2025}, extended with the OSHMPI communicator contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}}. It is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
 \begin{itemize}
@@ -417,10 +417,10 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
     \item \textbf{UCC:} disabled, as in \texttt{cg\_step}, whose scalar reductions it matches.
 \end{itemize}
 
-\paragraph{SYCL solver.} The SYCL port of aCG contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/acg-sycl}} is built with its own environment, which shares the SYCL toolchain of the microbenchmarks but not their communication libraries:
+\paragraph{SYCL solver.} The SYCL port of aCG contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/acg-sycl}} is compared with the CUDA solver on Bump\_2911 at 1, 4, 8, and 16 GPUs, using solver-time medians over three repeats. It is built with its own environment:
 \begin{itemize}
     \item \textbf{Toolchain:} DPC++ 6.3 with the CUDA backend, GCC 12.2, and CUDA 12.2, as for the SYCL microbenchmarks.
-    \item \textbf{Communication libraries:} Open MPI 4.1.6 and NCCL 2.22.3 from the site modules, rather than HPC-X 2.19 and NCCL 2.18.5.
+    \item \textbf{Communication libraries:} Open MPI 4.1.6 and NCCL 2.22.3 from the site modules, rather than HPC-X 2.19 and NCCL 2.18.5. The comparison therefore changes the communication libraries as well as the programming model, and its ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead; the CUDA runs of that report also lack a recorded convergence classification.
     \item \textbf{Other dependencies:} oneMath for the linear-algebra kernels, and METIS for partitioning.
 \end{itemize}
 
