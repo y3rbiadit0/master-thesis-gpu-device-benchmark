@@ -1,10 +1,22 @@
 \chapter{Experimental Methodology}\label{ch:m-methodology}
 
-\section{Research Design}
+This chapter details the experimental methodology designed to rigorously evaluate and compare the performance of distinct communication backends on GPU-accelerated clusters. It outlines the complete evaluation environment, detailing the hardware architecture, the specific software stacks and library versions employed, and the critical runtime variables used to tune each backend. By establishing this foundational framework, the chapter ensures that the subsequent comparative analysis between host-driven and device-initiated communication models is both reproducible and robust.
 
-The evaluation follows a candidate communication path from an isolated operation to a complete application. Microbenchmarks first locate its favorable message-size and placement regimes. A composite \texttt{cg\_step} then tests whether those observations explain a sequence containing halo exchange, computation, and scalar reductions. Finally, aCG tests cross-level agreement with a sparse partition, application dependencies, and convergence. The purpose of increasing application context is to establish which properties a benchmark must preserve to provide useful selection guidance.
+\section{Research Planning}
 
-The unit of comparison is a configured runtime stack. Direct MPI denotes GPU-aware HPC-X Open MPI over UCX; oneCCL is qualified by its NCCL or OSHMPI backend. Device invocation is evaluated through persistent NVSHMEM neighbor kernels and the monolithic NVSHMEM solver. These implementations differ from host-driven alternatives in more than invocation mode, so the comparison identifies performance regimes without treating every difference as an initiation-only effect.
+The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three stages:
+
+\begin{enumerate}
+    \item \textbf{Isolated Microbenchmarks:} Used to identify the optimal message sizes and topological configurations for a given backend.
+    \item \textbf{Composite \texttt{cg\_step}:} Evaluates whether baseline observations hold true in a more complex sequence that combines halo exchanges, local computation, and scalar reductions.
+    \item \textbf{Full \texttt{aCG} Solver:} Tests cross-level agreement by introducing sparse partitioning, realistic application dependencies, and convergence criteria.
+\end{enumerate}
+
+The main purpose of gradually increasing the application context is to determine which properties a simple benchmark must preserve to provide reliable performance guidance for a real application.
+
+The fundamental unit of comparison throughout this evaluation is a configured runtime stack. Rather than merely comparing individual libraries, this research contrasts fundamentally distinct communication models—specifically, host-driven paradigms against device-initiated executions. The precise implementations, spanning GPU-Aware MPI (CUDA/SYCL), oneCCL (NCCL/OSHMPI), NVSHMEM and OSHMPI are detailed in Section~\ref{sec:eval-environment}.
+
+Because device-driven implementations differ from host-driven alternatives in much more than just their invocation mechanism, this methodology is designed to identify broader performance regimes. This ensures we do not incorrectly attribute all performance variations solely to the overhead of host-versus-device initiation.
 
 \subsection{Research Questions and Evidence}
 
@@ -101,7 +113,7 @@ OSHMPI/oneCCL & Source-built extensions & Symmetric allocation and backend adapt
 
 MPI and OSHMPI share an MPI installation and UCX settings, but use different operation mappings and completion schemes. Sharing a transport framework does not isolate interface overhead: MPI RMA and two-sided operations can select different protocols and progress behavior. Similarly, comparing CUDA NCCL with SYCL oneCCL/NCCL includes compute-runtime and adapter differences.
 
-Native and direct MPI jobs use \texttt{srun}; oneCCL jobs use the MPI launcher matching their build. A rank wrapper derives the local rank and selects its CUDA device. Allocations request eight CPU cores per process, with binding configured to leave progress threads runnable. The oneCCL/NCCL bootstrap uses the TCP OFI provider across nodes; this does not make TCP its NCCL payload transport.
+Native and GPU-Aware MPI jobs use \texttt{srun}; oneCCL jobs use the MPI launcher matching their build. A rank wrapper derives the local rank and selects its CUDA device. Allocations request eight CPU cores per process, with binding configured to leave progress threads runnable. The oneCCL/NCCL bootstrap uses the TCP OFI provider across nodes; this does not make TCP its NCCL payload transport.
 
 \subsection{Transport Availability and Verification}\label{sec:ibgda-check}
 
