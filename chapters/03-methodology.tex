@@ -103,7 +103,7 @@ All experiments were run on the Booster partition of the Leonardo supercomputer 
     \item \textbf{Scheduler:} Slurm.
 \end{itemize}
 
-\subsection{Intra- and Inter-Node Communication}
+\subsection{Intra- and Inter-Node Communication Support}
 
 The node provides two communication domains with an order-of-magnitude difference in bandwidth, and the topology set is chosen to observe each separately and in combination:
 
@@ -131,7 +131,7 @@ Source-built components are identified by repository and branch in the artifact 
 
 \subsection{Evaluated Stacks}
 
-The benchmark compares seven source implementations or backend builds (Table~\ref{tab:m-evaluated-stacks}). The two oneCCL paths compile the same SYCL benchmark source against different backends; Section~\ref{sec:oneccl-method} describes what their adapters add to the measured path.
+The benchmark compares seven stacks (Table~\ref{tab:m-evaluated-stacks}). The two oneCCL stacks compile the same SYCL benchmark source against different backends. Table~\ref{tab:m-pattern-coverage} records which stacks were measured for each pattern; no single pattern contains all seven.
 
 \begin{table}[htbp]
 \centering
@@ -153,8 +153,6 @@ Identifier & Compute interface & Communication path\\
 \end{tabularx}
 \end{table}
 
-Table~\ref{tab:m-pattern-coverage} records measured coverage rather than API capability. The seven stack identifiers describe the union of the campaign; no single pattern contains all paths. In particular, oneCCL/OSHMPI is measured only for the standalone collectives, while the persistent device-invoked NVSHMEM implementation is specific to the neighbor patterns and the monolithic solver. The MoE column is complete for the six stacks that declare it: oneCCL/OSHMPI is not declared for MoE, because the adapter's point-to-point path would stage every variable-count block through symmetric memory.
-
 \begin{table}[htbp]
 \centering
 \caption{Measured backend coverage in the reconciled benchmark archive. ``No'' denotes an absent campaign cell, not an unsupported operation in the underlying library.}
@@ -175,19 +173,51 @@ Stack & Ping-pong & Halo & Allreduce & All-to-all & \texttt{moe} & \texttt{cg\_s
 \end{tabular}
 \end{table}
 
-MPI and OSHMPI share an MPI installation and UCX settings, but use different operation mappings and completion schemes. Sharing a transport framework does not isolate interface overhead: MPI RMA and two-sided operations can select different protocols and progress behavior. Similarly, comparing CUDA NCCL with SYCL oneCCL/NCCL includes compute-runtime and adapter differences.
+\subsection{Backend Considerations}\label{sec:runtime-method}
 
-Native and GPU-Aware MPI jobs use \texttt{srun}; oneCCL jobs use the MPI launcher matching their build. A rank wrapper derives the local rank and selects its CUDA device. Allocations request eight CPU cores per process, with binding configured to leave progress threads runnable. The oneCCL/NCCL bootstrap uses the TCP OFI provider across nodes; this does not make TCP its NCCL payload transport.
+Each stack runs with a fixed runtime configuration, applied identically to every cell of that stack by the benchmark tooling. Table~\ref{tab:m-runtime-settings} lists the settings that affect the measured path; everything else keeps library defaults.
 
-\subsection{Adapted oneCCL Paths}\label{sec:oneccl-method}
+\begin{table}[htbp]
+\centering
+\caption{Runtime settings per stack. Unlisted parameters keep library defaults.}
+\label{tab:m-runtime-settings}
+\scriptsize
+\begin{tabularx}{\textwidth}{lYY}
+\toprule
+Stack & Setting & Value\\
+\midrule
+MPI paths and OSHMPI & \texttt{UCX\_TLS} & \texttt{sm,cuda,self}; adds \texttt{rc} across nodes\\
+ & \texttt{UCX\_IB\_GPU\_DIRECT\_RDMA} & \texttt{yes}\\
+ & \texttt{UCX\_RNDV\_SCHEME}, \texttt{UCX\_RNDV\_THRESH} & \texttt{get\_zcopy}, 1024 bytes\\
+ & \texttt{UCX\_MAX\_RNDV\_RAILS} & 2 across nodes\\
+ & \texttt{OMPI\_MCA\_coll\_hcoll\_enable}, \texttt{OMPI\_MCA\_btl} & 0, \texttt{\^{}openib}\\
+ & \texttt{OMPI\_MCA\_coll\_ucc\_enable} & Per pattern (see text)\\
+\midrule
+OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{OMPI\_MCA\_osc} & 1\,GiB, \texttt{ucx}\\
+\midrule
+NVSHMEM & \texttt{NVSHMEM\_BOOTSTRAP}, \texttt{NVSHMEM\_REMOTE\_TRANSPORT} & \texttt{MPI}, \texttt{ibrc}\\
+ & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{NVSHMEM\_DISABLE\_NCCL} & 1\,GiB, 0\\
+\midrule
+oneCCL/NCCL & \texttt{CCL\_ATL\_TRANSPORT}, \texttt{CCL\_WORKER\_COUNT} & \texttt{mpi}, 1\\
+ & \texttt{I\_MPI\_OFI\_PROVIDER} & \texttt{tcp} for multi-node bootstrap\\
+\midrule
+oneCCL/OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{CCL\_OSHMPI\_STAGING\_SIZE} & 2\,GiB, 256\,MiB\\
+ & \texttt{CCL\_OSHMPI\_PT2PT\_SLOT\_SIZE} & 8\,MiB per peer\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-Two identifiers in Table~\ref{tab:m-evaluated-stacks} reach their backend through adapters written for this thesis, so each measures a complete adapted path rather than the backend alone. The NCCL adapter propagates oneCCL's group lifecycle to the corresponding NCCL calls, which preserves asynchronous submission: a dependent send/receive batch is issued as one group and observed through the returned event. The OSHMPI adapter maps collectives onto OpenSHMEM operations where equivalents exist and composes the remainder, building all-to-all-v from puts and synchronization, rooted reduce by discarding non-root allreduce output, and reduce-scatter from a slice of an allreduce result. Ordinary operands are staged through a grow-only symmetric arena, and because the underlying call is blocking and host-driven, pending SYCL work completes first and the returned event is already complete. That path therefore satisfies completion correctness without preserving asynchronous submission, and its staging and synchronization fall inside the timed interval because they are part of the implemented path.
+\paragraph{MPI and OSHMPI.} Both use the same HPC-X installation and UCX settings, but map operations differently: MPI uses two-sided and collective calls, OSHMPI uses MPI RMA, so a shared transport does not make their costs comparable as interface overhead. UCC is enabled for the standalone allreduce and all-to-all sweeps and disabled for \texttt{moe} and \texttt{cg\_step}, whose small or variable-count exchanges fall where UCC is slower or unmeasured. This is a fixed policy per pattern rather than the better of two settings per point; its effect is quantified by the paired UCC comparison in Chapter~\ref{ch:m-results}. OSHMPI's standalone allreduce reduces CUDA symmetric operands, while the archived \texttt{cg\_step} copies each scalar to host symmetric memory and reduces it there; the two are reported as separate variants.
 
-The oneCCL/NVSHMEM branch is a runtime foundation rather than a backend. It establishes CUDA-backed communicator selection, UID distribution through oneCCL's key-value store, lifecycle ownership, and symmetric staging, validated on one and two nodes, while its public collective, point-to-point, barrier, and split operations remain unsupported. It contributes integration evidence for RQ2 and no performance measurement.
+\paragraph{NCCL.} Algorithm and protocol selection are left to NCCL. The oneCCL/NCCL stack is launched and bootstrapped through the Intel MPI bundled with its build, using the TCP provider across nodes; NCCL still carries the payload over InfiniBand.
 
-\subsection{Transport Availability and Verification}\label{sec:ibgda-check}
+\paragraph{NVSHMEM.} NVSHMEM bootstraps through MPI and dispatches its collectives to NCCL in the benchmark, so its collective results describe that dispatched path. The persistent device-invoked neighbor kernels limit the inter-node grid to eight blocks to bound the request load on the CPU proxy described in Section~\ref{sec:ibgda-check}. aCG instead disables NCCL dispatch, a difference Section~\ref{sec:acg-method} accounts for.
 
-The NVSHMEM path was checked at two levels: inspection of the driver prerequisites and runtime logging of the selected transport. Table~\ref{tab:m-ibgda-check} records the relevant observations against the installation guidance \cite{nvidia_nvshmem_install_2026}. Operational identifiers and diagnostic provenance are retained in the experiment records rather than used to explain the result.
+\paragraph{oneCCL adapters.}\label{sec:oneccl-method} Two stacks reach their backend through adapters contributed by this thesis, so each measures the adapted path rather than the backend alone. The NCCL adapter forwards oneCCL's group calls to NCCL, so a dependent send/receive batch is submitted as one group and completes asynchronously through the returned event. The OSHMPI adapter maps collectives to OpenSHMEM operations where equivalents exist and composes the rest, for example all-to-all-v from puts and reduce-scatter from an allreduce. It stages operands through a symmetric arena and, because the OpenSHMEM call blocks on the host, returns an event that is already complete: completion is correct, but submission is no longer asynchronous. Staging and synchronization are inside the timed interval, and both oneCCL stacks also differ from their direct counterparts in compute runtime, since they run SYCL rather than CUDA. A third adapter, for NVSHMEM, is a runtime foundation only: it establishes communicator selection, bootstrap, lifecycle, and symmetric staging on one and two nodes, but its collective and point-to-point operations are unsupported, so it contributes integration evidence and no measurements.
+
+\subsection{Leonardo Considerations}\label{sec:ibgda-check}
+
+\paragraph{No GPU-initiated network posting.} NVSHMEM can let a GPU kernel post InfiniBand requests directly through IBGDA, but this path is not available on the evaluated system. Table~\ref{tab:m-ibgda-check} compares the recorded driver configuration with the documented prerequisites \cite{nvidia_nvshmem_install_2026}: the base driver, peer-memory, and OFED requirements are met, but the peer-mapping and stream-memory settings IBGDA relies on are disabled or not reported. These observations explain the missing prerequisites; they do not by themselves prove why the transport is unavailable. A two-node diagnostic run confirmed that NVSHMEM selected the \texttt{ibrc} transport. Device-initiated inter-node requests in this thesis are therefore serviced by a CPU proxy, consistent with the lack of IBGDA support reported for Leonardo by Trotter et al.\ \cite{trotter_cpu-_2025}. Results for device-initiated NVSHMEM describe proxy-assisted networking, not GPU-posted networking.
 
 \begin{table}[htbp]
 \centering
@@ -208,17 +238,9 @@ Stream memory operations & Enabled for the documented path & Disabled\\
 \end{tabularx}
 \end{table}
 
-A two-node diagnostic run reported the \texttt{ibrc} transport. Together with the recorded configuration, this establishes that the evaluated device-issued inter-node requests were serviced by a CPU proxy. The missing prerequisite settings are consistent with the reported lack of IBGDA support on Leonardo \cite{trotter_cpu-_2025}; an \texttt{ibrc} trace by itself would establish transport selection, not the reason another transport was unavailable. Driver requirements and alternative NIC-handler modes must be checked against the actual library release before a future GPU-posted experiment.
+\paragraph{Launch and process binding.} CUDA and MPI-based stacks are launched with \texttt{srun}; the oneCCL stacks use the MPI launcher of their own build. In both cases a wrapper maps each rank to one GPU by its node-local rank. Each process is given eight CPU cores with Slurm CPU binding disabled, leaving communication progress threads runnable.
 
-\subsection{Runtime Configuration and Sensitivity Controls}\label{sec:runtime-method}
-
-MPI and OSHMPI use UCX, with HCOLL and the legacy OpenIB component disabled. Single-node transfers select shared-memory, CUDA, and self transports; multi-node transfers additionally enable reliable-connection networking, service level 1, and two rendezvous rails. The benchmark requests GPUDirect RDMA and uses \texttt{get\_zcopy} with a 1024-byte rendezvous threshold. A separate rail-count comparison and UCC on/off controls assess these choices.
-
-UCC is enabled for standalone allreduce and the selected all-to-all configuration and disabled for \texttt{moe} and \texttt{cg\_step}. This is a fixed per-pattern policy, not a best-of-two selection at each plotted point. The UCC comparison is a separate paired configuration dataset; its results explain where the policy helps and where it incurs a penalty. Diagnostic tracing is excluded from performance aggregation because tracing and first-use connection setup change the measured interval.
-
-NCCL retains default algorithm and protocol selection. NVSHMEM uses MPI bootstrap, the \texttt{ibrc} transport, a 1\,GiB symmetric heap, and NCCL collective dispatch in the benchmark. Its persistent inter-node neighbor kernels cap the cooperative grid at eight blocks to limit proxy request pressure. Direct OSHMPI uses a 1\,GiB heap and the UCX RMA component; oneCCL/OSHMPI uses a 2\,GiB heap, a 256\,MiB staging arena, and an 8\,MiB point-to-point slot per peer.
-
-OSHMPI's standalone allreduce uses CUDA symmetric operands with UCC enabled. The archived \texttt{cg\_step} instead copies each device scalar to host symmetric memory and reduces it there. A separate device/UCC variant changes operand placement, allocator, and collective configuration together. These variants are kept distinct because their difference cannot be attributed solely to reduction execution.
+\paragraph{InfiniBand service level.} All InfiniBand traffic from UCX, NCCL, and NVSHMEM uses service level 1.
 
 \section{Measurement and Statistical Protocol}
 
@@ -284,7 +306,7 @@ Three deterministic routing cases change only the block-size distribution, not t
 
 At one rank all three cases degenerate to a local copy and are operationally equivalent; \texttt{1n1g} is therefore a packing and local-copy control, not a network measurement. Because the byte count is held fixed across cases, a latency difference between them is attributable to distribution rather than to volume. Each backend maps the exchange differently: the MPI paths issue two variable-count \texttt{MPI\_Alltoallv} calls, NCCL and oneCCL/NCCL issue grouped variable-count point-to-point exchanges, and the two SHMEM paths issue per-destination puts with local copies. The one-sided paths thus have no collective algorithm to reorganize a skewed distribution, which the \texttt{hotspot80} case is designed to expose.
 
-MoE keeps UCC disabled. That default was inherited from the all-to-all experiment rather than established by a MoE-specific control, and MoE uses the variable-count Open MPI path, not the one the all-to-all sweep measured. The MoE results consequently describe one fixed configuration and are not a tuned MPI result.
+MoE runs with UCC disabled (Section~\ref{sec:runtime-method}). That setting was not tuned for the variable-count Open MPI path MoE uses, so its MPI results describe one fixed configuration rather than a tuned one.
 
 \subsection{What the Composite Step Represents}
 
