@@ -207,13 +207,19 @@ oneCCL/OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{CCL\_OSHMPI\_STAGING\_S
 \end{tabularx}
 \end{table}
 
-\paragraph{MPI and OSHMPI.} Both use the same HPC-X installation and UCX settings, but map operations differently: MPI uses two-sided and collective calls, OSHMPI uses MPI RMA, so a shared transport does not make their costs comparable as interface overhead. UCC is enabled for the standalone allreduce and all-to-all sweeps and disabled for \texttt{moe} and \texttt{cg\_step}, whose small or variable-count exchanges fall where UCC is slower or unmeasured. This is a fixed policy per pattern rather than the better of two settings per point; its effect is quantified by the paired UCC comparison in Chapter~\ref{ch:m-results}. OSHMPI's standalone allreduce reduces CUDA symmetric operands, while the archived \texttt{cg\_step} copies each scalar to host symmetric memory and reduces it there; the two are reported as separate variants.
+\paragraph{MPI and OSHMPI.} Both use the same HPC-X installation and UCX settings, but map operations differently: MPI uses two-sided and collective calls, OSHMPI uses MPI RMA, so a shared transport does not make their costs comparable as interface overhead. UCC is enabled for the standalone allreduce and all-to-all sweeps and disabled for \texttt{moe} and \texttt{cg\_step}, whose small or variable-count exchanges fall where UCC is slower or unmeasured. This is a fixed policy per pattern rather than the better of two settings per point; its effect is quantified by the paired UCC comparison in Chapter~\ref{ch:m-results}.
 
 \paragraph{NCCL.} Algorithm and protocol selection are left to NCCL. The oneCCL/NCCL stack is launched and bootstrapped through the Intel MPI bundled with its build, using the TCP provider across nodes; NCCL still carries the payload over InfiniBand.
 
 \paragraph{NVSHMEM.} NVSHMEM bootstraps through MPI and dispatches its collectives to NCCL in the benchmark, so its collective results describe that dispatched path. The persistent device-invoked neighbor kernels limit the inter-node grid to eight blocks to bound the request load on the CPU proxy described in Section~\ref{sec:ibgda-check}. aCG instead disables NCCL dispatch, a difference Section~\ref{sec:acg-method} accounts for.
 
-\paragraph{oneCCL adapters.}\label{sec:oneccl-method} Two stacks reach their backend through adapters contributed by this thesis, so each measures the adapted path rather than the backend alone. The NCCL adapter forwards oneCCL's group calls to NCCL, so a dependent send/receive batch is submitted as one group and completes asynchronously through the returned event. The OSHMPI adapter maps collectives to OpenSHMEM operations where equivalents exist and composes the rest, for example all-to-all-v from puts and reduce-scatter from an allreduce. It stages operands through a symmetric arena and, because the OpenSHMEM call blocks on the host, returns an event that is already complete: completion is correct, but submission is no longer asynchronous. Staging and synchronization are inside the timed interval, and both oneCCL stacks also differ from their direct counterparts in compute runtime, since they run SYCL rather than CUDA. A third adapter, for NVSHMEM, is a runtime foundation only: it establishes communicator selection, bootstrap, lifecycle, and symmetric staging on one and two nodes, but its collective and point-to-point operations are unsupported, so it contributes integration evidence and no measurements.
+\paragraph{oneCCL adapters.}\label{sec:oneccl-method} Two stacks reach their backend through adapters contributed by this thesis, so each measures the adapted path rather than the backend alone. Both also run SYCL rather than CUDA, so a comparison with the direct backend changes the compute runtime as well.
+
+\begin{itemize}
+    \item \textbf{NCCL adapter.} Forwards oneCCL's group calls to NCCL, so a dependent send/receive batch is submitted as one group and completes asynchronously through the returned event.
+    \item \textbf{OSHMPI adapter.} Maps collectives to OpenSHMEM operations where equivalents exist and composes the rest, for example all-to-all-v from puts and reduce-scatter from an allreduce. Operands are staged through a symmetric arena, and because the OpenSHMEM call blocks on the host, the returned event is already complete: completion is correct, but submission is no longer asynchronous. Staging and synchronization are inside the timed interval.
+    \item \textbf{NVSHMEM adapter.} A runtime foundation only: it establishes communicator selection, bootstrap, lifecycle, and symmetric staging on one and two nodes, but its collective and point-to-point operations are unsupported. It contributes integration evidence and no measurements.
+\end{itemize}
 
 \subsection{Leonardo Considerations}\label{sec:ibgda-check}
 
@@ -242,35 +248,45 @@ Stream memory operations & Enabled for the documented path & Disabled\\
 
 \paragraph{InfiniBand service level.} All InfiniBand traffic from UCX, NCCL, and NVSHMEM uses service level 1.
 
-\section{Measurement and Statistical Protocol}
+\section{Benchmarks and Measurement Protocol}\label{sec:benchmark-method}
 
-\subsection{Completion Boundaries and Correctness}\label{sec:completion-method}
+All benchmarks share one measurement contract, and differ only in the operation they time, the point at which each stack considers that operation complete, and how their payload is counted. This section first defines the shared contract, then describes each benchmark in the order of the evaluation levels: the four communication microbenchmarks, then the two application microbenchmarks. It closes with how samples are aggregated into the reported results.
 
-Timed intervals include completion rather than only submission. MPI paths include blocking communication or request completion and the required device synchronization; NCCL paths wait for stream completion; oneCCL paths wait for returned events. SHMEM paths include the completion and synchronization required by their exchange protocol: MoE's OSHMPI path, for example, closes each of dispatch and combine with a quiet, a device synchronization, and a barrier, while its NVSHMEM path closes with a quiet and one signal per peer actually exchanged with. Persistent NVSHMEM batches additionally include device-side signaling and waits. Setup, initialization, and the final correctness checks are outside the timed intervals.
+\subsection{Common Protocol}\label{sec:completion-method}
 
-An isolated halo sample completes one exchange. A steady-state sample amortizes a batch boundary over 100 exchanges while retaining the protocol's required internal synchronization. These are different execution contracts, so the amortized result is not an estimate of raw network latency. Likewise, \texttt{cg\_step}'s phase instrumentation runs separately from its unsplit timing and introduces additional synchronization.
-
-Each implementation checks received or reduced data against its expected result and combines rank-local verdicts globally. MoE additionally validates the dispatch layout, token ownership, source-token ordering, and the deterministic payload, and then checks that combine reproduced the packed send buffer exactly. The composite benchmark checks its stencil and dot products. The archived OSHMPI scalar check validates host reduction results; it does not establish the cost of returning those results to a subsequent GPU consumer.
-
-The adapters of Section~\ref{sec:oneccl-method} are validated at the interface level on the same principle: the criterion is that a complete batch can be submitted and its completion observed correctly, exercised through dependent send/receive batches, nested groups, deferred events, error propagation, communicator reuse, and rank agreement with the supported world team. Unsupported configurations are rejected explicitly rather than silently approximated. The halo and all-to-all benchmarks then drive the validated path under load, so interface correctness and performance retention are established by separate evidence.
-
-\subsection{Samples, Trials, and Independent Allocations}\label{sec:samples-method}
-
-Except for ping-pong, each rank records a local elapsed-time series, and sample $i$ is summarized using the slowest rank:
+\paragraph{Timing.} Every benchmark uses GPU-resident buffers with deterministic contents. After the warm-up iterations, each rank records the elapsed time of every timed iteration, from submission of the operation to its observed completion. Buffer initialization, the initial rank barrier, validation, and reporting are outside the timed interval. Because a distributed operation completes only when its slowest participant does, sample $i$ is the maximum over the $P$ ranks,
 \begin{equation}
-t_i=\max_{r\in\{0,\ldots,P-1\}}t_{i,r}.
+t_i=\max_{r\in\{0,\ldots,P-1\}}t_{i,r},
 \end{equation}
-The arithmetic mean of this series is the trial latency. Ping-pong instead reports half of rank zero's round-trip time. Repeated iterations within a trial and repeated trials within an allocation are not independent samples of node assignment.
+and the trial latency is the arithmetic mean of that series. Ping-pong is the only exception, as described below.
 
-For the principal benchmark curves, trial means are first averaged within each allocation. The plotted center is the median of those allocation means, and shading shows their minimum--maximum range. Following the defaults of Section~\ref{sec:execution-procedure}, ping-pong, halo, allreduce, and MoE cells contain five allocations with three trials each; the retained all-to-all and \texttt{cg\_step} snapshots contain three allocations with three trials each. Ranges describe observed variation, not confidence intervals. Small differences with overlapping ranges are not treated as decisive backend advantages.
-
-The archived phase records contain aggregated phase means rather than per-allocation phase samples. Phase tables therefore compare those means with the stored unsplit mean, while headline curves use the allocation-based median. The UCC on/off CSVs likewise retain summary means and are analyzed as a separate configuration comparison. These reporting levels are stated explicitly rather than combined into one uncertainty estimate.
-
-\section{Communication Patterns and Application Microbenchmarks}\label{sec:benchmark-method}
+\paragraph{Completion.} The timed interval ends at the completion boundary of each stack, which is part of the measured cost rather than an implementation detail. Table~\ref{tab:m-completion} summarizes the boundary each stack family uses; the benchmark descriptions below note where a pattern departs from it.
 
 \begin{table}[htbp]
 \centering
-\caption{Benchmark patterns and measurement ranges. Iteration counts are timed/warm-up defaults. The first four patterns are isolated operations; the last two are the application microbenchmarks.}
+\caption{Completion boundary that closes the timed interval, by stack family.}
+\label{tab:m-completion}
+\footnotesize
+\begin{tabularx}{\textwidth}{lY}
+\toprule
+Stack & Completion boundary\\
+\midrule
+CUDA and SYCL MPI & Return of the blocking or waited MPI calls, with device synchronization where the step requires it\\
+NCCL & Synchronization of the CUDA stream the operation was queued on\\
+oneCCL/NCCL, oneCCL/OSHMPI & Completion of the event returned by oneCCL\\
+OSHMPI & For put-based exchanges, a quiet, device synchronization, and a barrier; for reductions, return of the collective\\
+NVSHMEM & Return of the host collective, or completion of the device kernel for device-initiated patterns\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Correctness.} Each benchmark fills its send buffers with a known pattern and, after timing, every rank checks the data it received or computed against the expected result. The rank-local verdicts are combined into one global result; a cell that fails validation is not a performance result. The oneCCL adapters are additionally validated at the interface level: a complete batch must be submitted and its completion observed correctly, exercised through dependent send/receive batches, nested groups, deferred events, error propagation, and communicator reuse, with unsupported configurations rejected explicitly. Interface correctness and performance are therefore established separately.
+
+Table~\ref{tab:m-benchmark-patterns} summarizes the six benchmarks.
+
+\begin{table}[htbp]
+\centering
+\caption{Benchmark patterns and measurement ranges. Iteration counts are timed/warm-up defaults.}
 \label{tab:m-benchmark-patterns}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYYl}
@@ -288,33 +304,80 @@ Pattern & Operation & Size range & Iterations\\
 \end{tabularx}
 \end{table}
 
-Ping-pong uses \texttt{1n2g} and \texttt{2n1g}. Halo adds \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}; the collectives and both application microbenchmarks also retain \texttt{1n1g} controls. Table~\ref{tab:m-pattern-coverage} gives the exact backend matrix: oneCCL/OSHMPI has standalone allreduce and all-to-all data but no ping-pong, halo, MoE, or composite-step campaign.
+\subsection{Communication Microbenchmarks}
 
-Payload conventions are operation-specific. Ping-pong uses one directional payload. Halo counts two sends and two receives. Allreduce reports input bytes, with bus bandwidth normalized by $2(P-1)/P$. All-to-all reports bytes per peer on its size axis and the whole per-rank send buffer, including the self block, for aggregate bandwidth. MoE reports useful application volume, $2\,T H \cdot 4$ bytes per rank for $T$ tokens of $H$ float32 features, counting dispatch and combine for every token including those that never leave their source rank. Bandwidth is recomputed from the stated payload and latency; these different conventions are not compared as physical link rates, and the MoE figure in particular is not the traffic crossing a link.
+The four microbenchmarks sweep powers of two over their size range and time one operation per iteration.
 
-\subsection{What the MoE Step Represents}\label{sec:moe-method}
+\subsubsection{Ping-Pong}
 
-The MoE microbenchmark measures one top-1 dispatch and its inverse combine, with no expert computation. Every rank holds $T=16{,}384$ tokens of $H=256$ float32 features. Each token is assigned to one expert rank, tokens are packed into destination-ordered blocks, and dispatch sends those variable-sized blocks to their expert ranks; combine returns each received block to its source without modifying the payload. Route generation, planning, packing, allocation, the initial barrier, and validation are outside the timed interval, so the measurement covers the redistribution itself rather than the routing decision.
-
-Three deterministic routing cases change only the block-size distribution, not the total useful volume:
-
+Rank 0 sends a buffer to rank 1, which returns the same payload; the exchange is dependency-ordered, since the reply cannot start before the message arrives. It runs on \texttt{1n2g} and \texttt{2n1g}, one link within a node and one across nodes.
 \begin{itemize}
-    \item \texttt{uniform}: tokens are assigned by a uniform hash, so every peer receives a comparable block. This is the case closest to the standalone all-to-all pattern.
-    \item \texttt{locality80}: approximately 80\% of tokens stay on their source rank. Off-node volume drops sharply while the number of peers does not.
-    \item \texttt{hotspot80}: approximately 80\% of tokens target rank 0, producing a deliberate incast onto one GPU and its NIC.
+    \item \textbf{Timing:} only rank 0 records samples, and the reported latency is half the round trip. NVSHMEM is timed differently: all timed exchanges run inside one persistent device kernel whose duration is divided by the iteration count, so its result is an average with coarser sampling than the per-exchange samples of the other stacks. The OSHMPI exchange includes handshake barriers, which direct point-to-point signaling does not need.
+    \item \textbf{Correctness:} rank 0 compares the returned buffer with the original payload.
+    \item \textbf{Payload:} one direction of the exchange.
 \end{itemize}
 
-At one rank all three cases degenerate to a local copy and are operationally equivalent; \texttt{1n1g} is therefore a packing and local-copy control, not a network measurement. Because the byte count is held fixed across cases, a latency difference between them is attributable to distribution rather than to volume. Each backend maps the exchange differently: the MPI paths issue two variable-count \texttt{MPI\_Alltoallv} calls, NCCL and oneCCL/NCCL issue grouped variable-count point-to-point exchanges, and the two SHMEM paths issue per-destination puts with local copies. The one-sided paths thus have no collective algorithm to reorganize a skewed distribution, which the \texttt{hotspot80} case is designed to expose.
+\subsubsection{Halo Exchange}
 
-MoE runs with UCC disabled (Section~\ref{sec:runtime-method}). That setting was not tuned for the variable-count Open MPI path MoE uses, so its MPI results describe one fixed configuration rather than a tuned one.
+Each rank exchanges one boundary region with its left and right neighbors on a periodic ring, over every topology with at least two ranks.
+\begin{itemize}
+    \item \textbf{Timing:} each size is measured in two cases. An \emph{isolated} sample times one exchange and exposes submission and completion latency. A \emph{steady} sample times a batch of 100 consecutive exchanges and divides by the batch length, amortizing that cost over queued or persistent work. The two are different execution contracts, and the steady result is not an estimate of raw network latency. The MPI stacks wait for each exchange; NCCL and oneCCL/NCCL complete per batch; OSHMPI closes with a global barrier rather than neighbor signaling; NVSHMEM runs a cooperative device kernel with neighbor signals.
+    \item \textbf{Correctness:} each rank checks both received regions against the markers its neighbors wrote.
+    \item \textbf{Payload:} two sends and two receives per rank.
+\end{itemize}
 
-\subsection{What the Composite Step Represents}
+\subsubsection{Allreduce}
 
-The composite benchmark block-distributes an $S\times S$ global grid by columns. Each iteration packs boundary columns, exchanges a nonperiodic west/east halo, computes a four-neighbor stencil and local dot products, and performs two separate global sums of one double each. The side $S$ takes values 512, 1024, 2048, 4096, and 8192. At fixed $S$, increasing rank count reduces local work; at fixed rank count, increasing $S$ increases local work quadratically and halo length linearly.
+Each rank contributes a float32 buffer and receives the element-wise sum, over every topology including the single-rank control.
+\begin{itemize}
+    \item \textbf{Timing:} one completed reduction per sample. OSHMPI reduces CUDA symmetric operands directly in this benchmark.
+    \item \textbf{Correctness:} rank $r$ fills its buffer with $r+1$, so every result element must equal $P(P+1)/2$.
+    \item \textbf{Payload:} input bytes per rank; bus bandwidth applies the conventional ring factor $2(P-1)/P$, which normalizes traffic without implying the algorithm a library selected.
+\end{itemize}
 
-The benchmark preserves the operation sequence but omits CG vector updates, changing search directions, and convergence. Both local dot products are available before the global reductions, and the archived loop does not use the reduced scalars to form the next iterate. Thus it tests a communication/computation composition, not the complete dependency graph in Table~\ref{tab:m-cg-dependencies}. In particular, the archived staged OSHMPI path omits the host-to-device result copy required by a GPU consumer.
+\subsubsection{All-to-All}
 
-With phase reporting enabled, a second pass measures pack, halo, computation, and reductions separately. Synchronization at phase boundaries changes both scheduling and overhead. The difference between the phase sum and unsplit time is consequently an instrumentation-sensitive diagnostic, not a direct overlap measurement.
+Each rank sends a distinct, equal-sized block to every rank, including itself, over every topology.
+\begin{itemize}
+    \item \textbf{Timing:} one completed exchange per sample. MPI and oneCCL issue a native all-to-all, while NCCL composes it from grouped point-to-point calls and OSHMPI from per-peer puts, so the same logical operation is implemented differently.
+    \item \textbf{Correctness:} source $r$ fills its block for destination $d$ with $rP+d$, and every destination checks each received block.
+    \item \textbf{Payload:} the size axis is bytes per peer, while bandwidth counts the whole per-rank send buffer including the self block.
+\end{itemize}
+
+\subsection{Application Microbenchmarks}
+
+The application microbenchmarks keep the protocol above but time a workload's communication sequence instead of a single operation. Both run on every topology, including a single-rank control.
+
+\subsubsection{MoE Dispatch and Combine}\label{sec:moe-method}
+
+The MoE benchmark times one top-1 dispatch and its inverse combine, without expert computation. Every rank holds $T=16{,}384$ tokens of $H=256$ float32 features, each assigned to one expert rank; dispatch sends the tokens to their experts in variable-sized blocks, and combine returns each block unchanged. Three deterministic routing cases change only how tokens are distributed, never how many bytes are moved:
+\begin{itemize}
+    \item \texttt{uniform}: tokens are spread evenly across ranks, the case closest to the all-to-all benchmark.
+    \item \texttt{locality80}: about 80\% of tokens stay on their source rank.
+    \item \texttt{hotspot80}: about 80\% of tokens target rank 0, creating a deliberate incast onto one GPU and its network adapter.
+\end{itemize}
+A latency difference between routing cases is therefore attributable to distribution rather than volume. At one rank all three cases reduce to a local copy, so \texttt{1n1g} is a packing control rather than a network measurement.
+\begin{itemize}
+    \item \textbf{Timing:} one completed dispatch and combine per sample; routing, planning, and packing are outside timing. The MPI stacks issue two \texttt{MPI\_Alltoallv} calls, NCCL and oneCCL/NCCL issue grouped variable-count point-to-point exchanges, and both SHMEM stacks issue per-destination puts. OSHMPI closes each phase with a quiet, device synchronization, and a barrier; NVSHMEM closes with a quiet and one signal per peer actually exchanged with. The one-sided stacks have no collective algorithm to reorganize a skewed distribution, which \texttt{hotspot80} is designed to expose.
+    \item \textbf{Correctness:} every rank checks the dispatch layout, token ownership, ordering, and payload, then checks that combine reproduced the packed send buffer exactly.
+    \item \textbf{Payload:} useful application volume, $2 \cdot T H \cdot 4$ bytes per rank for dispatch and combine, including tokens that never leave their rank. It is not the traffic crossing a link.
+\end{itemize}
+MoE runs with UCC disabled (Section~\ref{sec:runtime-method}), a setting not tuned for the variable-count path it uses, so its MPI results describe one fixed configuration.
+
+\subsubsection{CG Step}
+
+The \texttt{cg\_step} benchmark extracts the communication structure of one conjugate-gradient iteration. An $S\times S$ grid, with $S$ from 512 to 8192, is distributed by columns. Each iteration packs the boundary columns, exchanges a nonperiodic west/east halo, applies a four-neighbor stencil, computes two local dot products, and performs two global sums of one double each, matching the two scalar reductions of a CG iteration. At fixed $S$, more ranks reduce local work; at a fixed rank count, a larger $S$ increases local work quadratically and halo length linearly. The benchmark keeps this operation sequence but omits vector updates, changing search directions, and convergence: the reduced scalars do not feed a next iterate, so it tests a communication/computation composition rather than the dependency graph of a full solver (Table~\ref{tab:m-cg-dependencies}).
+\begin{itemize}
+    \item \textbf{Timing:} each sample covers pack, halo exchange, unpack, stencil, both dot products, and both completed reductions. The MPI halo uses two serialized \texttt{MPI\_Sendrecv} calls. The archived OSHMPI stack reduces each scalar in host memory and does not copy the result back to the GPU. The NVSHMEM stack fuses the two sums into one two-element reduction. An optional second pass times pack, halo, compute, and reductions separately; it synchronizes at every phase boundary, so its phase sum is an instrumentation-sensitive diagnostic rather than a measure of overlap.
+    \item \textbf{Correctness:} every rank checks its stencil slab against a host reference, and the two global dot products are checked. The archived OSHMPI check validates the host-side result only, so it does not cover returning that result to a GPU consumer.
+    \item \textbf{Payload:} a nominal two-column halo, excluding the scalar reductions.
+\end{itemize}
+
+\subsection{Statistical Aggregation}\label{sec:samples-method}
+
+Trial means are first averaged within each allocation, so every allocation carries equal weight regardless of its trial count. The reported center is the median of the allocation means, and shaded bands show their minimum--maximum range. The ranges describe observed variation, not confidence intervals, and small differences with overlapping ranges are not treated as decisive. Following the defaults of Section~\ref{sec:execution-procedure}, ping-pong, halo, allreduce, and MoE cells contain five allocations; the retained all-to-all and \texttt{cg\_step} snapshots contain three.
+
+Two auxiliary datasets are reported at a different level. The \texttt{cg\_step} phase records retain phase means rather than per-allocation samples, so phase tables compare them with the stored unsplit mean. The UCC on/off comparison retains summary means and is analyzed as a separate configuration dataset. Neither is combined with the allocation-based results into one uncertainty estimate.
 
 \section{Application Validation with aCG}\label{sec:acg-method}
 
