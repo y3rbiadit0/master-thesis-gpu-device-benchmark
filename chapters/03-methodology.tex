@@ -16,7 +16,7 @@ Of the two application microbenchmarks, \texttt{cg\_step} is the one carried int
 
 Raising the application context in steps is what makes the levels diagnostic: each one adds a single class of application property, so a ranking that changes between two levels identifies which property caused it.
 
-The unit of comparison is a configured runtime stack, not a library. Each stack fixes a compute interface, a communication path, and a completion contract together, and the evaluated device-initiated paths differ from their host-driven counterparts in all three, not only in where a transfer is invoked. The design therefore aims to locate performance regimes rather than to attribute differences to invocation alone; Section~\ref{sec:eval-environment} gives the seven stacks and the differences each comparison leaves uncontrolled.
+The unit of comparison is a configured runtime stack, not a library. Each stack fixes a compute interface, a communication path, and a completion contract together, and the evaluated device-initiated paths differ from their host-driven counterparts in all three, not only in where a transfer is invoked. The design therefore aims to locate performance regimes rather than to attribute differences to invocation alone; Section~\ref{sec:eval-environment} describes the environment and the seven stacks, including the differences each comparison leaves uncontrolled.
 
 \subsection{Experiment Parameters}\label{sec:execution-procedure}
 
@@ -87,11 +87,49 @@ RQ3 & Matched reduction costs, solver scaling, phase measurements, and CUDA--SYC
 
 The analysis distinguishes the archived performance campaign from later implementation changes. In particular, the measured OSHMPI \texttt{cg\_step} stages reductions to host memory without copying the results back to the GPU, while the measured aCG OSHMPI communicator uses MPI scalar reductions. Current source changes implement a complete staged round trip in both programs, but have no validated Leonardo performance results. They are candidates for a matched follow-up, not replacements for the archived measurements.
 
-\section{Platform and Evaluated Configurations}\label{sec:eval-environment}
+\section{Experimental Setup}\label{sec:eval-environment}
 
-All measurements use Leonardo's Booster partition at CINECA: four A100 GPUs per node, direct intra-node NVLink connections, and an InfiniBand HDR network, as described in Section~\ref{sec:leonardo}. One process controls one GPU. A topology label \texttt{$N$n$G$g} denotes $N$ nodes with $G$ ranks and GPUs per node. The campaign spans one to 32 GPUs.
+All experiments were run on the Booster partition of the Leonardo supercomputer at CINECA \cite{turisini_leonardo_2024}. Intra-node experiments use a single node with one, two, or four GPUs; multi-node experiments use two, four, or eight nodes of the same partition, up to 32 GPUs. One process drives one GPU throughout. This section describes the node hardware, the communication paths it provides, the software environment, and the stacks built on it.
 
-\subsection{Runtime Stacks and Software Versions}
+\subsection{Booster Node Specifications}
+
+\begin{itemize}
+    \item \textbf{Model:} Atos BullSequana X2135 ``Da Vinci'' single-node GPU blade.
+    \item \textbf{Processor:} one Intel Xeon Platinum 8358 (Ice Lake), 32 cores at 2.60\,GHz.
+    \item \textbf{GPU:} four NVIDIA A100 SXM4 GPUs with 64\,GB of HBM2e each.
+    \item \textbf{Memory:} 512\,GB DDR4 at 3200\,MHz ($8 \times 64$\,GB).
+    \item \textbf{Intra-node interconnect:} NVLink~3.0, with each GPU connected directly to the other three by four links, giving 200\,GB/s of bidirectional bandwidth per GPU pair; there is no NVSwitch.
+    \item \textbf{Network:} NVIDIA Mellanox InfiniBand HDR in a DragonFly+ topology, with two dual-port HDR100 adapters per node, exposed as four 100\,Gb/s interfaces.
+    \item \textbf{Scheduler:} Slurm.
+\end{itemize}
+
+\subsection{Intra- and Inter-Node Communication}
+
+The node provides two communication domains with an order-of-magnitude difference in bandwidth, and the topology set is chosen to observe each separately and in combination:
+
+\begin{enumerate}
+    \item \textbf{Intra-node communication} between GPUs of the same node travels over the direct NVLink connections, using GPUDirect peer-to-peer access without staging through host memory. A single GPU pair has a 100\,GB/s ceiling per direction. The \texttt{1n2g} and \texttt{1n4g} topologies use only this domain, and \texttt{1n1g} serves as a single-GPU control with no inter-rank transfer.
+    \item \textbf{Inter-node communication} between nodes travels over InfiniBand, where GPUDirect RDMA lets the adapter read and write registered GPU memory directly. One HDR100 port carries 100\,Gb/s, or 12.5\,GB/s. The \texttt{2n1g} topology isolates this domain with one GPU per node, while \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} combine both domains at 8, 16, and 32 GPUs.
+\end{enumerate}
+
+Comparing \texttt{1n4g} with \texttt{2n1g} therefore separates a change of interconnect from a change of scale, which a rank-count axis alone would conflate. Device-initiated inter-node transfers are the exception to direct GPU-to-NIC posting: InfiniBand GPUDirect Async (IBGDA) is not available on the evaluated system, so NVSHMEM services them through a CPU proxy (Section~\ref{sec:ibgda-check}).
+
+\subsection{Libraries and Drivers}
+
+\begin{itemize}
+    \item \textbf{NVIDIA driver:} 535.274.02, with the \texttt{nvidia\_peermem} module loaded for GPUDirect RDMA.
+    \item \textbf{InfiniBand stack:} MLNX\_OFED 23.04-1.1.3.
+    \item \textbf{CUDA toolchain:} NVHPC 24.5 with CUDA 12.4, for the CUDA benchmarks and aCG.
+    \item \textbf{SYCL toolchain:} DPC++ 6.3 built from intel/llvm with the CUDA backend, GCC 12.2, and CUDA 12.2, for the SYCL benchmarks and solver.
+    \item \textbf{MPI:} HPC-X 2.19, providing Open MPI over UCX, with UCC 1.4.0 as an optional collective component. It serves the CUDA and SYCL MPI paths and is the substrate of OSHMPI.
+    \item \textbf{NCCL:} 2.18.5, for the direct NCCL path and beneath oneCCL.
+    \item \textbf{NVSHMEM:} 2.11.0, for the host- and device-invoked SHMEM paths.
+    \item \textbf{OSHMPI and oneCCL:} built from source at pinned revisions, including the NCCL and OSHMPI backend extensions of this thesis. The oneCCL/NCCL build launches and bootstraps with its bundled Intel MPI, while NCCL carries the payload.
+\end{itemize}
+
+Source-built components are identified by repository and branch in the artifact records; exact measured revisions are not available for every archived run.
+
+\subsection{Evaluated Stacks}
 
 The benchmark compares seven source implementations or backend builds (Table~\ref{tab:m-evaluated-stacks}). The two oneCCL paths compile the same SYCL benchmark source against different backends; Section~\ref{sec:oneccl-method} describes what their adapters add to the measured path.
 
@@ -135,27 +173,6 @@ Stack & Ping-pong & Halo & Allreduce & All-to-all & \texttt{moe} & \texttt{cg\_s
 \texttt{sycl\_oneccl\_oshmpi} & No & No & Yes & Yes & No & No\\
 \bottomrule
 \end{tabular}
-\end{table}
-
-\begin{table}[htbp]
-\centering
-\caption{Software versions and roles in the main campaign. Source-built adapters are identified by repository and branch in the artifact records; exact measured revisions are not available for every archived run.}
-\label{tab:m-eval-versions}
-\footnotesize
-\begin{tabularx}{\textwidth}{lYY}
-\toprule
-Component & Version or configuration & Role\\
-\midrule
-Native toolchain & NVHPC 24.5, CUDA 12.4 & CUDA benchmarks and aCG\\
-SYCL toolchain & DPC++ 6.3, GCC 12.2, CUDA 12.2 & SYCL benchmarks and solver\\
-HPC-X & 2.19; Open MPI over UCX & Direct MPI and OSHMPI substrate\\
-UCC & 1.4.0 & Optional MPI collective component\\
-NCCL & 2.18.5 & Direct and oneCCL collectives\\
-NVSHMEM & 2.11.0, \texttt{ibrc} & Host- and device-invoked SHMEM\\
-Intel MPI & Bundled with the oneCCL/NCCL build & Launch and bootstrap; NCCL carries payload\\
-OSHMPI/oneCCL & Source-built extensions & Symmetric allocation and backend adaptation\\
-\bottomrule
-\end{tabularx}
 \end{table}
 
 MPI and OSHMPI share an MPI installation and UCX settings, but use different operation mappings and completion schemes. Sharing a transport framework does not isolate interface overhead: MPI RMA and two-sided operations can select different protocols and progress behavior. Similarly, comparing CUDA NCCL with SYCL oneCCL/NCCL includes compute-runtime and adapter differences.
@@ -250,8 +267,6 @@ Pattern & Operation & Size range & Iterations\\
 \end{table}
 
 Ping-pong uses \texttt{1n2g} and \texttt{2n1g}. Halo adds \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}; the collectives and both application microbenchmarks also retain \texttt{1n1g} controls. Table~\ref{tab:m-pattern-coverage} gives the exact backend matrix: oneCCL/OSHMPI has standalone allreduce and all-to-all data but no ping-pong, halo, MoE, or composite-step campaign.
-
-The topology set is deliberately not a single rank sweep. \texttt{1n2g} and \texttt{1n4g} stay on intra-node NVLink; \texttt{2n1g} isolates one InfiniBand link with no intra-node traffic; and \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} combine both levels at 8, 16, and 32 GPUs. Comparing \texttt{1n4g} with \texttt{2n1g} therefore separates a change of scale from a change of interconnect, which a rank-count axis alone would conflate.
 
 Payload conventions are operation-specific. Ping-pong uses one directional payload. Halo counts two sends and two receives. Allreduce reports input bytes, with bus bandwidth normalized by $2(P-1)/P$. All-to-all reports bytes per peer on its size axis and the whole per-rank send buffer, including the self block, for aggregate bandwidth. MoE reports useful application volume, $2\,T H \cdot 4$ bytes per rank for $T$ tokens of $H$ float32 features, counting dispatch and combine for every token including those that never leave their source rank. Bandwidth is recomputed from the stated payload and latency; these different conventions are not compared as physical link rates, and the MoE figure in particular is not the traffic crossing a link.
 
