@@ -77,18 +77,20 @@ The agreement does not survive scale in this campaign. From \texttt{4n4g} onward
 \input{data/main-campaign/allreduce-bandwidth-table.tex}
 \end{table}
 
-The UCC control explains why MPI's result cannot be summarized by a single library label. Figure~\ref{fig:m-ucc-allreduce} shows a size-dependent trade-off. UCC improves large reductions, but incurs penalties in part of the small-message range. The exceptions include an intra-node region around 4\,KiB; its benefit is not uniform even on one node. On the larger multi-node configurations, the crossover back to a benefit occurs around 64\,KiB.
+The UCC control explains why MPI's result cannot be summarized by a single library label, and it is the largest configuration effect measured anywhere in this campaign. Figure~\ref{fig:m-ucc-allreduce} shows both configurations in absolute terms, because the ratio alone understates what is at stake. At a 16\,MiB intra-node reduction on \texttt{1n4g}, the same MPI installation takes 34.9\,ms with UCC disabled and 361\,$\mu$s with it enabled, a factor of 96.5. The corresponding multi-node figures are 39.6\,ms against 1121\,$\mu$s at \texttt{2n4g} and 45.2\,ms against 1873\,$\mu$s at \texttt{8n4g}. The non-UCC curve does not merely scale worse: it breaks down above 1\,MiB, where doubling the payload to 2\,MiB multiplies its cost by 5.1, from 809\,$\mu$s to 4101\,$\mu$s, and the gap widens monotonically from there.
+
+The trade-off runs the other way at small payloads, which is why the policy is a choice rather than a default to enable everywhere. Around 4\,KiB, UCC is slower on every measured placement, by factors of 0.55, 0.54, and 0.46 at \texttt{1n4g}, \texttt{2n4g}, and \texttt{8n4g}. Intra-node the curve recovers quickly; on the two multi-node placements UCC remains behind until roughly 64\,KiB. The reductions that \texttt{cg\_step} and aCG actually perform are single doubles, which sit firmly inside that penalty region, and this is why Section~\ref{sec:runtime-method} disables UCC for the composite step while enabling it for the standalone sweep.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/ucc-ab-allreduce.png}
-\caption{Paired UCC allreduce summary means. Ratios above one favor UCC. Selected topologies show both the intra-node exception and multi-node crossover. The SYCL \texttt{8n4g} series is absent because no matched pair was retained.}
+\caption{Paired UCC allreduce control for CUDA MPI. Top: the measured cost of each configuration, so the divergence at large payloads is visible in absolute terms. Bottom: the resulting speedup, shaded green where UCC is faster and red where it is slower. Values are matched summary means; the SYCL MPI series tracks these curves closely and is omitted for legibility.}
 \label{fig:m-ucc-allreduce}
 \end{figure}
 
 The discontinuity near 4\,KiB is consistent with the UCC TL/UCP source's change from a latency-oriented recursive k-nomial schedule to scatter-reduce/allgather k-nomial \cite{openucx_ucc_source_2026}. Source defaults explain a plausible mechanism, while forcing alternatives or recording the exact selected schedule would strengthen attribution for individual cells. The experiment uses one fixed UCC policy for the standalone allreduce sweep, so it does not claim a pointwise optimal configuration.
 
-The single-rank allreduce control is anomalously slow for large buffers: the auxiliary UCC data report approximately 21\,ms at 16\,MiB, despite no inter-rank reduction. It is excluded as a reference for network startup. A one-rank control removes network communication, but can still expose internal copies or reduction implementation costs.
+The single-rank allreduce control is anomalously slow for large buffers: the auxiliary UCC data report approximately 21\,ms at 16\,MiB, despite no inter-rank reduction. That cost is essentially unchanged by the UCC setting, at 21.9\,ms disabled against 21.4\,ms enabled, so it is not a collective-component effect. It is the same order of magnitude as the 34.9\,ms non-UCC four-rank result above, which is consistent with both being dominated by a local copy or reduction implementation rather than by transfer, though a one-rank control cannot separate those two by itself. It is excluded as a reference for network startup.
 
 The complete backend view also exposes the cost of oneCCL/OSHMPI's symmetric staging. On \texttt{1n4g}, the four-byte allreduce medians are 20.2\,$\mu$s directly and 18.6\,$\mu$s through oneCCL/OSHMPI. At 16\,MiB, they are 364\,$\mu$s and 6538\,$\mu$s, respectively: the adapted path is approximately 18 times slower. The direct device-resident reduction and symmetric-staging adapter use different memory and completion paths. The comparison therefore identifies the cost of the evaluated integration choice, not an intrinsic penalty of the oneCCL API.
 
@@ -96,7 +98,9 @@ This pattern demonstrates why functional interface compatibility and performance
 
 \subsection{All-to-All: Correct the Default Before Ranking Libraries}
 
-All-to-all gives the clearest example of a configuration changing the apparent library ranking. Figure~\ref{fig:m-alltoall-backends} first shows all seven measured stacks against bytes per peer, rather than the topology-dependent aggregate send-buffer size. The MPI default changes regime sharply as rank count and per-peer size increase, while oneCCL/OSHMPI's staged path remains substantially more expensive. In the paired UCC summaries, the non-UCC MPI path takes hundreds of microseconds for tiny per-peer payloads at 16 and 32 ranks. Enabling UCC reduces these costs by approximately 17--34 times. Figure~\ref{fig:m-ucc-alltoall} shows that this gain is concentrated in the high-rank, small-message region; larger payloads can instead favor the non-UCC configuration.
+All-to-all gives the clearest example of a configuration changing the apparent library ranking, and its UCC profile is the opposite of allreduce's. Figure~\ref{fig:m-alltoall-backends} first shows all seven measured stacks against bytes per peer, rather than the topology-dependent aggregate send-buffer size. The MPI default changes regime sharply as rank count and per-peer size increase, while oneCCL/OSHMPI's staged path remains substantially more expensive.
+
+Figure~\ref{fig:m-ucc-alltoall} isolates the cause. At \texttt{8n4g} the non-UCC path costs between 671 and 974\,$\mu$s for every payload at or below 256 bytes per peer and then drops abruptly to 60\,$\mu$s at 512 bytes, a cliff rather than a curve; with UCC enabled the same small sizes cost between 24 and 31\,$\mu$s. The peak gain is 33.7 times at 128 bytes per peer. Here the benefit is confined to the small-message, high-rank corner: the two configurations agree to within 2\% by 8\,KiB per peer, and at 256\,KiB per peer UCC is instead slower, at 0.87 of the non-UCC time at \texttt{8n4g} and 0.56 at \texttt{2n4g}. Allreduce and all-to-all therefore want UCC enabled in opposite regions of the same size axis, which is why a single machine-wide setting cannot be correct for both.
 
 \begin{figure}[htbp]
 \centering
@@ -108,7 +112,7 @@ All-to-all gives the clearest example of a configuration changing the apparent l
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/ucc-ab-alltoall.png}
-\caption{Paired UCC all-to-all summary means. The payload axis is bytes per peer. The large high-rank benefit and the smaller large-message penalty motivate treating configuration as part of stack selection.}
+\caption{Paired UCC all-to-all control for CUDA MPI, against bytes per peer. Top: measured cost of each configuration; the flat non-UCC plateau below 512\,B per peer at \texttt{8n4g} is the modified-Bruck default. Bottom: the resulting speedup. The benefit is concentrated at small payloads and reverses at the largest ones, the opposite of the allreduce profile in Figure~\ref{fig:m-ucc-allreduce}.}
 \label{fig:m-ucc-alltoall}
 \end{figure}
 
