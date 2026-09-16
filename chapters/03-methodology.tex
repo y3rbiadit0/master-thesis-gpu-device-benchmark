@@ -401,9 +401,9 @@ The multi-GPU variants run on 2, 4, 8, 16, and 32 GPUs, using the \texttt{1n2g},
 
 \subsection{Solver Environment}\label{sec:acg-environment}
 
-Two builds of the solver are used. The CUDA solver provides every result of the benchmark-to-solver comparison; the SYCL solver is used only for the supporting CUDA--SYCL comparison.
+Two builds of the solver are used. The CUDA solver provides every result of the benchmark-to-solver comparison. The SYCL solver is used only for a supporting CUDA--SYCL comparison, which runs Bump\_2911 on 1, 4, 8, and 16 GPUs and compares solver-time medians over three repeats. Because the two builds also differ in communication libraries, and the CUDA runs of that comparison lack a recorded convergence classification, its ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead.
 
-\paragraph{CUDA solver.} The solver is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
+\paragraph{CUDA solver.} This is the CUDA implementation of aCG by Trotter et al.\ \cite{trotter_cpu-_2025}, extended with the OSHMPI communicator contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}}. It is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
 \begin{itemize}
     \item \textbf{Toolchain:} NVHPC 24.5 with CUDA 12.4.
     \item \textbf{Communication libraries:} HPC-X 2.19 for MPI, and the NCCL and NVSHMEM releases bundled with NVHPC 24.5, as in Section~\ref{sec:eval-environment}.
@@ -423,7 +423,6 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
     \item \textbf{Communication libraries:} Open MPI 4.1.6 and NCCL 2.22.3 from the site modules, rather than HPC-X 2.19 and NCCL 2.18.5.
     \item \textbf{Other dependencies:} oneMath for the linear-algebra kernels, and METIS for partitioning.
 \end{itemize}
-The CUDA--SYCL comparison runs Bump\_2911 on 1, 4, 8, and 16 GPUs with MPI for distributed execution, and compares solver-time medians over three repeats. Because the two builds differ in MPI implementation and NCCL release as well as programming model, the resulting ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead. The comparison report also does not record convergence for the CUDA runs, so its zero converged count reflects a missing classification rather than nonconvergence.
 
 \subsection{Metrics and Correctness}
 
