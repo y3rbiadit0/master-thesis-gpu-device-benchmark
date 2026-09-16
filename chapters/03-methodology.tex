@@ -35,14 +35,14 @@ Parameter & Role in the measurement & Campaign value\\
 \midrule
 Pattern & Communication operation or sequence under test & Six (Table~\ref{tab:m-benchmark-patterns})\\
 Stack & Compute interface and communication path & Seven (Table~\ref{tab:m-evaluated-stacks})\\
-Placement & Node and GPU count; one rank drives one GPU & Seven, \texttt{1n1g}--\texttt{8n4g}\\
+Topology & Node and GPU count; one rank drives one GPU & Seven, \texttt{1n1g}--\texttt{8n4g}\\
 Payload & Message size or application problem size & Per pattern (Table~\ref{tab:m-benchmark-patterns})\\
 \midrule
 Warm-up iterations & Untimed executions preceding measurement & 20; 10 for \texttt{cg\_step}\\
 Timed iterations & Executions averaged into one sample & 100; 50 for \texttt{cg\_step}\\
 \midrule
 Trials per allocation & Process launches sharing one placement & 3\\
-Independent allocations & Scheduler jobs with separate placements & 5; 3 for \texttt{alltoall} and \texttt{cg\_step}\\
+Independent allocations & Scheduler jobs with separate placements & 5\\
 \bottomrule
 \end{tabularx}
 \end{table}
