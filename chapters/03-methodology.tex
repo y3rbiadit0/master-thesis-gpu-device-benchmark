@@ -399,24 +399,31 @@ Nonzero counts refer to the full symmetric matrix. Each matrix is solved with si
 
 The multi-GPU variants run on 2, 4, 8, 16, and 32 GPUs, using the \texttt{1n2g}, \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} topologies, with three allocations of three trials per configuration. All runs solve the same manufactured solution (seed 101) to a relative residual tolerance of $10^{-6}$, with no absolute tolerance and a limit of 100\,000 iterations. The retained archive contains 507 completed runs: 354 host-initiated, 90 device-NVSHMEM, and 63 single-GPU. Incomplete attempts are not counted as trials.
 
-\subsection{Solver Environment}
+\subsection{Solver Environment}\label{sec:acg-environment}
 
-The solver is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between the benchmark and solver results is not a difference in library versions:
+Two builds of the solver are used. The CUDA solver provides every result of the benchmark-to-solver comparison; the SYCL solver is used only for the supporting CUDA--SYCL comparison.
 
+\paragraph{CUDA solver.} The solver is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
 \begin{itemize}
     \item \textbf{Toolchain:} NVHPC 24.5 with CUDA 12.4.
     \item \textbf{Communication libraries:} HPC-X 2.19 for MPI, and the NCCL and NVSHMEM releases bundled with NVHPC 24.5, as in Section~\ref{sec:eval-environment}.
     \item \textbf{OSHMPI:} built from source against the same HPC-X installation.
     \item \textbf{Transport settings:} the Open MPI and UCX settings of Table~\ref{tab:m-runtime-settings}, taken from the benchmark configuration and shared by every communicator.
 \end{itemize}
-
 Three settings deliberately differ from the benchmark defaults, and each is accounted for in the comparison:
-
 \begin{itemize}
     \item \textbf{Rendezvous threshold:} UCX switches to rendezvous at 16\,KiB instead of 1\,KiB. A separate control shows this changes the composite step by only about 2--3\%.
     \item \textbf{NCCL dispatch:} disabled beneath NVSHMEM, so host-NVSHMEM reductions use NVSHMEM's native path rather than the NCCL-dispatched path of the benchmarks. The default benchmark NVSHMEM reduction is therefore not used as a matched prediction.
     \item \textbf{UCC:} disabled, as in \texttt{cg\_step}, whose scalar reductions it matches.
 \end{itemize}
+
+\paragraph{SYCL solver.} The SYCL port of aCG contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/acg-sycl}} is built with its own environment, which shares the SYCL toolchain of the microbenchmarks but not their communication libraries:
+\begin{itemize}
+    \item \textbf{Toolchain:} DPC++ 6.3 with the CUDA backend, GCC 12.2, and CUDA 12.2, as for the SYCL microbenchmarks.
+    \item \textbf{Communication libraries:} Open MPI 4.1.6 and NCCL 2.22.3 from the site modules, rather than HPC-X 2.19 and NCCL 2.18.5.
+    \item \textbf{Other dependencies:} oneMath for the linear-algebra kernels, and METIS for partitioning.
+\end{itemize}
+The CUDA--SYCL comparison runs Bump\_2911 on 1, 4, 8, and 16 GPUs with MPI for distributed execution, and compares solver-time medians over three repeats. Because the two builds differ in MPI implementation and NCCL release as well as programming model, the resulting ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead. The comparison report also does not record convergence for the CUDA runs, so its zero converged count reflects a missing classification rather than nonconvergence.
 
 \subsection{Metrics and Correctness}
 
@@ -431,22 +438,26 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
     \item \textbf{Phase timers} have backend-dependent meanings and cannot be summed into a network-cost model. The halo timer covers only the wait remaining at halo-end, so OSHMPI's blocking communication appears mainly under \emph{other}; NVSHMEM may include communication in its SpMV interval; and the allreduce timer includes the wait for the slowest rank to arrive.
 \end{itemize}
 
-\subsection{Cross-Level Comparison}
+\subsection{Cross-Level Comparison}\label{sec:cross-level}
 
-The benchmark-to-solver comparison is made for the scalar reductions, the one operation both levels perform identically: two global sums of one double per iteration. The benchmark estimate is half of the \texttt{cg\_step} reduction phase at side 512. The solver measurement is the accumulated allreduce time divided by the recorded number of calls, which for $K$ iterations is $2K+2$ because the solver also reduces outside its main loop. MPI is paired with the MPI reductions of the OSHMPI variant, avoiding the variability of the MPI halo, and NCCL with the NCCL variant. The discrepancy over the five matched GPU counts is
+The solver cannot be predicted from the benchmarks as a whole, because it combines operations the benchmarks measure separately with computation and convergence. The comparison therefore matches each property of the solver with the benchmark level that measures the same thing, and uses a different kind of comparison depending on how closely the two match.
+
+\paragraph{Scalar reductions: compared by value.} The reductions are the one operation both levels perform identically, two global sums of one double per iteration, so their costs are compared directly. The benchmark estimate is half of the \texttt{cg\_step} reduction phase at side 512. The solver measurement is its accumulated allreduce time divided by the recorded number of calls, which for $K$ iterations is $2K+2$, because the solver also reduces outside its main loop. MPI is paired with the MPI reductions of the OSHMPI variant, avoiding the variability of the MPI halo, and NCCL with the NCCL variant. The discrepancy over the five matched GPU counts is
 \[
 \mathrm{MAPE}=\frac{100}{5}\sum_{P\in\{2,4,8,16,32\}}
-\left|\frac{\widehat{t}_P}{t_P}-1\right|.
+\left|\frac{\widehat{t}_P}{t_P}-1\right|,
 \]
-This is a descriptive check of one phase cost across scale, not a fitted prediction of total solver time. The pairing matches datatype as well as payload: an eight-byte float32 allreduce from the microbenchmark would match the size but not the operation.
+where $\widehat{t}_P$ is the benchmark estimate and $t_P$ the solver measurement on $P$ GPUs. This is a descriptive check of one phase cost across scale, not a fitted prediction of total solver time. Matching datatype matters as well as size: an eight-byte float32 allreduce from the microbenchmark would match the payload but not the operation.
 
-Two variants limit what the comparison can claim:
+\paragraph{Halo exchange: compared by structure.} The halo cannot be compared by value, because the benchmark halo and the solver halo are different exchanges. The benchmarks use a fixed payload with two neighbors per rank, while the solver's neighbors and per-rank volume follow from the sparse partition. The solver's communication graph is therefore reconstructed from its recorded communication matrices, and characterized by neighbor count and send volume per rank at each GPU count (Table~\ref{tab:m-acg-halo-signatures}). This measures how far the solver's halo is from the one the benchmarks represent.
+
+\paragraph{Backend ranking: compared by order.} The ranking of communication variants by median solver time and by work-normalized throughput is compared with the \texttt{cg\_step} ranking at the same GPU counts. A ranking that changes between the two levels is not attributed to a single cause, since the reduction path, halo structure, and overlap with computation all change together.
+
+Two variants limit what these comparisons can claim:
 \begin{itemize}
     \item \textbf{OSHMPI measures a halo only.} Its puts complete inside halo-begin, before local SpMV, and its reductions use MPI, so the OSHMPI label identifies a halo implementation, not an OpenSHMEM reduction.
     \item \textbf{Device NVSHMEM changes more than communication.} It also reorganizes computation and synchronization, so it is evaluated as a different execution model rather than a communicator substitution.
 \end{itemize}
-
-\paragraph{Supporting CUDA--SYCL comparison.} A separate report compares the CUDA solver with its SYCL port on Bump\_2911 at 1, 4, 8, and 16 GPUs, using solver-time medians over three repeats. The SYCL port is built with DPC++ 6.3, GCC 12.2, and CUDA 12.2 against Open MPI 4.1.6 and NCCL 2.22.3, so the comparison changes the MPI implementation and NCCL release as well as the programming model. Its CUDA parser also does not record the convergence flag, so its zero converged-count field reflects a missing classification rather than nonconvergence. The ratios are therefore reported as supporting implementation timings, not as a matched equal-accuracy comparison.
 
 \section{Reproducibility and Evidence Boundaries}\label{sec:reproducibility}
 
