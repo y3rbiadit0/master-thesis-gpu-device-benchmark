@@ -14,10 +14,39 @@ From the thesis repository, supply the local source repository paths:
 ```sh
 python3 -B tools/rebuild_main_evidence.py \
   --benchmark-root /path/to/gpu-comm-benchmark \
-  --acg-root /path/to/aCG-native
+  --acg-root /path/to/aCG-native \
+  --retain cg_step
+python3 -B tools/import_moe_evidence.py --benchmark-root /path/to/gpu-comm-benchmark
 uv run --no-project tools/plot_main_evidence.py
 python3 -B -m unittest discover -s tools/tests -v
 ```
+
+**Mixed snapshot.** `manifest.json` records `retained_patterns` and marks each
+retained source with `retained_from_previous_import`. The current archive mixes
+two benchmark snapshots deliberately:
+
+| Pattern | Source |
+| --- | --- |
+| pingpong, halo_1d, alltoall, UCC | inputs hash-identical to the original import |
+| allreduce | re-run exported 2026-09-16 as `all-reducepoints.json`; every cell differs from the original import |
+| cg_step | retained from the original import via `--retain` |
+
+`--retain PATTERN` keeps a pattern's rows from the existing CSVs instead of
+re-importing it, and carries its original hash forward into the manifest.
+`check_snapshot` refuses, before writing anything, an input that would narrow the
+archive: a `cg_step` side set smaller than 512/1024/2048/4096/8192, or an
+unexpected pattern label. Both refusals correspond to defects seen in real
+imported snapshots — the narrowed `cg_step` re-run, and one `sycl_oneccl_oshmpi`
+record exported with `benchmark: "step"` instead of `"cg_step"`.
+
+**Snapshot warning.** `rebuild_main_evidence.py` reproduces the archived all-to-all
+and `cg_step` summaries only against the benchmark snapshot hashed in
+`manifest.json`. The benchmark repository has since replaced
+`cg-points.json` with a narrower re-run (side 512 only, five allocations, seven
+backends), which does not contain the five-side sweep the `cg_step` tables and
+figures are built from. Re-running the import against a newer checkout will
+silently shrink that evidence. The exported CSV files in this directory, not the
+sibling source tree, are the retained evidence for those two patterns.
 
 The import uses Python's standard library. The plotting script pins Matplotlib
 through inline dependency metadata. It reads only the exported CSV files, so
@@ -47,6 +76,13 @@ rendering the main figures does not require the sibling repositories.
   MPI uses the OSHMPI-halo solver's MPI reductions. NCCL uses the NCCL solver.
 - `cg-winners.csv`: lowest median point estimates and their runner-up ratios.
   Winner labels do not establish statistical significance.
+- `moe-summary.csv`, `moe-jobs.csv`, `moe-table.tex`, `moe-manifest.json`: the MoE
+  dispatch/combine campaign, imported by `tools/import_moe_evidence.py`. Same
+  aggregation policy as `benchmark-summary.csv`, deliberately separate files: the
+  MoE snapshot is later than the inputs recorded in `manifest.json`, and merging
+  them would put two snapshots in one archive. `useful_bytes` is application
+  volume for dispatch and combine including tokens that never leave their source
+  rank, so `useful_gbytes_per_s` is not a link rate.
 - `adapter-comparison.csv`: selected direct/adapted-stack comparisons. These also
   change compute interface or operand placement and do not isolate wrapper overhead.
 - `halo-replay.csv`: directed communication graphs from the selected OSHMPI-halo

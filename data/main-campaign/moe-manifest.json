@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "input_repository_revision": "6f36d4ce0fba4e75a608507f1fe4e771c186608f",
+  "measured_source_revision": null,
+  "generated_by_benchmark_at": "2026-09-16T05:12:46",
+  "policy": "median of within-allocation trial means; range over allocation means",
+  "relation_to_main_campaign": "later benchmark snapshot than manifest.json; kept in separate files, not merged",
+  "sources": [
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/2. application_benchmark/moe/moe-points.json",
+      "sha256": "ff8d5cf451942731448f77acd46f02802ca33b1ed7029212d08298ef6c77f23b"
+    }
+  ]
+}

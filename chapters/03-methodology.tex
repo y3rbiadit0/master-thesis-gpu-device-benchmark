@@ -4,19 +4,33 @@ This chapter details the experimental methodology designed to rigorously evaluat
 
 \section{Research Planning}
 
-The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three stages:
+The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three levels, and the campaign was executed in that order, because each level uses the preceding one to choose what is worth measuring:
 
 \begin{enumerate}
-    \item \textbf{Isolated Microbenchmarks:} Used to identify the optimal message sizes and topological configurations for a given backend.
-    \item \textbf{Composite \texttt{cg\_step}:} Evaluates whether baseline observations hold true in a more complex sequence that combines halo exchanges, local computation, and scalar reductions.
-    \item \textbf{Full \texttt{aCG} Solver:} Tests cross-level agreement by introducing sparse partitioning, realistic application dependencies, and convergence criteria.
+    \item \textbf{Isolated communication microbenchmarks:} \texttt{pingpong}, \texttt{halo\_1d}, \texttt{allreduce}, and \texttt{alltoall} exercise one operation at a time, with no computation to overlap or distort the transfer. They establish the message sizes, placements, and runtime settings at which a given backend is competitive.
+    \item \textbf{Application microbenchmarks:} \texttt{moe} and \texttt{cg\_step} retain the same harness, timing contract, and validation policy, but replace a single operation with a workload's communication sequence. \texttt{moe} adds routing-dependent, variable-count redistribution; \texttt{cg\_step} combines a halo exchange, a local stencil, and two scalar reductions. They test whether the isolated observations survive composition, either with an irregular payload distribution or with local computation.
+    \item \textbf{Full \texttt{aCG} solver:} Tests cross-level agreement by introducing sparse partitioning, realistic application dependencies, and convergence criteria.
 \end{enumerate}
+
+Of the two application microbenchmarks, \texttt{cg\_step} is the one carried into the cross-level comparison of Section~\ref{sec:acg-method}, because the solver evaluated in this thesis is a CG solver and its reductions can be matched by datatype and payload. \texttt{moe} has no matched application in this campaign; it is measured to test how strongly the ranking obtained from a uniform, fixed-count exchange depends on the payload distribution assumed by that exchange.
 
 The main purpose of gradually increasing the application context is to determine which properties a simple benchmark must preserve to provide reliable performance guidance for a real application.
 
 The fundamental unit of comparison throughout this evaluation is a configured runtime stack. Rather than merely comparing individual libraries, this research contrasts fundamentally distinct communication models—specifically, host-driven paradigms against device-initiated executions. The precise implementations, spanning GPU-Aware MPI (CUDA/SYCL), oneCCL (NCCL/OSHMPI), NVSHMEM and OSHMPI are detailed in Section~\ref{sec:eval-environment}.
 
 Because device-driven implementations differ from host-driven alternatives in much more than just their invocation mechanism, this methodology is designed to identify broader performance regimes. This ensures we do not incorrectly attribute all performance variations solely to the overhead of host-versus-device initiation.
+
+\subsection{Execution Procedure}\label{sec:execution-procedure}
+
+All benchmark measurements were produced by the unified benchmark suite contributed by this thesis (Chapter~\ref{ch}), available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}, using the scheduler harness it ships under \path{cluster/}. The harness owns the experiment defaults, per-benchmark collective policy, process-to-GPU mapping, and result collection; the machine-specific compiler modules and transport tuning are isolated in \path{cluster/leonardo/}, so the same experiment definition can be resolved on another system without editing the harness.
+
+The unit of execution is a \emph{cell}: one $(\text{benchmark}, \text{backend}, \text{topology})$ combination. Valid cells are declared explicitly in \path{cluster/harness/matrix.sh} rather than inferred from which binaries exist, so an exclusion such as ping-pong's absent four-rank case is reviewable. Submitting a cell produces one scheduler job on a fresh allocation, which loads the runtime settings for that backend, binds one rank per GPU, and then executes the benchmark.
+
+Each cell was submitted as \textbf{five independent repetitions}: five separate scheduler jobs, each acquiring its own allocation and therefore its own node placement and network routing. Within a job the benchmark is executed three times, and each of those trials runs untimed warm-up iterations before its timed iterations (Table~\ref{tab:m-benchmark-patterns}). One cell therefore contributes 15 trial records grouped under five allocations. This nesting matters for the statistics: repeated iterations inside a trial and repeated trials inside one allocation share a placement, so only the five allocations are independent samples of it. Section~\ref{sec:samples-method} defines how the levels are aggregated.
+
+Two patterns in the retained archive depart from that default. The all-to-all and \texttt{cg\_step} sweeps were reconciled from a snapshot with three allocations of three trials each; their allocation counts are reported as measured rather than as the intended default. No result is reweighted to hide the difference.
+
+Execution order follows the three levels above. The isolated microbenchmarks were run first and swept powers of two over the full size range, which fixed the payloads and placements that the later levels needed to reproduce: \texttt{cg\_step}'s scalar reductions were matched against the allreduce sweep, and its halo against \texttt{halo\_1d}. The application microbenchmarks were then run over the same placement set, followed by the aCG campaign described in Section~\ref{sec:acg-method}. Profiled runs use a dedicated result name with a single trial and never enter any performance summary, because tracing changes the measured interval.
 
 \subsection{Research Questions and Evidence}
 
@@ -68,24 +82,24 @@ Identifier & Compute interface & Communication path\\
 \end{tabularx}
 \end{table}
 
-Table~\ref{tab:m-pattern-coverage} records measured coverage rather than API capability. The seven stack identifiers describe the union of the campaign; no single pattern contains all paths. In particular, oneCCL/OSHMPI is measured only for the standalone collectives, while the persistent device-invoked NVSHMEM implementation is specific to the neighbor patterns and the monolithic solver.
+Table~\ref{tab:m-pattern-coverage} records measured coverage rather than API capability. The seven stack identifiers describe the union of the campaign; no single pattern contains all paths. In particular, oneCCL/OSHMPI is measured only for the standalone collectives, while the persistent device-invoked NVSHMEM implementation is specific to the neighbor patterns and the monolithic solver. The MoE column is complete for the six stacks that declare it: oneCCL/OSHMPI is not declared for MoE, because the adapter's point-to-point path would stage every variable-count block through symmetric memory.
 
 \begin{table}[htbp]
 \centering
 \caption{Measured backend coverage in the reconciled benchmark archive. ``No'' denotes an absent campaign cell, not an unsupported operation in the underlying library.}
 \label{tab:m-pattern-coverage}
 \scriptsize
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccccc}
 \toprule
-Stack & Ping-pong & Halo & Allreduce & All-to-all & \texttt{cg\_step}\\
+Stack & Ping-pong & Halo & Allreduce & All-to-all & \texttt{moe} & \texttt{cg\_step}\\
 \midrule
-\texttt{cuda\_mpi} & Yes & Yes & Yes & Yes & Yes\\
-\texttt{sycl\_mpi} & Yes & Yes & Yes & Yes & Yes\\
-\texttt{cuda\_nccl} & Yes & Yes & Yes & Yes & Yes\\
-\texttt{cuda\_nvshmem} & Yes & Yes & Yes & Yes & Yes\\
-\texttt{oshmpi} & Yes & Yes & Yes & Yes & Yes\\
-\texttt{sycl\_oneccl} & Yes & Yes & Yes & Yes & Yes\\
-\texttt{sycl\_oneccl\_oshmpi} & No & No & Yes & Yes & No\\
+\texttt{cuda\_mpi} & Yes & Yes & Yes & Yes & Yes & Yes\\
+\texttt{sycl\_mpi} & Yes & Yes & Yes & Yes & Yes & Yes\\
+\texttt{cuda\_nccl} & Yes & Yes & Yes & Yes & Yes & Yes\\
+\texttt{cuda\_nvshmem} & Yes & Yes & Yes & Yes & Yes & Yes\\
+\texttt{oshmpi} & Yes & Yes & Yes & Yes & Yes & Yes\\
+\texttt{sycl\_oneccl} & Yes & Yes & Yes & Yes & Yes & Yes\\
+\texttt{sycl\_oneccl\_oshmpi} & No & No & Yes & Yes & No & No\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -144,7 +158,7 @@ A two-node diagnostic run reported the \texttt{ibrc} transport. Together with th
 
 MPI and OSHMPI use UCX, with HCOLL and the legacy OpenIB component disabled. Single-node transfers select shared-memory, CUDA, and self transports; multi-node transfers additionally enable reliable-connection networking, service level 1, and two rendezvous rails. The benchmark requests GPUDirect RDMA and uses \texttt{get\_zcopy} with a 1024-byte rendezvous threshold. A separate rail-count comparison and UCC on/off controls assess these choices.
 
-UCC is enabled for standalone allreduce and the selected all-to-all configuration and disabled for \texttt{cg\_step}. This is a fixed per-pattern policy, not a best-of-two selection at each plotted point. The UCC comparison is a separate paired configuration dataset; its results explain where the policy helps and where it incurs a penalty. Diagnostic tracing is excluded from performance aggregation because tracing and first-use connection setup change the measured interval.
+UCC is enabled for standalone allreduce and the selected all-to-all configuration and disabled for \texttt{moe} and \texttt{cg\_step}. This is a fixed per-pattern policy, not a best-of-two selection at each plotted point. The UCC comparison is a separate paired configuration dataset; its results explain where the policy helps and where it incurs a penalty. Diagnostic tracing is excluded from performance aggregation because tracing and first-use connection setup change the measured interval.
 
 NCCL retains default algorithm and protocol selection. NVSHMEM uses MPI bootstrap, the \texttt{ibrc} transport, a 1\,GiB symmetric heap, and NCCL collective dispatch in the benchmark. Its persistent inter-node neighbor kernels cap the cooperative grid at eight blocks to limit proxy request pressure. Direct OSHMPI uses a 1\,GiB heap and the UCX RMA component; oneCCL/OSHMPI uses a 2\,GiB heap, a 256\,MiB staging arena, and an 8\,MiB point-to-point slot per peer.
 
@@ -154,13 +168,13 @@ OSHMPI's standalone allreduce uses CUDA symmetric operands with UCC enabled. The
 
 \subsection{Completion Boundaries and Correctness}
 
-Timed intervals include completion rather than only submission. MPI paths include blocking communication or request completion and the required device synchronization; NCCL paths wait for stream completion; oneCCL paths wait for returned events. SHMEM paths include the completion and synchronization required by their exchange protocol. Persistent NVSHMEM batches additionally include device-side signaling and waits. Setup, initialization, and the final correctness checks are outside the timed intervals.
+Timed intervals include completion rather than only submission. MPI paths include blocking communication or request completion and the required device synchronization; NCCL paths wait for stream completion; oneCCL paths wait for returned events. SHMEM paths include the completion and synchronization required by their exchange protocol: MoE's OSHMPI path, for example, closes each of dispatch and combine with a quiet, a device synchronization, and a barrier, while its NVSHMEM path closes with a quiet and one signal per peer actually exchanged with. Persistent NVSHMEM batches additionally include device-side signaling and waits. Setup, initialization, and the final correctness checks are outside the timed intervals.
 
 An isolated halo sample completes one exchange. A steady-state sample amortizes a batch boundary over 100 exchanges while retaining the protocol's required internal synchronization. These are different execution contracts, so the amortized result is not an estimate of raw network latency. Likewise, \texttt{cg\_step}'s phase instrumentation runs separately from its unsplit timing and introduces additional synchronization.
 
-Each implementation checks received or reduced data against its expected result and combines rank-local verdicts globally. The composite benchmark checks its stencil and dot products. The archived OSHMPI scalar check validates host reduction results; it does not establish the cost of returning those results to a subsequent GPU consumer.
+Each implementation checks received or reduced data against its expected result and combines rank-local verdicts globally. MoE additionally validates the dispatch layout, token ownership, source-token ordering, and the deterministic payload, and then checks that combine reproduced the packed send buffer exactly. The composite benchmark checks its stencil and dot products. The archived OSHMPI scalar check validates host reduction results; it does not establish the cost of returning those results to a subsequent GPU consumer.
 
-\subsection{Samples, Trials, and Independent Allocations}
+\subsection{Samples, Trials, and Independent Allocations}\label{sec:samples-method}
 
 Except for ping-pong, each rank records a local elapsed-time series, and sample $i$ is summarized using the slowest rank:
 \begin{equation}
@@ -168,15 +182,15 @@ t_i=\max_{r\in\{0,\ldots,P-1\}}t_{i,r}.
 \end{equation}
 The arithmetic mean of this series is the trial latency. Ping-pong instead reports half of rank zero's round-trip time. Repeated iterations within a trial and repeated trials within an allocation are not independent samples of cluster placement.
 
-For the principal benchmark curves, trial means are first averaged within each allocation. The plotted center is the median of those allocation means, and shading shows their minimum--maximum range. Ping-pong, halo, and allreduce cells contain five allocations with three trials each; all-to-all and \texttt{cg\_step} contain three allocations with three trials each. Ranges describe observed variation, not confidence intervals. Small differences with overlapping ranges are not treated as decisive backend advantages.
+For the principal benchmark curves, trial means are first averaged within each allocation. The plotted center is the median of those allocation means, and shading shows their minimum--maximum range. Following the five-repetition default of Section~\ref{sec:execution-procedure}, ping-pong, halo, allreduce, and MoE cells contain five allocations with three trials each; the retained all-to-all and \texttt{cg\_step} snapshots contain three allocations with three trials each. Ranges describe observed variation, not confidence intervals. Small differences with overlapping ranges are not treated as decisive backend advantages.
 
 The archived phase records contain aggregated phase means rather than per-allocation phase samples. Phase tables therefore compare those means with the stored unsplit mean, while headline curves use the allocation-based median. The UCC on/off CSVs likewise retain summary means and are analyzed as a separate configuration comparison. These reporting levels are stated explicitly rather than combined into one uncertainty estimate.
 
-\section{Communication Patterns and Composite Step}\label{sec:benchmark-method}
+\section{Communication Patterns and Application Microbenchmarks}\label{sec:benchmark-method}
 
 \begin{table}[htbp]
 \centering
-\caption{Benchmark patterns and measurement ranges. Iteration counts are timed/warm-up defaults.}
+\caption{Benchmark patterns and measurement ranges. Iteration counts are timed/warm-up defaults. The first four patterns are isolated operations; the last two are the application microbenchmarks.}
 \label{tab:m-benchmark-patterns}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYYl}
@@ -187,14 +201,34 @@ Pattern & Operation & Size range & Iterations\\
 \texttt{halo\_1d} & Periodic neighbor exchange & 16\,B--16\,MiB aggregate & 100/20\\
 \texttt{allreduce} & Float32 sum & 4\,B--16\,MiB & 100/20\\
 \texttt{alltoall} & Equal block per peer & 4\,B--256\,KiB per peer & 100/20\\
+\midrule
+\texttt{moe} & Variable-count dispatch and combine & 16\,384 tokens of 256 float32 per rank; three routing cases & 100/20\\
 \texttt{cg\_step} & Halo, stencil, two FP64 sums & Global side 512--8192 & 50/10\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Ping-pong uses \texttt{1n2g} and \texttt{2n1g}. Halo adds \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}; collectives and the composite step also retain \texttt{1n1g} controls. Table~\ref{tab:m-pattern-coverage} gives the exact backend matrix: oneCCL/OSHMPI has standalone allreduce and all-to-all data but no ping-pong, halo, or composite-step campaign. The suite also implements variable-count MoE traffic, but no complete MoE campaign is available for quantitative conclusions.
+Ping-pong uses \texttt{1n2g} and \texttt{2n1g}. Halo adds \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}; the collectives and both application microbenchmarks also retain \texttt{1n1g} controls. Table~\ref{tab:m-pattern-coverage} gives the exact backend matrix: oneCCL/OSHMPI has standalone allreduce and all-to-all data but no ping-pong, halo, MoE, or composite-step campaign.
 
-Payload conventions are operation-specific. Ping-pong uses one directional payload. Halo counts two sends and two receives. Allreduce reports input bytes, with bus bandwidth normalized by $2(P-1)/P$. All-to-all reports bytes per peer on its size axis and the whole per-rank send buffer, including the self block, for aggregate bandwidth. Bandwidth is recomputed from the stated payload and latency; these different conventions are not compared as physical link rates.
+The placement set is deliberately not a single rank sweep. \texttt{1n2g} and \texttt{1n4g} stay on intra-node NVLink; \texttt{2n1g} isolates one InfiniBand link with no intra-node traffic; and \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} combine both levels at 8, 16, and 32 GPUs. Comparing \texttt{1n4g} with \texttt{2n1g} therefore separates a change of scale from a change of interconnect, which a rank-count axis alone would conflate.
+
+Payload conventions are operation-specific. Ping-pong uses one directional payload. Halo counts two sends and two receives. Allreduce reports input bytes, with bus bandwidth normalized by $2(P-1)/P$. All-to-all reports bytes per peer on its size axis and the whole per-rank send buffer, including the self block, for aggregate bandwidth. MoE reports useful application volume, $2\,T H \cdot 4$ bytes per rank for $T$ tokens of $H$ float32 features, counting dispatch and combine for every token including those that never leave their source rank. Bandwidth is recomputed from the stated payload and latency; these different conventions are not compared as physical link rates, and the MoE figure in particular is not the traffic crossing a link.
+
+\subsection{What the MoE Step Represents}\label{sec:moe-method}
+
+The MoE microbenchmark measures one top-1 dispatch and its inverse combine, with no expert computation. Every rank holds $T=16{,}384$ tokens of $H=256$ float32 features. Each token is assigned to one expert rank, tokens are packed into destination-ordered blocks, and dispatch sends those variable-sized blocks to their expert ranks; combine returns each received block to its source without modifying the payload. Route generation, planning, packing, allocation, the initial barrier, and validation are outside the timed interval, so the measurement covers the redistribution itself rather than the routing decision.
+
+Three deterministic routing cases change only the block-size distribution, not the total useful volume:
+
+\begin{itemize}
+    \item \texttt{uniform}: tokens are assigned by a uniform hash, so every peer receives a comparable block. This is the case closest to the standalone all-to-all pattern.
+    \item \texttt{locality80}: approximately 80\% of tokens stay on their source rank. Off-node volume drops sharply while the number of peers does not.
+    \item \texttt{hotspot80}: approximately 80\% of tokens target rank 0, producing a deliberate incast onto one GPU and its NIC.
+\end{itemize}
+
+At one rank all three cases degenerate to a local copy and are operationally equivalent; \texttt{1n1g} is therefore a packing and local-copy control, not a network measurement. Because the byte count is held fixed across cases, a latency difference between them is attributable to distribution rather than to volume. Each backend maps the exchange differently: the MPI paths issue two variable-count \texttt{MPI\_Alltoallv} calls, NCCL and oneCCL/NCCL issue grouped variable-count point-to-point exchanges, and the two SHMEM paths issue per-destination puts with local copies. The one-sided paths thus have no collective algorithm to reorganize a skewed distribution, which the \texttt{hotspot80} case is designed to expose.
+
+MoE keeps UCC disabled. That default was inherited from the all-to-all experiment rather than established by a MoE-specific control, and MoE uses the variable-count Open MPI path, not the one the all-to-all sweep measured. The MoE results consequently describe one fixed configuration and are not a tuned MPI result.
 
 \subsection{What the Composite Step Represents}
 
@@ -264,6 +298,8 @@ The available comparison report contains timing and iteration summaries, but its
 \section{Reproducibility and Evidence Boundaries}\label{sec:reproducibility}
 
 The reconciled archive in \path{data/main-campaign/} contains benchmark allocation summaries, all retained aCG trial records, selected solver results, and reduction-prediction pairs. A manifest records source-file hashes and the repository revisions inspected during import. Those revisions identify the imported archive, not necessarily the source used for each measured run. \path{tools/rebuild_main_evidence.py} regenerates the data and complete table blocks; \path{tools/plot_main_evidence.py} renders the figures. The accompanying README specifies the aggregation and exclusion policies.
+
+The MoE campaign is a later benchmark snapshot than the reconciled inputs, so it is imported separately by \path{tools/import_moe_evidence.py} into its own summary, allocation, and manifest files rather than merged into the shared benchmark summary. One archive therefore corresponds to one snapshot, and the shared aggregation policy is reused rather than reimplemented. The archive is explicitly a mixed snapshot for the same reason. The allreduce sweep was re-run and re-exported after the original import, and the reported allreduce values are that later campaign; the \texttt{cg\_step} sweep was re-run only at global side 512, so the wider archived sweep is retained rather than replaced. The import records which patterns were retained and carries their original source hashes forward, and it refuses, before writing anything, an input that would narrow the archive. The exported CSV files, not the current source tree, are the evidence for the retained patterns.
 
 Auxiliary rail, scalar-placement, forced-algorithm, and runtime-dispatch controls survive partly as analysis records rather than complete per-trial datasets. Their reported effects are identified as such and are not assigned reconstructed error bars. The original IBGDA job and node identifiers are retained in \path{data/experiment-notes.md}. Preliminary NCCL transcription and plotting provenance are recorded separately in \path{data/nccl-preliminary.md}.
 

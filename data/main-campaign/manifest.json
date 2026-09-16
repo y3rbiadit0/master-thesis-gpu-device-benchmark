@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "input_repository_revisions": {
-    "benchmark": "c8ed32b890420ec360397d240cd12b54aaa6c093",
+    "benchmark": "6f36d4ce0fba4e75a608507f1fe4e771c186608f",
     "acg": "314700ff2333f912c6d69027044a029805c41344"
   },
   "measured_source_revision": null,
@@ -9,6 +9,9 @@
   "phase_policy": "stored phase means; per-allocation phase samples unavailable",
   "solver_policy": "fastest residual-valid completed trial per matrix/backend/rank count; retain all trials",
   "excluded_directory": "acg-cg-oshmpi-backup-mpi (backup, not an independent campaign)",
+  "retained_patterns": [
+    "cg_step"
+  ],
   "sources": [
     {
       "repository": "benchmark",
@@ -22,18 +25,13 @@
     },
     {
       "repository": "benchmark",
-      "path": "docs/analysis/data/1. microbenchmarks/allreduce/points.json",
-      "sha256": "1fdc3ea0eefbe3475bc0a7ccbe65bd06a82778b4fd2cf9707dfdc3a23c1c9f6e"
+      "path": "docs/analysis/data/1. microbenchmarks/allreduce/all-reducepoints.json",
+      "sha256": "60627397a3f4c33da65855620ed1d62628ae315dfadaa43ab3f63ad0a0dde589"
     },
     {
       "repository": "benchmark",
       "path": "docs/analysis/data/1. microbenchmarks/alltoall/points.json",
       "sha256": "f559df0dc56c49b2f0e458d2edda36a6405e00c557d90824c92a85e71a38765e"
-    },
-    {
-      "repository": "benchmark",
-      "path": "docs/analysis/data/2. application_benchmark/cg_step/cg-points.json",
-      "sha256": "8468d1cfa226573232a719314a8afab1baadf06a390023c0a15c7e50ddfafa14"
     },
     {
       "repository": "benchmark",
@@ -2639,6 +2637,12 @@
       "repository": "acg",
       "path": "acg-results/acg-cg-oshmpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-56216591-3-stdout.txt",
       "sha256": "323b359fc8965fe5fdb6630f108c9a6a11314da8ac6ecafc6d253f39f8d64f29"
+    },
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/2. application_benchmark/cg_step/cg-points.json",
+      "sha256": "8468d1cfa226573232a719314a8afab1baadf06a390023c0a15c7e50ddfafa14",
+      "retained_from_previous_import": true
     }
   ]
 }

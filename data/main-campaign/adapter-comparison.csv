@@ -1,5 +1,5 @@
 pattern,topology,bytes_per_rank,direct,adapted,direct_us,adapted_us,adapted_over_direct
 pingpong,2n1g,4,cuda_nccl,sycl_oneccl,28.781066666666668,33.78906666666666,1.1740032799340305
-allreduce,1n4g,4,oshmpi,sycl_oneccl_oshmpi,20.259,18.7079,0.9234364973591983
-allreduce,1n4g,16777216,oshmpi,sycl_oneccl_oshmpi,364.343,6508.6866666666665,17.864173777639934
+allreduce,1n4g,4,oshmpi,sycl_oneccl_oshmpi,20.1988,18.634766666666668,0.9225680073403701
+allreduce,1n4g,16777216,oshmpi,sycl_oneccl_oshmpi,364.46566666666666,6537.54,17.937327430018556
 alltoall,8n4g,8388608,cuda_nccl,sycl_oneccl,842.339,824.9393333333334,0.9793436292672348
