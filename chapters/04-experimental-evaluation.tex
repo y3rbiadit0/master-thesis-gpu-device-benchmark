@@ -4,13 +4,13 @@
 
 The results follow the execution order defined in Section~\ref{sec:execution-procedure}, and develop the selection argument in three steps. First, the isolated microbenchmarks identify candidate stacks and the configurations that make them competitive, separately within one node and across nodes. Second, the two application microbenchmarks test those candidates under a workload's communication sequence: \texttt{moe} keeps the operation but replaces the uniform payload distribution with routing-dependent block sizes, and \texttt{cg\_step} adds local computation and scalar reductions. Third, aCG determines which observations survive an irregular sparse partition, synchronization dependencies, and convergence. The common-interface results explain what is required to expose these paths through oneCCL.
 
-Every section reports the same placement progression: \texttt{1n2g} and \texttt{1n4g} on intra-node NVLink, \texttt{2n1g} as a single InfiniBand link without intra-node traffic, and \texttt{2n4g} through \texttt{8n4g} at 8, 16, and 32 GPUs with both levels active. The recurring question is whether a stack's intra-node advantage survives the crossing of that boundary.
+Every section reports the same topology progression: \texttt{1n2g} and \texttt{1n4g} on intra-node NVLink, \texttt{2n1g} as a single InfiniBand link without intra-node traffic, and \texttt{2n4g} through \texttt{8n4g} at 8, 16, and 32 GPUs with both levels active. The recurring question is whether a stack's intra-node advantage survives the crossing of that boundary.
 
 The principal figures and tables are regenerated from the reconciled archive described in Section~\ref{sec:reproducibility}. Benchmark curves use the median of allocation means with allocation ranges. Solver results first show median completed-trial time for every native path, then retain the reference study's fastest-valid-trial convention as a work-normalized sensitivity view and report MPI variability separately. Lowest point estimates are distinguished from decisive performance differences. Auxiliary configuration controls are identified where their evidence is available only as summaries; the incomplete later NCCL study is confined to Appendix~\ref{app:nccl-preliminary}.
 
 \section{Microbenchmark Results by Communication Pattern}\label{sec:micro-results}
 
-Each pattern is presented with the complete set of measured backends for that campaign, followed immediately by the configuration and execution-contract evidence needed to interpret the curves. The main figures use representative placements; Appendix~\ref{app:complete-results} provides the complete topology panels and the data archive retains every measured size. Comparisons identify complete configured paths rather than attributing a difference to an API or invocation location alone.
+Each pattern is presented with the complete set of measured backends for that campaign, followed immediately by the configuration and execution-contract evidence needed to interpret the curves. The main figures use representative topologies; Appendix~\ref{app:complete-results} provides the complete topology panels and the data archive retains every measured size. Comparisons identify complete configured paths rather than attributing a difference to an API or invocation location alone.
 
 \subsection{Ping-Pong: Establishing the Startup Reference}
 
@@ -59,14 +59,14 @@ The favorable regime for the persistent, kernel-invoked NVSHMEM path is thus sus
 
 \subsection{Allreduce: Configuration and Payload Both Matter}
 
-For reductions, the dominant distinction is between startup-sensitive scalar work and bulk combination. Figure~\ref{fig:m-allreduce-backends} shows all seven measured paths at representative intra- and multi-node placements. NCCL-based paths lead the large-message regime (Table~\ref{tab:m-allreduce-bandwidth}). Within one node, NVSHMEM matches NCCL closely, at 128.3 against 127.5\,GB/s on \texttt{1n4g}: NVSHMEM normally dispatches these benchmark collectives through NCCL, so that agreement is evidence about one configured path rather than two independent collective algorithms.
+For reductions, the dominant distinction is between startup-sensitive scalar work and bulk combination. Figure~\ref{fig:m-allreduce-backends} shows all seven measured paths at representative intra- and multi-node topologies. NCCL-based paths lead the large-message regime (Table~\ref{tab:m-allreduce-bandwidth}). Within one node, NVSHMEM matches NCCL closely, at 128.3 against 127.5\,GB/s on \texttt{1n4g}: NVSHMEM normally dispatches these benchmark collectives through NCCL, so that agreement is evidence about one configured path rather than two independent collective algorithms.
 
 The agreement does not survive scale in this campaign. From \texttt{4n4g} onward the NVSHMEM series separates from NCCL and falls behind every other path, to 14.3 against 31.8\,GB/s at \texttt{4n4g} and 11.9 against 29.5\,GB/s at \texttt{8n4g}, with a 16\,MiB latency of 2733\,$\mu$s against NCCL's 1104\,$\mu$s. Its allocation spread is also much wider than its neighbors'. Because dispatch configuration is exactly the variable that makes the intra-node curves agree, a separation that appears only across nodes is more consistent with a change in the selected multi-node path than with the collective algorithm itself, and the archived records do not carry the per-run dispatch setting needed to decide that. The multi-node NVSHMEM reduction figures are therefore reported as measured and are not used to rank collective implementations.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/allreduce-backends.png}
-\caption{Allreduce latency for all seven measured stacks at representative placements. Points are medians of allocation means and shading spans those means. The input payload is per rank; the single-rank control is discussed separately.}
+\caption{Allreduce latency for all seven measured stacks at representative topologies. Points are medians of allocation means and shading spans those means. The input payload is per rank; the single-rank control is discussed separately.}
 \label{fig:m-allreduce-backends}
 \end{figure}
 
@@ -79,7 +79,7 @@ The agreement does not survive scale in this campaign. From \texttt{4n4g} onward
 
 The UCC control explains why MPI's result cannot be summarized by a single library label, and it is the largest configuration effect measured anywhere in this campaign. Figure~\ref{fig:m-ucc-allreduce} shows both configurations in absolute terms, because the ratio alone understates what is at stake. At a 16\,MiB intra-node reduction on \texttt{1n4g}, the same MPI installation takes 34.9\,ms with UCC disabled and 361\,$\mu$s with it enabled, a factor of 96.5. The corresponding multi-node figures are 39.6\,ms against 1121\,$\mu$s at \texttt{2n4g} and 45.2\,ms against 1873\,$\mu$s at \texttt{8n4g}. The non-UCC curve does not merely scale worse: it breaks down above 1\,MiB, where doubling the payload to 2\,MiB multiplies its cost by 5.1, from 809\,$\mu$s to 4101\,$\mu$s, and the gap widens monotonically from there.
 
-The trade-off runs the other way at small payloads, which is why the policy is a choice rather than a default to enable everywhere. Around 4\,KiB, UCC is slower on every measured placement, by factors of 0.55, 0.54, and 0.46 at \texttt{1n4g}, \texttt{2n4g}, and \texttt{8n4g}. Intra-node the curve recovers quickly; on the two multi-node placements UCC remains behind until roughly 64\,KiB. The reductions that \texttt{cg\_step} and aCG actually perform are single doubles, which sit firmly inside that penalty region, and this is why Section~\ref{sec:runtime-method} disables UCC for the composite step while enabling it for the standalone sweep.
+The trade-off runs the other way at small payloads, which is why the policy is a choice rather than a default to enable everywhere. Around 4\,KiB, UCC is slower on every measured topology, by factors of 0.55, 0.54, and 0.46 at \texttt{1n4g}, \texttt{2n4g}, and \texttt{8n4g}. Intra-node the curve recovers quickly; on the two multi-node topologies UCC remains behind until roughly 64\,KiB. The reductions that \texttt{cg\_step} and aCG actually perform are single doubles, which sit firmly inside that penalty region, and this is why Section~\ref{sec:runtime-method} disables UCC for the composite step while enabling it for the standalone sweep.
 
 \begin{figure}[htbp]
 \centering
@@ -105,7 +105,7 @@ Figure~\ref{fig:m-ucc-alltoall} isolates the cause. At \texttt{8n4g} the non-UCC
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/alltoall-backends.png}
-\caption{All-to-all latency for all seven measured stacks at representative placements. The horizontal axis is payload per peer; points are medians of allocation means and shading spans those means.}
+\caption{All-to-all latency for all seven measured stacks at representative topologies. The horizontal axis is payload per peer; points are medians of allocation means and shading spans those means.}
 \label{fig:m-alltoall-backends}
 \end{figure}
 
@@ -151,11 +151,11 @@ At the largest \texttt{8n4g} payload, direct NCCL and oneCCL/NCCL are within app
 
 \subsection{Scaling from One Node to Eight}\label{sec:micro-scaling}
 
-Reading the four patterns across the placement axis rather than the size axis separates two different effects: losing NVLink, and adding GPUs. The steady-state halo at a 16\,MiB aggregate payload makes the first effect explicit. Within one node the aggregate rate is 325\,GB/s for OSHMPI and 280\,GB/s for CUDA MPI at \texttt{1n4g}. Moving the same exchange to \texttt{2n1g}, which keeps two ranks but places them on separate nodes, drops every stack to 20--24\,GB/s, an order-of-magnitude change produced by the interconnect alone. The rate then stays essentially flat as nodes are added: NVSHMEM holds 41.1, 40.9, and 40.6\,GB/s at \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}, and CUDA MPI holds 33.9--36.5\,GB/s over the same range. Once the exchange is inter-node, its aggregate rate is limited by what one node can inject, not by the number of nodes participating.
+Reading the four patterns across the topology axis rather than the size axis separates two different effects: losing NVLink, and adding GPUs. The steady-state halo at a 16\,MiB aggregate payload makes the first effect explicit. Within one node the aggregate rate is 325\,GB/s for OSHMPI and 280\,GB/s for CUDA MPI at \texttt{1n4g}. Moving the same exchange to \texttt{2n1g}, which keeps two ranks but places them on separate nodes, drops every stack to 20--24\,GB/s, an order-of-magnitude change produced by the interconnect alone. The rate then stays essentially flat as nodes are added: NVSHMEM holds 41.1, 40.9, and 40.6\,GB/s at \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}, and CUDA MPI holds 33.9--36.5\,GB/s over the same range. Once the exchange is inter-node, its aggregate rate is limited by what one node can inject, not by the number of nodes participating.
 
 Allreduce shows the second effect, and it runs in the opposite direction. At 16\,MiB, \texttt{2n1g} costs 1557\,$\mu$s for NCCL even though only two GPUs participate, whereas \texttt{8n4g} with 32 GPUs costs 1104\,$\mu$s. Adding intra-node ranks does not simply add work: the NVLink stage of a hierarchical reduction shrinks the payload that must cross InfiniBand. The same mechanism explains why the NCCL-based paths pull away from MPI only once each node holds four GPUs, from 567\,$\mu$s against 1118\,$\mu$s at \texttt{2n4g} to 1104\,$\mu$s against 1879\,$\mu$s at \texttt{8n4g}. In the scalar regime, where no such staging is available, the four-byte allreduce instead grows monotonically with rank count, from roughly 18--20\,$\mu$s at \texttt{1n4g} to 46--49\,$\mu$s at \texttt{8n4g} for every path except NVSHMEM, whose 88\,$\mu$s belongs with its separated multi-node behavior.
 
-These two effects bound what the later levels can show. A stack that wins intra-node has not been shown to win at scale, because the NVLink regime it won in disappears at \texttt{2n1g}; and a stack that loses at two ranks may recover at 32, because hierarchical staging only becomes available when nodes hold several GPUs. The remaining placement panels are in Appendix~\ref{app:complete-results}.
+These two effects bound what the later levels can show. A stack that wins intra-node has not been shown to win at scale, because the NVLink regime it won in disappears at \texttt{2n1g}; and a stack that loses at two ranks may recover at 32, because hierarchical staging only becomes available when nodes hold several GPUs. The remaining topology panels are in Appendix~\ref{app:complete-results}.
 
 These primitive results leave several plausible candidates: MPI for startup-sensitive transfers, persistent NVSHMEM for large repeated halos, and NCCL-based paths for bulk collectives. The next question is whether composing operations preserves those advantages.
 
@@ -165,12 +165,12 @@ The two application microbenchmarks address different threats to the primitive r
 
 \subsection{Placement Scaling Under Three Routing Cases}
 
-The MoE archive is complete for the six declared stacks across all seven placements and all three routing cases, with five allocations of three trials per cell. Total useful volume is held fixed at 32\,MiB per rank for dispatch and combine together, so a difference between routing cases is a difference in distribution, not in bytes moved.
+The MoE archive is complete for the six declared stacks across all seven topologies and all three routing cases, with five allocations of three trials per cell. Total useful volume is held fixed at 32\,MiB per rank for dispatch and combine together, so a difference between routing cases is a difference in distribution, not in bytes moved.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/moe-routing-scaling.png}
-\caption{MoE dispatch-and-combine latency for the six measured stacks at every placement, under the three routing cases. Points are medians of five allocation means and shading spans those means. The dotted line separates intra-node NVLink placements from those crossing InfiniBand. At \texttt{1n1g} all three cases degenerate to a local copy.}
+\caption{MoE dispatch-and-combine latency for the six measured stacks at every topology, under the three routing cases. Points are medians of five allocation means and shading spans those means. The dotted line separates intra-node NVLink topologies from those crossing InfiniBand. At \texttt{1n1g} all three cases degenerate to a local copy.}
 \label{fig:m-moe-scaling}
 \end{figure}
 
@@ -178,7 +178,7 @@ Figure~\ref{fig:m-moe-scaling} reproduces the interconnect boundary identified i
 
 \begin{table}[htbp]
 \centering
-\caption{MoE dispatch-and-combine latency in \,$\mu$s, medians of allocation means, contrasting the largest intra-node placement with the largest multi-node placement for each routing case.}
+\caption{MoE dispatch-and-combine latency in \,$\mu$s, medians of allocation means, contrasting the largest intra-node topology with the largest multi-node topology for each routing case.}
 \label{tab:m-moe}
 \footnotesize
 \input{data/main-campaign/moe-table.tex}
@@ -191,7 +191,7 @@ Table~\ref{tab:m-moe} gives the endpoints. The intra-node columns are tightly gr
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.78\textwidth]{figures/results/moe-routing-sensitivity.png}
-\caption{MoE latency at \texttt{8n4g} relative to CUDA MPI at the same placement and routing case. Bars below one favor the compared stack. No stack is below one in all three cases.}
+\caption{MoE latency at \texttt{8n4g} relative to CUDA MPI at the same topology and routing case. Bars below one favor the compared stack. No stack is below one in all three cases.}
 \label{fig:m-moe-sensitivity}
 \end{figure}
 
@@ -205,7 +205,7 @@ Two qualifications bound these results. MoE keeps UCC disabled and uses the vari
 
 \subsection{What MoE Adds to the Primitive Evidence}
 
-The standalone all-to-all sweep of Section~\ref{sec:micro-results} moves equal blocks between all peers, and on that evidence the NCCL-based paths own the bulk regime. MoE retains the same operation family and the same placements, changes only the distribution of block sizes, and inverts that conclusion in two of three cases. The regime boundary that matters for this workload is therefore not the payload size that the primitive sweep varies, but the skew that it holds constant.
+The standalone all-to-all sweep of Section~\ref{sec:micro-results} moves equal blocks between all peers, and on that evidence the NCCL-based paths own the bulk regime. MoE retains the same operation family and the same topologies, changes only the distribution of block sizes, and inverts that conclusion in two of three cases. The regime boundary that matters for this workload is therefore not the payload size that the primitive sweep varies, but the skew that it holds constant.
 
 This is the same failure mode that Section~\ref{sec:cg-step-results} finds for \texttt{cg\_step}, reached from the opposite direction: there, matching the operation and payload is insufficient because submission structure changes; here, matching the operation and the total volume is insufficient because the distribution changes. Neither result is evidence against the primitive measurements. Both constrain what a primitive measurement can be asked to predict.
 
@@ -213,11 +213,11 @@ This is the same failure mode that Section~\ref{sec:cg-step-results} finds for \
 
 \subsection{Communication--Computation Sequence}
 
-The composite archive covers seven placements, five global grid sides, and six backends, with nine successful trials per cell. It preserves a halo--stencil--reduction sequence but not the complete CG recurrence: the two reduced scalars are terminal outputs and do not gate a dependent GPU update. Table~\ref{tab:m-cg-step} reports the lowest allocation-median estimate under that contract. OSHMPI leads 25 of the 30 multi-rank cells, including all multi-node placements; NCCL leads the remaining five intra-node cells. The single-GPU NCCL-labeled implementation leads its controls, where the result reflects local execution and synchronization rather than network performance.
+The composite archive covers seven topologies, five global grid sides, and six backends, with nine successful trials per cell. It preserves a halo--stencil--reduction sequence but not the complete CG recurrence: the two reduced scalars are terminal outputs and do not gate a dependent GPU update. Table~\ref{tab:m-cg-step} reports the lowest allocation-median estimate under that contract. OSHMPI leads 25 of the 30 multi-rank cells, including all multi-node topologies; NCCL leads the remaining five intra-node cells. The single-GPU NCCL-labeled implementation leads its controls, where the result reflects local execution and synchronization rather than network performance.
 
 \begin{table}[htbp]
 \centering
-\caption{Lowest allocation-median \texttt{cg\_step} time by placement and global grid side. This is a point-estimate ranking for the synthetic sequence, not a significance test or a solver-ready ranking.}
+\caption{Lowest allocation-median \texttt{cg\_step} time by topology and global grid side. This is a point-estimate ranking for the synthetic sequence, not a significance test or a solver-ready ranking.}
 \label{tab:m-cg-step}
 \footnotesize
 \input{data/main-campaign/cg-winner-table.tex}
@@ -226,7 +226,7 @@ The composite archive covers seven placements, five global grid sides, and six b
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-step-relative.png}
-\caption{Composite-step time relative to CUDA MPI at the same global grid side and placement. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack.}
+\caption{Composite-step time relative to CUDA MPI at the same global grid side and topology. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack.}
 \label{fig:m-cg-relative}
 \end{figure}
 
