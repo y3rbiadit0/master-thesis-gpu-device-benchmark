@@ -455,7 +455,7 @@ The Roofline model \cite{williams_roofline_2009-1} bounds kernel performance by 
 
 \section{The Leonardo System}\label{sec:leonardo}
 
-All measurements in this thesis were collected on the Leonardo supercomputer at CINECA, specifically on its accelerated Booster partition \cite{turisini_leonardo_2024}. Leonardo is used as one concrete production system; it is not assumed to represent every contemporary HPC architecture.
+All measurements in this thesis were collected on the Leonardo supercomputer at CINECA, specifically on its accelerated Booster partition \cite{turisini_leonardo_2024}. Leonardo ranked 12th in the June 2026 TOP500 list \cite{top500_june2026}. It is used as one concrete production system and is not assumed to represent every contemporary HPC architecture.
 
 Each Booster node is an Atos BullSequana X2135 ``Da Vinci'' blade integrating one Intel Xeon Platinum 8358 processor with 32 cores, 512\,GB of DDR4 system memory, and four NVIDIA A100 SXM GPUs with 64\,GB of HBM2e each \cite{turisini_leonardo_2024}. The GPUs are directly connected by NVLink~3.0 without NVSwitch, with the pair and endpoint bandwidths described in Section~\ref{sec:intra-node}. Nodes connect through an NVIDIA Mellanox InfiniBand HDR network in a DragonFly+ topology with two dual-port HDR100 adapters per node. Jobs are submitted through Slurm.
 

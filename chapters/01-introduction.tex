@@ -39,7 +39,7 @@ It remains to be established which observations from this comparison predict app
 Persistent device work can amortize host-control costs, but memory placement, completion semantics, and progress determine the favorable regimes. Pattern-oriented measurements can guide backend selection when the application's peer structure and dependencies preserve those regimes.
 \end{keypoint}
 
-The benchmark consequently covers reductions, neighbor exchanges, and all-to-all redistribution, with point-to-point tests as a transfer reference. Iterative sparse solvers motivate small reductions and halo exchanges; distributed training motivates bulk reductions; and Mixture-of-Experts routing motivates uniform and variable-count redistribution. The application study validates the reduction and halo families through aCG.
+The benchmark consequently covers reductions, neighbor exchanges, and all-to-all redistribution, with point-to-point tests as a transfer reference. Iterative sparse solvers motivate small reductions and halo exchanges; distributed training on rapidly growing AI supercomputers \cite{pilz_trends_2025} motivates bulk reductions; and Mixture-of-Experts routing motivates uniform and variable-count redistribution. The application study validates the reduction and halo families through aCG.
 
 \section{Research Questions}
 

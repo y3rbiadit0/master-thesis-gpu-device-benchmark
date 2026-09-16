@@ -49,7 +49,7 @@ A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combinati
 
 \paragraph{Timing.} Each trial first runs untimed warm-up iterations, which absorb one-time costs such as buffer registration, connection establishment, and algorithm selection, and then its timed iterations. A timed iteration covers the complete operation from submission to observed completion; setup and correctness checks are excluded (Section~\ref{sec:completion-method}). The timed iterations of a trial form one sample series and are not treated as independent repetitions.
 
-\paragraph{Independence.} Every cell was run as five independent repetitions. Each repetition is a separate scheduler job that obtains its own allocation, so repetitions share no process state and may differ in nodes and network routes. Within one allocation the benchmark is launched three times. Only allocations are treated as independent samples, and each contributes equally to the reported statistics (Section~\ref{sec:samples-method}).
+\paragraph{Independence.} Every cell was run as five independent repetitions. Each repetition is a separate scheduler job that obtains its own allocation, so repetitions share no process state and may differ in nodes and network routes. Within one allocation the benchmark is launched three times. Only allocations are treated as independent samples: trial means are averaged within each allocation, the reported value is the median of the allocation means, and shaded bands show their minimum--maximum range, which describes observed variation rather than a confidence interval.
 
 \paragraph{Exceptions to the defaults.} The retained all-to-all and \texttt{cg\_step} sweeps contain three allocations instead of five, each still with three trials; their counts are reported as measured and not reweighted. \texttt{cg\_step} also uses 50 timed and 10 warm-up iterations instead of 100 and 20.
 
@@ -89,7 +89,7 @@ The analysis distinguishes the archived performance campaign from later implemen
 
 \section{Experimental Setup}\label{sec:eval-environment}
 
-All experiments were run on the Booster partition of the Leonardo supercomputer at CINECA \cite{turisini_leonardo_2024}. Intra-node experiments use a single node with one, two, or four GPUs; multi-node experiments use two, four, or eight nodes of the same partition, up to 32 GPUs. One process drives one GPU throughout. This section describes the node hardware, the communication paths it provides, the software environment, and the stacks built on it.
+All experiments were run on the Booster partition of the Leonardo supercomputer at CINECA \cite{turisini_leonardo_2024}, ranked 12th in the June 2026 TOP500 list \cite{top500_june2026}. Intra-node experiments use a single node with one, two, or four GPUs; multi-node experiments use two, four, or eight nodes of the same partition, up to 32 GPUs. One process drives one GPU throughout. This section describes the node hardware, the communication paths it provides, the software environment, and the stacks built on it.
 
 \subsection{Booster Node Specifications}
 
@@ -373,49 +373,95 @@ The \texttt{cg\_step} benchmark extracts the communication structure of one conj
     \item \textbf{Payload:} a nominal two-column halo, excluding the scalar reductions.
 \end{itemize}
 
-\subsection{Statistical Aggregation}\label{sec:samples-method}
-
-Trial means are first averaged within each allocation, so every allocation carries equal weight regardless of its trial count. The reported center is the median of the allocation means, and shaded bands show their minimum--maximum range. The ranges describe observed variation, not confidence intervals, and small differences with overlapping ranges are not treated as decisive. Following the defaults of Section~\ref{sec:execution-procedure}, ping-pong, halo, allreduce, and MoE cells contain five allocations; the retained all-to-all and \texttt{cg\_step} snapshots contain three.
-
-Two auxiliary datasets are reported at a different level. The \texttt{cg\_step} phase records retain phase means rather than per-allocation samples, so phase tables compare them with the stored unsplit mean. The UCC on/off comparison retains summary means and is analyzed as a separate configuration dataset. Neither is combined with the allocation-based results into one uncertainty estimate.
-
 \section{Application Validation with aCG}\label{sec:acg-method}
 
-\subsection{Problem and Execution Matrix}
+The last evaluation level asks whether the benchmark observations hold in a complete application. It runs the aCG conjugate-gradient solver \cite{trotter_cpu-_2025} on large sparse problems with the same stacks, and compares its measured communication costs and backend ranking with those predicted by the microbenchmarks and \texttt{cg\_step}. Unlike the benchmarks, the solver introduces an irregular communication graph from a sparse partition, computation that can overlap communication, and convergence that determines how many iterations are run.
 
-The aCG suite provides CG and pipelined CG implementations \cite{trotter_cpu-_2025}. This campaign compares the host-initiated CG solver with MPI, NCCL, NVSHMEM, and OSHMPI communicators and separately evaluates the monolithic device-NVSHMEM solver. Both matrices use fixed METIS partitions reused across communicators: Bump\_2911 has 2,911,419 rows and 127,729,899 full symmetric nonzeros; Queen\_4147 has 4,147,110 rows and 329,499,284 full symmetric nonzeros. Runs use 1, 2, 4, 8, 16, and 32 GPUs.
+\subsection{Problems and Solver Variants}
 
-The manufactured solution uses seed 101, relative residual tolerance $10^{-6}$, zero absolute tolerance, and a limit of 100,000 iterations. The retained archive contains 507 completed solver logs: 354 host-communicator trials, 90 device-NVSHMEM trials, and 63 single-GPU controls. These counts describe available completed records; incomplete attempts do not become successful trials by omission. Backup copies are excluded from the analysis.
+The solver is evaluated on two symmetric positive definite matrices from the SuiteSparse Matrix Collection \cite{davis_suitesparse_2011}. Each is partitioned once with METIS, and the same partition is reused by every solver variant.
 
-Two properties of this matrix constrain what the cross-level comparison can claim. First, the measured OSHMPI communicator implements the halo only: it allocates CUDA symmetric buffers, exchanges remote offsets at setup, and completes its blocking puts inside halo-begin, before local SpMV, while its scalar reductions use CUDA-aware \texttt{MPI\_Allreduce}. The application's OSHMPI label therefore identifies a halo implementation, not an OpenSHMEM scalar-reduction measurement. Second, the solver departs from the benchmark defaults in a 16,384-byte UCX rendezvous threshold and in disabling NCCL dispatch beneath NVSHMEM; separate sensitivity controls assess both, so the archived default NVSHMEM reduction is not treated as a configuration-matched prediction. The monolithic device solver additionally reorganizes computation and synchronization, and is evaluated as an execution-model variant rather than a communicator substitution.
+\begin{enumerate}
+    \item \textbf{Bump\_2911:} 2\,911\,419 rows and 127\,729\,899 nonzeros.
+    \item \textbf{Queen\_4147:} 4\,147\,110 rows and 329\,499\,284 nonzeros.
+\end{enumerate}
 
-\subsection{Solver Metrics and Prediction Accuracy}
+Nonzero counts refer to the full symmetric matrix. Each matrix is solved with six variants:
 
-Solver time is the time-to-solution measure. Time per iteration and analytical throughput help distinguish execution cost from changes in convergence. Following the reference study, the primary scaling view selects the fastest residual-valid completed trial per matrix, backend, and rank count. For standard CG, the analytical work is
-\[
-W(K)=2(K+1)\,\mathrm{nnz}+2(5K+1)n,
-\]
-where $K$ is the executed iteration count, $n$ the row count, and $\mathrm{nnz}$ the full nonzero count. Per-GPU throughput is $W(K)/(P T)$; it is not a hardware-counter measurement. All retained trial times remain available, and MPI variability is shown by allocation medians and ranges rather than a line connecting rare fast trials.
+\begin{enumerate}
+    \item \textbf{MPI:} host-initiated CG, with halo exchange and reductions through CUDA-aware MPI.
+    \item \textbf{NCCL:} host-initiated CG, with halo exchange and reductions through NCCL.
+    \item \textbf{Host NVSHMEM:} host-initiated CG, with communication through NVSHMEM.
+    \item \textbf{OSHMPI:} host-initiated CG, with an OpenSHMEM halo exchange contributed by this thesis and CUDA-aware MPI reductions.
+    \item \textbf{Device NVSHMEM:} the monolithic solver, which runs the entire CG loop on the GPU with device-initiated NVSHMEM communication.
+    \item \textbf{Single GPU:} a control without inter-rank communication.
+\end{enumerate}
 
-Correctness is checked from the recorded residual relative to the initial residual and the requested tolerance, together with successful completion. Manufactured-solution error is retained as a separate numerical diagnostic. Missing correctness fields are distinguished from failures. The parser does not infer convergence solely from a process exit code.
+The multi-GPU variants run on 2, 4, 8, 16, and 32 GPUs, using the \texttt{1n2g}, \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} topologies, with three allocations of three trials per configuration. All runs solve the same manufactured solution (seed 101) to a relative residual tolerance of $10^{-6}$, with no absolute tolerance and a limit of 100\,000 iterations. The retained archive contains 507 completed runs: 354 host-initiated, 90 device-NVSHMEM, and 63 single-GPU. Incomplete attempts are not counted as trials.
 
-Phase timers have backend-dependent meanings. The halo timer brackets the wait remaining at halo-end, whereas OSHMPI's blocking communication appears mainly in \emph{other}. NVSHMEM may include communication in its SpMV interval, and allreduce timing includes arrival skew. These columns cannot simply be added into an overlap-free network-cost model.
+\subsection{Solver Environment}
 
-For the scalar cross-level comparison, half of the stored two-reduction \texttt{cg\_step} phase at side 512 is compared with aCG's accumulated allreduce time divided by its recorded operation count. The latter includes operations outside the steady loop: a run with $K$ iterations records $2K+2$ reductions. MPI is paired with the MPI scalar calls in the OSHMPI-halo solver, and NCCL with the NCCL solver. Mean absolute percentage discrepancy over the five matched rank counts is
+The solver is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between the benchmark and solver results is not a difference in library versions:
+
+\begin{itemize}
+    \item \textbf{Toolchain:} NVHPC 24.5 with CUDA 12.4.
+    \item \textbf{Communication libraries:} HPC-X 2.19 for MPI, and the NCCL and NVSHMEM releases bundled with NVHPC 24.5, as in Section~\ref{sec:eval-environment}.
+    \item \textbf{OSHMPI:} built from source against the same HPC-X installation.
+    \item \textbf{Transport settings:} the Open MPI and UCX settings of Table~\ref{tab:m-runtime-settings}, taken from the benchmark configuration and shared by every communicator.
+\end{itemize}
+
+Three settings deliberately differ from the benchmark defaults, and each is accounted for in the comparison:
+
+\begin{itemize}
+    \item \textbf{Rendezvous threshold:} UCX switches to rendezvous at 16\,KiB instead of 1\,KiB. A separate control shows this changes the composite step by only about 2--3\%.
+    \item \textbf{NCCL dispatch:} disabled beneath NVSHMEM, so host-NVSHMEM reductions use NVSHMEM's native path rather than the NCCL-dispatched path of the benchmarks. The default benchmark NVSHMEM reduction is therefore not used as a matched prediction.
+    \item \textbf{UCC:} disabled, as in \texttt{cg\_step}, whose scalar reductions it matches.
+\end{itemize}
+
+\subsection{Metrics and Correctness}
+
+\begin{itemize}
+    \item \textbf{Solver time} is the time to solution. For the primary scaling view, following the reference study, the fastest residual-valid trial is selected per matrix, variant, and GPU count; all other trials are retained, and MPI variability is reported through allocation medians and ranges.
+    \item \textbf{Throughput} separates execution cost from changes in iteration count. For standard CG with $K$ executed iterations, $n$ rows, and $\mathrm{nnz}$ nonzeros, the analytical work is
+    \[
+    W(K)=2(K+1)\,\mathrm{nnz}+2(5K+1)\,n,
+    \]
+    and per-GPU throughput on $P$ GPUs in time $T$ is $W(K)/(PT)$. It is derived from the operation count, not from hardware counters.
+    \item \textbf{Correctness} requires successful completion and a final residual, relative to the initial residual, within the requested tolerance. Convergence is never inferred from the exit code alone, and a run with missing correctness fields is classified as unknown rather than failed. The error against the manufactured solution is kept as a separate numerical diagnostic.
+    \item \textbf{Phase timers} have backend-dependent meanings and cannot be summed into a network-cost model. The halo timer covers only the wait remaining at halo-end, so OSHMPI's blocking communication appears mainly under \emph{other}; NVSHMEM may include communication in its SpMV interval; and the allreduce timer includes the wait for the slowest rank to arrive.
+\end{itemize}
+
+\subsection{Cross-Level Comparison}
+
+The benchmark-to-solver comparison is made for the scalar reductions, the one operation both levels perform identically: two global sums of one double per iteration. The benchmark estimate is half of the \texttt{cg\_step} reduction phase at side 512. The solver measurement is the accumulated allreduce time divided by the recorded number of calls, which for $K$ iterations is $2K+2$ because the solver also reduces outside its main loop. MPI is paired with the MPI reductions of the OSHMPI variant, avoiding the variability of the MPI halo, and NCCL with the NCCL variant. The discrepancy over the five matched GPU counts is
 \[
 \mathrm{MAPE}=\frac{100}{5}\sum_{P\in\{2,4,8,16,32\}}
 \left|\frac{\widehat{t}_P}{t_P}-1\right|.
 \]
-This is a descriptive phase-cost check across increasing scale, not a fitted or held-out prediction of total solver time. Matching eight bytes in the float32 microbenchmark alone does not establish equivalence to a one-double sum; the composite-to-solver pairing matches datatype as well as payload.
+This is a descriptive check of one phase cost across scale, not a fitted prediction of total solver time. The pairing matches datatype as well as payload: an eight-byte float32 allreduce from the microbenchmark would match the size but not the operation.
 
-The CUDA--SYCL question is answered by a separate report rather than by this campaign. It compares solver-time medians on Bump\_2911 at 1, 4, 8, and 16 GPUs over three repeats, with MPI supplying distributed execution, and uses medians on both sides rather than the fastest-trial convention above. Its CUDA parser does not populate the convergence flag, so its zero converged-count field represents missing classification rather than demonstrated nonconvergence. Until those logs are reprocessed, the ratios are retained as supporting implementation timings, not a verified equal-accuracy comparison, and they do not separate kernel, memory, and orchestration contributions.
+Two variants limit what the comparison can claim:
+\begin{itemize}
+    \item \textbf{OSHMPI measures a halo only.} Its puts complete inside halo-begin, before local SpMV, and its reductions use MPI, so the OSHMPI label identifies a halo implementation, not an OpenSHMEM reduction.
+    \item \textbf{Device NVSHMEM changes more than communication.} It also reorganizes computation and synchronization, so it is evaluated as a different execution model rather than a communicator substitution.
+\end{itemize}
+
+\paragraph{Supporting CUDA--SYCL comparison.} A separate report compares the CUDA solver with its SYCL port on Bump\_2911 at 1, 4, 8, and 16 GPUs, using solver-time medians over three repeats. The SYCL port is built with DPC++ 6.3, GCC 12.2, and CUDA 12.2 against Open MPI 4.1.6 and NCCL 2.22.3, so the comparison changes the MPI implementation and NCCL release as well as the programming model. Its CUDA parser also does not record the convergence flag, so its zero converged-count field reflects a missing classification rather than nonconvergence. The ratios are therefore reported as supporting implementation timings, not as a matched equal-accuracy comparison.
 
 \section{Reproducibility and Evidence Boundaries}\label{sec:reproducibility}
 
-The reconciled archive in \path{data/main-campaign/} contains benchmark allocation summaries, all retained aCG trial records, selected solver results, and reduction-prediction pairs. A manifest records source-file hashes and the repository revisions inspected during import. Those revisions identify the imported archive, not necessarily the source used for each measured run. \path{tools/rebuild_main_evidence.py} regenerates the data and complete table blocks; \path{tools/plot_main_evidence.py} renders the figures. The accompanying README specifies the aggregation and exclusion policies.
+All results reported in this thesis are provided in a supplementary archive distributed with it. The archive contains:
+\begin{itemize}
+    \item the exported benchmark results for every pattern, with trial-level records grouped by allocation;
+    \item the completed aCG solver logs and the communication graphs of the sparse partitions;
+    \item the reconciled summaries and tables used in Chapter~\ref{ch:m-results}, together with a manifest of source-file hashes;
+    \item the scripts that regenerate those summaries, tables, and figures from the exported results.
+\end{itemize}
+Together with the benchmark tooling of Section~\ref{sec:harness}, which records each run's configuration, this allows both the analysis to be reproduced from the archive and the measurements to be repeated on the same system.
 
-The MoE campaign is a later benchmark snapshot than the reconciled inputs, so it is imported separately by \path{tools/import_moe_evidence.py} into its own summary, allocation, and manifest files rather than merged into the shared benchmark summary. One archive therefore corresponds to one snapshot, and the shared aggregation policy is reused rather than reimplemented. The archive is explicitly a mixed snapshot for the same reason. The allreduce sweep was re-run and re-exported after the original import, and the reported allreduce values are that later campaign; the \texttt{cg\_step} sweep was re-run only at global side 512, so the wider archived sweep is retained rather than replaced. The import records which patterns were retained and carries their original source hashes forward, and it refuses, before writing anything, an input that would narrow the archive. The exported CSV files, not the current source tree, are the evidence for the retained patterns.
-
-Auxiliary rail, scalar-placement, forced-algorithm, and runtime-dispatch controls survive partly as analysis records rather than complete per-trial datasets. Their reported effects are identified as such and are not assigned reconstructed error bars. The original IBGDA job and node identifiers are retained in \path{data/experiment-notes.md}. Preliminary NCCL transcription and plotting provenance are recorded separately in \path{data/nccl-preliminary.md}.
-
-The next measurements are defined in \path{experiments/targeted-controls.md}. Their priority relative to matched initiation, batching, and configuration controls is recorded in \path{experiments/missing-experiments-report.md}. These documents describe prospective work and do not turn current unmeasured source changes into experimental evidence.
+Three boundaries apply to the archived evidence:
+\begin{itemize}
+    \item \textbf{Revisions.} Repository revisions identify the imported archive, not necessarily the exact source of every measured run.
+    \item \textbf{Snapshots.} The results come from more than one measurement snapshot. The allreduce and MoE results are from a later campaign than the other microbenchmarks, and the five-size \texttt{cg\_step} sweep is retained from the earlier campaign because its later re-run covers only one grid size. The manifest records which snapshot each pattern comes from.
+    \item \textbf{Auxiliary controls.} The rail-count, scalar-placement, forced-algorithm, and dispatch controls survive as analysis summaries rather than complete trial datasets, and are reported without reconstructed error bars.
+\end{itemize}
