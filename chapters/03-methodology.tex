@@ -4,7 +4,7 @@ This chapter defines the experiment behind the comparison of host-driven and dev
 
 \section{Research Planning}\label{sec:research-planning-levels}
 
-The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three levels, and the campaign was executed in that order, because each level uses the preceding one to choose what is worth measuring:
+The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three levels, and the campaigns were executed in that order, because each level uses the preceding one to choose what is worth measuring:
 
 \begin{enumerate}
     \item \textbf{Isolated communication microbenchmarks:} \texttt{pingpong}, \texttt{halo\_1d}, \texttt{allreduce}, and \texttt{alltoall} exercise one operation at a time, with no computation to overlap or distort the transfer. They establish the message sizes, topologies, and runtime settings at which a given backend is competitive.
@@ -12,7 +12,7 @@ The evaluation employs a bottom-up approach, progressing from isolated microbenc
     \item \textbf{Full \texttt{aCG} solver:} Tests cross-level agreement by introducing sparse partitioning, realistic application dependencies, and convergence criteria.
 \end{enumerate}
 
-Of the two application microbenchmarks, \texttt{cg\_step} is the one carried into the cross-level comparison of Section~\ref{sec:acg-method}, because the solver evaluated in this thesis is a CG solver and its reductions can be matched by datatype and payload. \texttt{moe} has no matched application in this campaign; it is measured to test how strongly the ranking obtained from a uniform, fixed-count exchange depends on the payload distribution assumed by that exchange.
+Of the two application microbenchmarks, \texttt{cg\_step} is the one carried into the cross-level comparison of Section~\ref{sec:acg-method}, because the solver evaluated in this thesis is a CG solver and its reductions can be matched by datatype and payload. \texttt{moe} has no matched application in this thesis; it is measured to test how strongly the ranking obtained from a uniform, fixed-count exchange depends on the payload distribution assumed by that exchange.
 
 Raising the application context in steps is what makes the levels diagnostic: each one adds a single class of application property, so a ranking that changes between two levels identifies which property caused it.
 
@@ -24,7 +24,7 @@ One benchmark measurement is defined by the parameters in Table~\ref{tab:m-exper
 
 \begin{table}[htbp]
 \centering
-\caption{Parameters defining one benchmark measurement, and the values used in this campaign.}
+\caption{Parameters defining one benchmark measurement, and the values used in the main campaign.}
 \label{tab:m-experiment-parameters}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYl}
@@ -45,7 +45,7 @@ Independent allocations & Scheduler jobs with separate node assignments & 5\\
 \end{tabularx}
 \end{table}
 
-A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combination, swept over the payload axis. Topology is given as $N$ nodes by $G$ GPUs rather than as a rank count, because equal rank counts can use different interconnects; \texttt{1n4g} and \texttt{2n1g} are both measured for that reason. Each pattern has a fixed collective policy, such as whether UCC is enabled, described in Section~\ref{sec:runtime-method}.
+A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combination, swept over the payload axis. Topology is given as $N$ nodes by $G$ GPUs rather than as a rank count, because equal rank counts can use different interconnects; \texttt{1n4g} and \texttt{2n1g} are both measured for that reason. Each pattern has a fixed collective policy, such as whether UCC is enabled, described in Section~\ref{sec:runtime-method}. A \emph{campaign} is one complete run of a benchmark over all of its cells: every stack and topology it declares, with all repetitions, under the same tooling and configuration. Each benchmark's results come from one campaign, and the aCG solver runs form a campaign of their own; together, these make up the \emph{main campaign} reported in Chapter~\ref{ch:m-results}.
 
 \paragraph{Timing.} Each trial first runs untimed warm-up iterations, which absorb one-time costs such as buffer registration, connection establishment, and algorithm selection, and then its timed iterations. A timed iteration covers the complete operation from submission to observed completion; setup and correctness checks are excluded (Section~\ref{sec:completion-method}). The timed iterations of a trial form one sample series and are not treated as independent repetitions.
 
@@ -55,7 +55,7 @@ A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combinati
 
 \subsection{Benchmark Tooling}\label{sec:harness}
 
-The campaign was run with the command-line tooling of the benchmark suite contributed by this thesis (Chapter~\ref{ch}), available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}. It covers the workflow from an empty checkout to recorded results, so that every stack is built, launched, and logged in the same way:
+All campaigns were run with the command-line tooling of the benchmark suite contributed by this thesis (Chapter~\ref{ch}), available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}. It covers the workflow from an empty checkout to recorded results, so that every stack is built, launched, and logged in the same way:
 
 \begin{itemize}
     \item \textbf{Initialization.} One command bootstraps the source-built dependencies, including OSHMPI and the two oneCCL backends, in dependency order, and builds all seven stacks from shared build presets. Libraries provided by the site, such as HPC-X MPI, are taken from the system modules.
@@ -85,7 +85,7 @@ RQ3 & Matched reduction costs, solver scaling, phase measurements, and CUDA--SYC
 \end{tabularx}
 \end{table}
 
-The analysis distinguishes the archived performance campaign from later implementation changes. In particular, the measured OSHMPI \texttt{cg\_step} stages reductions to host memory without copying the results back to the GPU, while the measured aCG OSHMPI communicator uses MPI scalar reductions. Current source changes implement a complete staged round trip in both programs, but have no validated Leonardo performance results. They are candidates for a matched follow-up, not replacements for the archived measurements.
+The analysis distinguishes the archived campaigns from later implementation changes. In particular, the measured OSHMPI \texttt{cg\_step} stages reductions to host memory without copying the results back to the GPU, while the measured aCG OSHMPI communicator uses MPI scalar reductions. Current source changes implement a complete staged round trip in both programs, but have no validated Leonardo performance results. They are candidates for a matched follow-up, not replacements for the archived measurements.
 
 \section{Experimental Setup}\label{sec:eval-environment}
 
@@ -427,7 +427,7 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
 \subsection{Metrics and Correctness}
 
 \begin{itemize}
-    \item \textbf{Solver time} is the time to solution. For the primary scaling view, following the reference study, the fastest residual-valid trial is selected per matrix, variant, and GPU count; all other trials are retained, and MPI variability is reported through allocation medians and ranges.
+    \item a\textbf{Solver time} is the time to solution. For the primary scaling view, following the reference study, the fastest residual-valid trial is selected per matrix, variant, and GPU count; all other trials are retained, and MPI variability is reported through allocation medians and ranges.
     \item \textbf{Throughput} is work per second per GPU. Solver time alone is not enough: communicators reduce in different orders, so the same problem can converge in a slightly different number of iterations, and a variant would look faster just for needing fewer. Dividing work by time removes that effect. Work is counted as in the reference aCG study \cite{trotter_cpu-_2025}: two floating-point operations (FLOPs) per nonzero or vector element a kernel processes. For $K$ iterations on a matrix with $n$ rows and $\mathrm{nnz}$ nonzeros,
     \[
     W(K)=2(K+1)\,\mathrm{nnz}+2(5K+1)\,n,
