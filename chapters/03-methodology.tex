@@ -428,44 +428,14 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
 
 \begin{itemize}
     \item \textbf{Solver time} is the time to solution. For the primary scaling view, following the reference study, the fastest residual-valid trial is selected per matrix, variant, and GPU count; all other trials are retained, and MPI variability is reported through allocation medians and ranges.
-    \item \textbf{Throughput} corrects solver time for the amount of work done. Communicators can converge in slightly different iteration counts, because reductions performed in a different order round differently, so solver time alone would reward a variant for needing fewer iterations. Throughput divides the work performed by the time taken. Work is counted with the floating-point operation (FLOP) accounting of the reference aCG study \cite{trotter_cpu-_2025}, which charges two FLOPs, one multiplication and one addition, per matrix nonzero or vector element processed. A CG solve of $K$ iterations performs $K+1$ sparse matrix--vector products, $K$ dot products, $K+1$ residual norms, and $3K$ vector updates, so for a matrix with $n$ rows and $\mathrm{nnz}$ nonzeros
+    \item \textbf{Throughput} is work per second per GPU. Solver time alone is not enough: communicators reduce in different orders, so the same problem can converge in a slightly different number of iterations, and a variant would look faster just for needing fewer. Dividing work by time removes that effect. Work is counted as in the reference aCG study \cite{trotter_cpu-_2025}: two floating-point operations (FLOPs) per nonzero or vector element a kernel processes. For $K$ iterations on a matrix with $n$ rows and $\mathrm{nnz}$ nonzeros,
     \[
     W(K)=2(K+1)\,\mathrm{nnz}+2(5K+1)\,n,
     \]
-    and per-GPU throughput on $P$ GPUs in solver time $T$ is $W(K)/(PT)$ FLOPs per second.
+    and throughput on $P$ GPUs in solver time $T$ is $W(K)/(PT)$.
     \item \textbf{Correctness} requires successful completion and a final residual, relative to the initial residual, within the requested tolerance. Convergence is never inferred from the exit code alone, and a run with missing correctness fields is classified as unknown rather than failed. The error against the manufactured solution is kept as a separate numerical diagnostic.
     \item \textbf{Phase timers} have backend-dependent meanings and cannot be summed into a network-cost model. The halo timer covers only the wait remaining at halo-end, so OSHMPI's blocking communication appears mainly under \emph{other}; NVSHMEM may include communication in its SpMV interval; and the allreduce timer includes the wait for the slowest rank to arrive.
 \end{itemize}
-
-\subsection{Cross-Level Comparison}\label{sec:cross-level}
-
-A benchmark is useful for stack selection only to the extent that it predicts the application it stands in for. The comparison therefore takes each communication property of the solver, identifies the benchmark that measures the same property, and compares the two only as far as they are actually equivalent. Table~\ref{tab:m-cross-level} summarizes the three resulting comparisons.
-
-\begin{table}[htbp]
-\centering
-\caption{Benchmark-to-solver comparisons, from the most to the least directly equivalent.}
-\label{tab:m-cross-level}
-\footnotesize
-\begin{tabularx}{\textwidth}{lYY}
-\toprule
-Solver property & Benchmark counterpart & How the two are compared\\
-\midrule
-Scalar reductions & Reduction phase of \texttt{cg\_step} & By value: both perform two one-double global sums per iteration, so their cost per reduction is compared directly\\
-Halo exchange & \texttt{halo\_1d} and the \texttt{cg\_step} halo & By structure: the benchmarks exchange a fixed payload with two neighbors, while the solver's neighbors and volume follow the sparse partition, so only their communication graphs are compared\\
-Backend ranking & Ranking in \texttt{cg\_step} & By order: stacks are ranked by solver time and throughput at the same GPU counts, and a change in ranking is not attributed to a single cause\\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\paragraph{Reduction cost.} The benchmark estimate $\widehat{t}_P$ on $P$ GPUs is half of the \texttt{cg\_step} reduction phase at side 512. The solver value $t_P$ is its accumulated allreduce time divided by its recorded number of calls, $2K+2$ for $K$ iterations. MPI is taken from the OSHMPI variant, whose reductions use MPI without the instability of the MPI halo, and NCCL from the NCCL variant. Agreement over the five GPU counts is reported as the mean absolute percentage error,
-\[
-\mathrm{MAPE}=\frac{100}{5}\sum_{P\in\{2,4,8,16,32\}}
-\left|\frac{\widehat{t}_P}{t_P}-1\right|.
-\]
-
-\paragraph{Halo structure.} The solver's communication graph is reconstructed from the communication matrices it records, and summarized per GPU count by the number of neighbors and the send volume per rank (Table~\ref{tab:m-acg-halo-signatures}).
-
-Two solver variants have no benchmark counterpart for part of their behavior. The OSHMPI variant implements the halo in OpenSHMEM but its reductions in MPI, so it contributes a halo implementation and not an OpenSHMEM reduction. The device-NVSHMEM variant reorganizes computation and synchronization as well as communication, so it is evaluated as a different execution model rather than paired with a benchmark.
 
 \section{Reproducibility and Evidence Boundaries}\label{sec:reproducibility}
 
