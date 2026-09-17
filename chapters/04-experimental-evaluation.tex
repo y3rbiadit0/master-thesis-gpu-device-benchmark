@@ -75,6 +75,12 @@ The agreement does not survive scale in this campaign. From \texttt{4n4g} onward
 \input{data/main-campaign/allreduce-bandwidth-table.tex}
 \end{table}
 
+The complete backend view also exposes the cost of oneCCL/OSHMPI's symmetric staging. On \texttt{1n4g}, the four-byte allreduce medians are 20.2\,$\mu$s directly and 18.6\,$\mu$s through oneCCL/OSHMPI. At 16\,MiB, they are 364\,$\mu$s and 6538\,$\mu$s, respectively: the adapted path is approximately 18 times slower. The direct device-resident reduction and symmetric-staging adapter use different memory and completion paths. The comparison therefore identifies the cost of the evaluated integration choice, not an intrinsic penalty of the oneCCL API.
+
+This pattern demonstrates why functional interface compatibility and performance retention must be evaluated separately. The OSHMPI adapter waits for queue dependencies, stages ordinary operands through symmetric storage, performs a blocking host operation, and returns an already-complete event. Those semantics preserve correctness but remove the asynchronous opportunity retained by the NCCL path.
+
+\subsubsection{MPI with UCC: A Size-Dependent Trade-off}
+
 The UCC control explains why MPI's result cannot be summarized by a single library label, and it is the largest configuration effect measured anywhere in this campaign. Figure~\ref{fig:m-ucc-allreduce} shows both configurations in absolute terms, because the ratio alone understates what is at stake. At a 16\,MiB intra-node reduction on \texttt{1n4g}, the same MPI installation takes 34.9\,ms with UCC disabled and 361\,$\mu$s with it enabled, a factor of 96.5. The corresponding multi-node figures are 39.6\,ms against 1121\,$\mu$s at \texttt{2n4g} and 45.2\,ms against 1873\,$\mu$s at \texttt{8n4g}. The non-UCC curve does not merely scale worse: it breaks down above 1\,MiB, where doubling the payload to 2\,MiB multiplies its cost by 5.1, from 809\,$\mu$s to 4101\,$\mu$s, and the gap widens monotonically from there.
 
 The trade-off runs the other way at small payloads, which is why the policy is a choice rather than a default to enable everywhere. Around 4\,KiB, UCC is slower on every measured topology, by factors of 0.55, 0.54, and 0.46 at \texttt{1n4g}, \texttt{2n4g}, and \texttt{8n4g}. Intra-node the curve recovers quickly; on the two multi-node topologies UCC remains behind until roughly 64\,KiB. The reductions that \texttt{cg\_step} and aCG actually perform are single doubles, which sit firmly inside that penalty region, and this is why Section~\ref{sec:runtime-method} disables UCC for the composite step while enabling it for the standalone sweep.
@@ -90,15 +96,9 @@ The discontinuity near 4\,KiB is consistent with the UCC TL/UCP source's change 
 
 The single-rank allreduce control is anomalously slow for large buffers: the auxiliary UCC data report approximately 21\,ms at 16\,MiB, despite no inter-rank reduction. That cost is essentially unchanged by the UCC setting, at 21.9\,ms disabled against 21.4\,ms enabled, so it is not a collective-component effect. It is the same order of magnitude as the 34.9\,ms non-UCC four-rank result above, which is consistent with both being dominated by a local copy or reduction implementation rather than by transfer, though a one-rank control cannot separate those two by itself. It is excluded as a reference for network startup.
 
-The complete backend view also exposes the cost of oneCCL/OSHMPI's symmetric staging. On \texttt{1n4g}, the four-byte allreduce medians are 20.2\,$\mu$s directly and 18.6\,$\mu$s through oneCCL/OSHMPI. At 16\,MiB, they are 364\,$\mu$s and 6538\,$\mu$s, respectively: the adapted path is approximately 18 times slower. The direct device-resident reduction and symmetric-staging adapter use different memory and completion paths. The comparison therefore identifies the cost of the evaluated integration choice, not an intrinsic penalty of the oneCCL API.
-
-This pattern demonstrates why functional interface compatibility and performance retention must be evaluated separately. The OSHMPI adapter waits for queue dependencies, stages ordinary operands through symmetric storage, performs a blocking host operation, and returns an already-complete event. Those semantics preserve correctness but remove the asynchronous opportunity retained by the NCCL path.
-
 \subsection{All-to-All: Correct the Default Before Ranking Libraries}
 
 All-to-all gives the clearest example of a configuration changing the apparent library ranking, and its UCC profile is the opposite of allreduce's. Figure~\ref{fig:m-alltoall-backends} first shows all seven measured stacks against bytes per peer, rather than the topology-dependent aggregate send-buffer size. The MPI default changes regime sharply as rank count and per-peer size increase, while oneCCL/OSHMPI's staged path remains substantially more expensive.
-
-Figure~\ref{fig:m-ucc-alltoall} isolates the cause. At \texttt{8n4g} the non-UCC path costs between 671 and 974\,$\mu$s for every payload at or below 256 bytes per peer and then drops abruptly to 60\,$\mu$s at 512 bytes, a cliff rather than a curve; with UCC enabled the same small sizes cost between 24 and 31\,$\mu$s. The peak gain is 33.7 times at 128 bytes per peer. Here the benefit is confined to the small-message, high-rank corner: the two configurations agree to within 2\% by 8\,KiB per peer, and at 256\,KiB per peer UCC is instead slower, at 0.87 of the non-UCC time at \texttt{8n4g} and 0.56 at \texttt{2n4g}. Allreduce and all-to-all therefore want UCC enabled in opposite regions of the same size axis, which is why a single machine-wide setting cannot be correct for both.
 
 \begin{figure}[htbp]
 \centering
@@ -107,6 +107,23 @@ Figure~\ref{fig:m-ucc-alltoall} isolates the cause. At \texttt{8n4g} the non-UCC
 \label{fig:m-alltoall-backends}
 \end{figure}
 
+At large payloads, NCCL-based paths regain the advantage. Table~\ref{tab:m-alltoall-bandwidth} gives the endpoint at 256\,KiB per peer. The closely spaced direct-NCCL and oneCCL/NCCL results should be read against allocation variation. The all-to-all archive combines measurement rounds, so it establishes the large regime differences more securely than small cross-backend margins.
+
+\begin{table}[htbp]
+\centering
+\caption{All-to-all aggregate bandwidth at 256\,KiB per peer, in GB/s. The numerator includes each rank's self block.}
+\label{tab:m-alltoall-bandwidth}
+\footnotesize
+\input{data/main-campaign/alltoall-bandwidth-table.tex}
+\end{table}
+
+At the largest \texttt{8n4g} payload, direct NCCL and oneCCL/NCCL are within approximately 2\%. The adapter and SYCL orchestration are therefore much less visible at this bulk endpoint than in four-byte ping-pong. This is again a complete-stack comparison, not an isolated adapter measurement. Together with the staged oneCCL/OSHMPI curve, it shows that a common interface can retain a backend's bulk regime when it preserves its asynchronous data path, while a blocking staging strategy can change the regime entirely.
+
+\subsubsection{MPI with UCC: The Opposite Trade-off}
+
+Figure~\ref{fig:m-ucc-alltoall} isolates what makes the MPI default collapse at small payloads. At \texttt{8n4g} the non-UCC path costs between 671 and 974\,$\mu$s for every payload at or below 256 bytes per peer and then drops abruptly to 60\,$\mu$s at 512 bytes, a cliff rather than a curve; with UCC enabled the same small sizes cost between 24 and 31\,$\mu$s. The peak gain is 33.7 times at 128 bytes per peer. Here the benefit is confined to the small-message, high-rank corner: the two configurations agree to within 2\% by 8\,KiB per peer, and at 256\,KiB per peer UCC is instead slower, at 0.87 of the non-UCC time at \texttt{8n4g} and 0.56 at \texttt{2n4g}. Allreduce and all-to-all therefore want UCC enabled in opposite regions of the same size axis, which is why a single machine-wide setting cannot be correct for both.
+
+
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/ucc-ab-alltoall.png}
@@ -114,11 +131,11 @@ Figure~\ref{fig:m-ucc-alltoall} isolates the cause. At \texttt{8n4g} the non-UCC
 \label{fig:m-ucc-alltoall}
 \end{figure}
 
-An auxiliary forced-algorithm control isolates the problematic default (Table~\ref{tab:m-alltoall-forced}). Below 512 bytes per peer, the default follows modified Bruck; forcing linear or synchronized-linear exchange avoids most of the penalty. This supports an algorithm-selection explanation rather than attributing the full gain to a uniquely efficient UCC network transport.
+Open MPI's tuned collective component allows its algorithm choice to be overridden, so the default can be compared with each candidate directly: enabling \texttt{coll\_tuned\_use\_dynamic\_rules} and setting \texttt{coll\_tuned\_alltoall\_algorithm} to 1, 2, 3, or 4 forces linear, pairwise, modified Bruck, or synchronized-linear exchange, and each setting is measured as a separate run. Table~\ref{tab:m-alltoall-forced} shows the result at 16 ranks: below 512 bytes per peer the default matches modified Bruck almost exactly, confirming that the collapse is an algorithm-selection effect, and forcing linear or synchronized-linear exchange avoids most of the penalty. This supports an algorithm-selection explanation rather than attributing the full gain to a uniquely efficient UCC network transport.
 
 \begin{table}[htbp]
 \centering
-\caption{Auxiliary forced Open MPI all-to-all control at 16 ranks, UCC disabled, in \,$\mu$s. Values are retained from the configuration-analysis record.}
+\caption{Open MPI all-to-all with each algorithm forced explicitly, at 16 ranks with UCC disabled, in \,$\mu$s. Each column is a separate run with \texttt{coll\_tuned\_alltoall\_algorithm} set to that algorithm; the last column lets Open MPI choose. Values are retained from the configuration-analysis record.}
 \label{tab:m-alltoall-forced}
 \scriptsize
 \begin{tabular}{rrrrrr}
@@ -134,18 +151,6 @@ B/peer & Linear & Pairwise & Modified Bruck & Linear sync & Default\\
 \end{table}
 
 Modified Bruck reduces communication rounds by forwarding data, but the Open MPI implementation also rotates buffers, constructs indexed datatypes, and copies noncontiguous blocks \cite{bruck_alltoall_1997,openmpi_alltoall_source_2026}. Those local operations can be expensive on GPU-resident buffers. The UCC dispatch trace identifies its UCP transport layer, whose CUDA default uses contiguous peer slices and nonblocking tagged communication \cite{venkata_ucc_2024,openucx_ucc_source_2026}. This explains the structural difference; it does not replace a profile of individual copy costs.
-
-At large payloads, NCCL-based paths regain the advantage. Table~\ref{tab:m-alltoall-bandwidth} gives the endpoint at 256\,KiB per peer. The closely spaced direct-NCCL and oneCCL/NCCL results should be read against allocation variation. The all-to-all archive combines measurement rounds, so it establishes the large regime differences more securely than small cross-backend margins.
-
-\begin{table}[htbp]
-\centering
-\caption{All-to-all aggregate bandwidth at 256\,KiB per peer, in GB/s. The numerator includes each rank's self block.}
-\label{tab:m-alltoall-bandwidth}
-\footnotesize
-\input{data/main-campaign/alltoall-bandwidth-table.tex}
-\end{table}
-
-At the largest \texttt{8n4g} payload, direct NCCL and oneCCL/NCCL are within approximately 2\%. The adapter and SYCL orchestration are therefore much less visible at this bulk endpoint than in four-byte ping-pong. This is again a complete-stack comparison, not an isolated adapter measurement. Together with the staged oneCCL/OSHMPI curve, it shows that a common interface can retain a backend's bulk regime when it preserves its asynchronous data path, while a blocking staging strategy can change the regime entirely.
 
 \subsection{Scaling from One Node to Eight}\label{sec:micro-scaling}
 
