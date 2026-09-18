@@ -7,9 +7,9 @@ This chapter defines the experiment behind the comparison of host-driven and dev
 The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three levels, and the campaigns were executed in that order, because each level uses the preceding one to choose what is worth measuring:
 
 \begin{enumerate}
-    \item \textbf{Isolated communication microbenchmarks:} \texttt{pingpong}, \texttt{halo\_1d}, \texttt{allreduce}, and \texttt{alltoall} exercise one operation at a time, with no computation to overlap or distort the transfer. They establish the message sizes, topologies, and runtime settings at which a given backend is competitive.
-    \item \textbf{Application microbenchmarks:} \texttt{moe} and \texttt{cg\_step} retain the same harness, timing contract, and validation policy, but replace a single operation with a workload's communication sequence. \texttt{moe} adds routing-dependent, variable-count redistribution; \texttt{cg\_step} combines a halo exchange, a local stencil, and two scalar reductions. They test whether the isolated observations survive composition, either with an irregular payload distribution or with local computation.
-    \item \textbf{Full \texttt{aCG} solver:} Tests cross-level agreement by introducing sparse partitioning, realistic application dependencies, and convergence criteria.
+    \item \emph{Isolated communication microbenchmarks:} \texttt{pingpong}, \texttt{halo\_1d}, \texttt{allreduce}, and \texttt{alltoall} exercise one operation at a time, with no computation to overlap or distort the transfer. They establish the message sizes, topologies, and runtime settings at which a given backend is competitive.
+    \item \emph{Application microbenchmarks:} \texttt{moe} and \texttt{cg\_step} retain the same harness, timing contract, and validation policy, but replace a single operation with a workload's communication sequence. \texttt{moe} adds routing-dependent, variable-count redistribution; \texttt{cg\_step} combines a halo exchange, a local stencil, and two scalar reductions. They test whether the isolated observations survive composition, either with an irregular payload distribution or with local computation.
+    \item \emph{Full \texttt{aCG} solver:} Tests cross-level agreement by introducing sparse partitioning, realistic application dependencies, and convergence criteria.
 \end{enumerate}
 
 Of the two application microbenchmarks, \texttt{cg\_step} is the one carried into the cross-level comparison of Section~\ref{sec:acg-method}, because the solver evaluated in this thesis is a CG solver and its reductions can be matched by datatype and payload. \texttt{moe} has no matched application in this thesis; it is measured to test how strongly the ranking obtained from a uniform, fixed-count exchange depends on the payload distribution assumed by that exchange.
@@ -58,11 +58,11 @@ A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combinati
 All campaigns were run with the command-line tooling of the benchmark suite contributed by this thesis (Chapter~\ref{ch}), available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}. It covers the workflow from an empty checkout to recorded results, so that every stack is built, launched, and logged in the same way:
 
 \begin{itemize}
-    \item \textbf{Initialization.} One command bootstraps the source-built dependencies, including OSHMPI and the two oneCCL backends, in dependency order, and builds all seven stacks from shared build presets. Libraries provided by the site, such as HPC-X MPI, are taken from the system modules.
-    \item \textbf{Execution.} Experiments can be submitted for a single cell, for one pattern, or for the complete declared matrix of patterns, stacks, and topologies. Iteration counts, trials, and collective policy are defined once per pattern and apply to every stack, and the resolved configuration of a cell can be inspected before submission.
-    \item \textbf{Library versions.} NCCL and NVSHMEM releases are selected with a single variable that gives each version its own installation, build, and results directory, so measurements of different versions cannot be mixed. Source-built dependencies are pinned to a revision and rebuilt when changed.
-    \item \textbf{Recording.} Each trial log records the job, nodes, stack, launcher, and communication-relevant environment. Output is kept as a result only if the trial completes successfully within its timeout; failed runs are retained separately for inspection.
-    \item \textbf{Portability.} Machine-specific modules and transport settings are kept apart from the experiment definitions, so the same experiments can target another cluster by adding a cluster definition.
+    \item \emph{Initialization.} One command bootstraps the source-built dependencies, including OSHMPI and the two oneCCL backends, in dependency order, and builds all seven stacks from shared build presets. Libraries provided by the site, such as HPC-X MPI, are taken from the system modules.
+    \item \emph{Execution.} Experiments can be submitted for a single cell, for one pattern, or for the complete declared matrix of patterns, stacks, and topologies. Iteration counts, trials, and collective policy are defined once per pattern and apply to every stack, and the resolved configuration of a cell can be inspected before submission.
+    \item \emph{Library versions.} NCCL and NVSHMEM releases are selected with a single variable that gives each version its own installation, build, and results directory, so measurements of different versions cannot be mixed. Source-built dependencies are pinned to a revision and rebuilt when changed.
+    \item \emph{Recording.} Each trial log records the job, nodes, stack, launcher, and communication-relevant environment. Output is kept as a result only if the trial completes successfully within its timeout; failed runs are retained separately for inspection.
+    \item \emph{Portability.} Machine-specific modules and transport settings are kept apart from the experiment definitions, so the same experiments can target another cluster by adding a cluster definition.
 \end{itemize}
 
 \subsection{Research Questions and Evidence}
@@ -94,13 +94,13 @@ All experiments were run on the Booster partition of the Leonardo supercomputer 
 \subsection{Booster Node Specifications}
 
 \begin{itemize}
-    \item \textbf{Model:} Atos BullSequana X2135 ``Da Vinci'' single-node GPU blade.
-    \item \textbf{Processor:} one Intel Xeon Platinum 8358 (Ice Lake), 32 cores at 2.60\,GHz.
-    \item \textbf{GPU:} four NVIDIA A100 SXM4 GPUs with 64\,GB of HBM2e each.
-    \item \textbf{Memory:} 512\,GB DDR4 at 3200\,MHz ($8 \times 64$\,GB).
-    \item \textbf{Intra-node interconnect:} NVLink~3.0, with each GPU connected directly to the other three by four links, giving 200\,GB/s of bidirectional bandwidth per GPU pair; there is no NVSwitch.
-    \item \textbf{Network:} NVIDIA Mellanox InfiniBand HDR in a DragonFly+ topology, with two dual-port HDR100 adapters per node, exposed as four 100\,Gb/s interfaces.
-    \item \textbf{Scheduler:} Slurm.
+    \item \emph{Model:} Atos BullSequana X2135 ``Da Vinci'' single-node GPU blade.
+    \item \emph{Processor:} one Intel Xeon Platinum 8358 (Ice Lake), 32 cores at 2.60\,GHz.
+    \item \emph{GPU:} four NVIDIA A100 SXM4 GPUs with 64\,GB of HBM2e each.
+    \item \emph{Memory:} 512\,GB DDR4 at 3200\,MHz ($8 \times 64$\,GB).
+    \item \emph{Intra-node interconnect:} NVLink~3.0, with each GPU connected directly to the other three by four links, giving 200\,GB/s of bidirectional bandwidth per GPU pair; there is no NVSwitch.
+    \item \emph{Network:} NVIDIA Mellanox InfiniBand HDR in a DragonFly+ topology, with two dual-port HDR100 adapters per node, exposed as four 100\,Gb/s interfaces.
+    \item \emph{Scheduler:} Slurm.
 \end{itemize}
 
 \subsection{Intra- and Inter-Node Communication Support}
@@ -108,8 +108,8 @@ All experiments were run on the Booster partition of the Leonardo supercomputer 
 The node provides two communication domains with an order-of-magnitude difference in bandwidth, and the topology set is chosen to observe each separately and in combination:
 
 \begin{enumerate}
-    \item \textbf{Intra-node communication} between GPUs of the same node travels over the direct NVLink connections, using GPUDirect peer-to-peer access without staging through host memory. A single GPU pair has a 100\,GB/s ceiling per direction. The \texttt{1n2g} and \texttt{1n4g} topologies use only this domain, and \texttt{1n1g} serves as a single-GPU control with no inter-rank transfer.
-    \item \textbf{Inter-node communication} between nodes travels over InfiniBand, where GPUDirect RDMA lets the adapter read and write registered GPU memory directly. One HDR100 port carries 100\,Gb/s, or 12.5\,GB/s. The \texttt{2n1g} topology isolates this domain with one GPU per node, while \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} combine both domains at 8, 16, and 32 GPUs.
+    \item \emph{Intra-node communication} between GPUs of the same node travels over the direct NVLink connections, using GPUDirect peer-to-peer access without staging through host memory. A single GPU pair has a 100\,GB/s ceiling per direction. The \texttt{1n2g} and \texttt{1n4g} topologies use only this domain, and \texttt{1n1g} serves as a single-GPU control with no inter-rank transfer.
+    \item \emph{Inter-node communication} between nodes travels over InfiniBand, where GPUDirect RDMA lets the adapter read and write registered GPU memory directly. One HDR100 port carries 100\,Gb/s, or 12.5\,GB/s. The \texttt{2n1g} topology isolates this domain with one GPU per node, while \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} combine both domains at 8, 16, and 32 GPUs.
 \end{enumerate}
 
 Comparing \texttt{1n4g} with \texttt{2n1g} therefore separates a change of interconnect from a change of scale, which a rank-count axis alone would conflate. Device-initiated inter-node transfers are the exception to direct GPU-to-NIC posting: InfiniBand GPUDirect Async (IBGDA) is not available on the evaluated system, so NVSHMEM services them through a CPU proxy (Section~\ref{sec:ibgda-check}).
@@ -117,14 +117,14 @@ Comparing \texttt{1n4g} with \texttt{2n1g} therefore separates a change of inter
 \subsection{Libraries and Drivers}
 
 \begin{itemize}
-    \item \textbf{NVIDIA driver:} 535.274.02, with the \texttt{nvidia\_peermem} module loaded for GPUDirect RDMA.
-    \item \textbf{InfiniBand stack:} MLNX\_OFED 23.04-1.1.3.
-    \item \textbf{CUDA toolchain:} NVHPC 24.5 with CUDA 12.4, for the CUDA benchmarks and aCG.
-    \item \textbf{SYCL toolchain:} DPC++ 6.3 built from intel/llvm with the CUDA backend, GCC 12.2, and CUDA 12.2, for the SYCL benchmarks and solver.
-    \item \textbf{MPI:} HPC-X 2.19, providing Open MPI over UCX, with UCC 1.4.0 as an optional collective component. It serves the CUDA and SYCL MPI paths and is the substrate of OSHMPI.
-    \item \textbf{NCCL:} 2.18.5, for the direct NCCL path and beneath oneCCL.
-    \item \textbf{NVSHMEM:} 2.11.0, for the host- and device-invoked SHMEM paths.
-    \item \textbf{OSHMPI and oneCCL:} built from source at pinned revisions, including the NCCL and OSHMPI backend extensions of this thesis. The oneCCL/NCCL build launches and bootstraps with its bundled Intel MPI, while NCCL carries the payload.
+    \item \emph{NVIDIA driver:} 535.274.02, with the \texttt{nvidia\_peermem} module loaded for GPUDirect RDMA.
+    \item \emph{InfiniBand stack:} MLNX\_OFED 23.04-1.1.3.
+    \item \emph{CUDA toolchain:} NVHPC 24.5 with CUDA 12.4, for the CUDA benchmarks and aCG.
+    \item \emph{SYCL toolchain:} DPC++ 6.3 built from intel/llvm with the CUDA backend, GCC 12.2, and CUDA 12.2, for the SYCL benchmarks and solver.
+    \item \emph{MPI:} HPC-X 2.19, providing Open MPI over UCX, with UCC 1.4.0 as an optional collective component. It serves the CUDA and SYCL MPI paths and is the substrate of OSHMPI.
+    \item \emph{NCCL:} 2.18.5, for the direct NCCL path and beneath oneCCL.
+    \item \emph{NVSHMEM:} 2.11.0, for the host- and device-invoked SHMEM paths.
+    \item \emph{OSHMPI and oneCCL:} built from source at pinned revisions, including the NCCL and OSHMPI backend extensions of this thesis. The oneCCL/NCCL build launches and bootstraps with its bundled Intel MPI, while NCCL carries the payload.
 \end{itemize}
 
 Source-built components are identified by repository and branch in the artifact records; exact measured revisions are not available for every archived run.
@@ -216,9 +216,9 @@ oneCCL/OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{CCL\_OSHMPI\_STAGING\_S
 \paragraph{oneCCL adapters.}\label{sec:oneccl-method} Two stacks reach their backend through adapters contributed by this thesis, so each measures the adapted path rather than the backend alone. Both also run SYCL rather than CUDA, so a comparison with the direct backend changes the compute runtime as well.
 
 \begin{itemize}
-    \item \textbf{NCCL adapter.} Forwards oneCCL's group calls to NCCL, so a dependent send/receive batch is submitted as one group and completes asynchronously through the returned event.
-    \item \textbf{OSHMPI adapter.} Maps collectives to OpenSHMEM operations where equivalents exist and composes the rest, for example all-to-all-v from puts and reduce-scatter from an allreduce. Operands are staged through a symmetric arena, and because the OpenSHMEM call blocks on the host, the returned event is already complete: completion is correct, but submission is no longer asynchronous. Staging and synchronization are inside the timed interval.
-    \item \textbf{NVSHMEM adapter.} A runtime foundation only: it establishes communicator selection, bootstrap, lifecycle, and symmetric staging on one and two nodes, but its collective and point-to-point operations are unsupported. It contributes integration evidence and no measurements.
+    \item \emph{NCCL adapter.} Forwards oneCCL's group calls to NCCL, so a dependent send/receive batch is submitted as one group and completes asynchronously through the returned event.
+    \item \emph{OSHMPI adapter.} Maps collectives to OpenSHMEM operations where equivalents exist and composes the rest, for example all-to-all-v from puts and reduce-scatter from an allreduce. Operands are staged through a symmetric arena, and because the OpenSHMEM call blocks on the host, the returned event is already complete: completion is correct, but submission is no longer asynchronous. Staging and synchronization are inside the timed interval.
+    \item \emph{NVSHMEM adapter.} A runtime foundation only: it establishes communicator selection, bootstrap, lifecycle, and symmetric staging on one and two nodes, but its collective and point-to-point operations are unsupported. It contributes integration evidence and no measurements.
 \end{itemize}
 
 \subsection{Leonardo Considerations}\label{sec:ibgda-check}
@@ -312,36 +312,36 @@ The four microbenchmarks sweep powers of two over their size range and time one 
 
 Rank 0 sends a buffer to rank 1, which returns the same payload; the exchange is dependency-ordered, since the reply cannot start before the message arrives. It runs on \texttt{1n2g} and \texttt{2n1g}, one link within a node and one across nodes.
 \begin{itemize}
-    \item \textbf{Timing:} only rank 0 records samples, and the reported latency is half the round trip. NVSHMEM is timed differently: all timed exchanges run inside one persistent device kernel whose duration is divided by the iteration count, so its result is an average with coarser sampling than the per-exchange samples of the other stacks. The OSHMPI exchange includes handshake barriers, which direct point-to-point signaling does not need.
-    \item \textbf{Correctness:} rank 0 compares the returned buffer with the original payload.
-    \item \textbf{Payload:} one direction of the exchange.
+    \item \emph{Timing:} only rank 0 records samples, and the reported latency is half the round trip. NVSHMEM is timed differently: all timed exchanges run inside one persistent device kernel whose duration is divided by the iteration count, so its result is an average with coarser sampling than the per-exchange samples of the other stacks. The OSHMPI exchange includes handshake barriers, which direct point-to-point signaling does not need.
+    \item \emph{Correctness:} rank 0 compares the returned buffer with the original payload.
+    \item \emph{Payload:} one direction of the exchange.
 \end{itemize}
 
 \subsubsection{Halo Exchange}
 
 Each rank exchanges one boundary region with its left and right neighbors on a periodic ring, over every topology with at least two ranks.
 \begin{itemize}
-    \item \textbf{Timing:} each size is measured in two cases. An \emph{isolated} sample times one exchange and exposes submission and completion latency. A \emph{steady} sample times a batch of 100 consecutive exchanges and divides by the batch length, amortizing that cost over queued or persistent work. The two are different execution contracts, and the steady result is not an estimate of raw network latency. The MPI stacks wait for each exchange; NCCL and oneCCL/NCCL complete per batch; OSHMPI closes with a global barrier rather than neighbor signaling; NVSHMEM runs a cooperative device kernel with neighbor signals.
-    \item \textbf{Correctness:} each rank checks both received regions against the markers its neighbors wrote.
-    \item \textbf{Payload:} two sends and two receives per rank.
+    \item \emph{Timing:} each size is measured in two cases. An \emph{isolated} sample times one exchange and exposes submission and completion latency. A \emph{steady} sample times a batch of 100 consecutive exchanges and divides by the batch length, amortizing that cost over queued or persistent work. The two are different execution contracts, and the steady result is not an estimate of raw network latency. The MPI stacks wait for each exchange; NCCL and oneCCL/NCCL complete per batch; OSHMPI closes with a global barrier rather than neighbor signaling; NVSHMEM runs a cooperative device kernel with neighbor signals.
+    \item \emph{Correctness:} each rank checks both received regions against the markers its neighbors wrote.
+    \item \emph{Payload:} two sends and two receives per rank.
 \end{itemize}
 
 \subsubsection{Allreduce}
 
 Each rank contributes a float32 buffer and receives the element-wise sum, over every topology including the single-rank control.
 \begin{itemize}
-    \item \textbf{Timing:} one completed reduction per sample. OSHMPI reduces CUDA symmetric operands directly in this benchmark.
-    \item \textbf{Correctness:} rank $r$ fills its buffer with $r+1$, so every result element must equal $P(P+1)/2$.
-    \item \textbf{Payload:} input bytes per rank; bus bandwidth applies the conventional ring factor $2(P-1)/P$, which normalizes traffic without implying the algorithm a library selected.
+    \item \emph{Timing:} one completed reduction per sample. OSHMPI reduces CUDA symmetric operands directly in this benchmark.
+    \item \emph{Correctness:} rank $r$ fills its buffer with $r+1$, so every result element must equal $P(P+1)/2$.
+    \item \emph{Payload:} input bytes per rank; bus bandwidth applies the conventional ring factor $2(P-1)/P$, which normalizes traffic without implying the algorithm a library selected.
 \end{itemize}
 
 \subsubsection{All-to-All}
 
 Each rank sends a distinct, equal-sized block to every rank, including itself, over every topology.
 \begin{itemize}
-    \item \textbf{Timing:} one completed exchange per sample. MPI and oneCCL issue a native all-to-all, while NCCL composes it from grouped point-to-point calls and OSHMPI from per-peer puts, so the same logical operation is implemented differently.
-    \item \textbf{Correctness:} source $r$ fills its block for destination $d$ with $rP+d$, and every destination checks each received block.
-    \item \textbf{Payload:} the size axis is bytes per peer, while bandwidth counts the whole per-rank send buffer including the self block.
+    \item \emph{Timing:} one completed exchange per sample. MPI and oneCCL issue a native all-to-all, while NCCL composes it from grouped point-to-point calls and OSHMPI from per-peer puts, so the same logical operation is implemented differently.
+    \item \emph{Correctness:} source $r$ fills its block for destination $d$ with $rP+d$, and every destination checks each received block.
+    \item \emph{Payload:} the size axis is bytes per peer, while bandwidth counts the whole per-rank send buffer including the self block.
 \end{itemize}
 
 \subsection{Application Microbenchmarks}
@@ -358,9 +358,9 @@ The MoE benchmark times one top-1 dispatch and its inverse combine, without expe
 \end{itemize}
 A latency difference between routing cases is therefore attributable to distribution rather than volume. At one rank all three cases reduce to a local copy, so \texttt{1n1g} is a packing control rather than a network measurement.
 \begin{itemize}
-    \item \textbf{Timing:} one completed dispatch and combine per sample; routing, planning, and packing are outside timing. The MPI stacks issue two \texttt{MPI\_Alltoallv} calls, NCCL and oneCCL/NCCL issue grouped variable-count point-to-point exchanges, and both SHMEM stacks issue per-destination puts. OSHMPI closes each phase with a quiet, device synchronization, and a barrier; NVSHMEM closes with a quiet and one signal per peer actually exchanged with. The one-sided stacks have no collective algorithm to reorganize a skewed distribution, which \texttt{hotspot80} is designed to expose.
-    \item \textbf{Correctness:} every rank checks the dispatch layout, token ownership, ordering, and payload, then checks that combine reproduced the packed send buffer exactly.
-    \item \textbf{Payload:} useful application volume, $2 \cdot T H \cdot 4$ bytes per rank for dispatch and combine, including tokens that never leave their rank. It is not the traffic crossing a link.
+    \item \emph{Timing:} one completed dispatch and combine per sample; routing, planning, and packing are outside timing. The MPI stacks issue two \texttt{MPI\_Alltoallv} calls, NCCL and oneCCL/NCCL issue grouped variable-count point-to-point exchanges, and both SHMEM stacks issue per-destination puts. OSHMPI closes each phase with a quiet, device synchronization, and a barrier; NVSHMEM closes with a quiet and one signal per peer actually exchanged with. The one-sided stacks have no collective algorithm to reorganize a skewed distribution, which \texttt{hotspot80} is designed to expose.
+    \item \emph{Correctness:} every rank checks the dispatch layout, token ownership, ordering, and payload, then checks that combine reproduced the packed send buffer exactly.
+    \item \emph{Payload:} useful application volume, $2 \cdot T H \cdot 4$ bytes per rank for dispatch and combine, including tokens that never leave their rank. It is not the traffic crossing a link.
 \end{itemize}
 MoE runs with UCC disabled (Section~\ref{sec:runtime-method}), a setting not tuned for the variable-count path it uses, so its MPI results describe one fixed configuration.
 
@@ -368,9 +368,9 @@ MoE runs with UCC disabled (Section~\ref{sec:runtime-method}), a setting not tun
 
 The \texttt{cg\_step} benchmark extracts the communication structure of one conjugate-gradient iteration. An $S\times S$ grid, with $S$ from 512 to 8192, is distributed by columns. Each iteration packs the boundary columns, exchanges a nonperiodic west/east halo, applies a four-neighbor stencil, computes two local dot products, and performs two global sums of one double each, matching the two scalar reductions of a CG iteration. At fixed $S$, more ranks reduce local work; at a fixed rank count, a larger $S$ increases local work quadratically and halo length linearly. The benchmark keeps this operation sequence but omits vector updates, changing search directions, and convergence: the reduced scalars do not feed a next iterate, so it tests a communication/computation composition rather than the dependency graph of a full solver (Table~\ref{tab:m-cg-dependencies}).
 \begin{itemize}
-    \item \textbf{Timing:} each sample covers pack, halo exchange, unpack, stencil, both dot products, and both completed reductions. The MPI halo uses two serialized \texttt{MPI\_Sendrecv} calls. The archived OSHMPI stack reduces each scalar in host memory and does not copy the result back to the GPU. The NVSHMEM stack fuses the two sums into one two-element reduction. An optional second pass times pack, halo, compute, and reductions separately; it synchronizes at every phase boundary, so its phase sum is an instrumentation-sensitive diagnostic rather than a measure of overlap.
-    \item \textbf{Correctness:} every rank checks its stencil slab against a host reference, and the two global dot products are checked. The archived OSHMPI check validates the host-side result only, so it does not cover returning that result to a GPU consumer.
-    \item \textbf{Payload:} a nominal two-column halo, excluding the scalar reductions.
+    \item \emph{Timing:} each sample covers pack, halo exchange, unpack, stencil, both dot products, and both completed reductions. The MPI halo uses two serialized \texttt{MPI\_Sendrecv} calls. The archived OSHMPI stack reduces each scalar in host memory and does not copy the result back to the GPU. The NVSHMEM stack fuses the two sums into one two-element reduction. An optional second pass times pack, halo, compute, and reductions separately; it synchronizes at every phase boundary, so its phase sum is an instrumentation-sensitive diagnostic rather than a measure of overlap.
+    \item \emph{Correctness:} every rank checks its stencil slab against a host reference, and the two global dot products are checked. The archived OSHMPI check validates the host-side result only, so it does not cover returning that result to a GPU consumer.
+    \item \emph{Payload:} a nominal two-column halo, excluding the scalar reductions.
 \end{itemize}
 
 \section{Application Validation with aCG}\label{sec:acg-method}
@@ -382,19 +382,19 @@ The last evaluation level asks whether the benchmark observations hold in a comp
 The solver is evaluated on two symmetric positive definite matrices from the SuiteSparse Matrix Collection \cite{davis_suitesparse_2011}. Each is partitioned once with METIS, and the same partition is reused by every solver variant.
 
 \begin{enumerate}
-    \item \textbf{Bump\_2911:} 2\,911\,419 rows and 127\,729\,899 nonzeros.
-    \item \textbf{Queen\_4147:} 4\,147\,110 rows and 329\,499\,284 nonzeros.
+    \item \emph{Bump\_2911:} 2\,911\,419 rows and 127\,729\,899 nonzeros.
+    \item \emph{Queen\_4147:} 4\,147\,110 rows and 329\,499\,284 nonzeros.
 \end{enumerate}
 
 Nonzero counts refer to the full symmetric matrix. Each matrix is solved with six variants:
 
 \begin{enumerate}
-    \item \textbf{MPI:} host-initiated CG, with halo exchange and reductions through CUDA-aware MPI.
-    \item \textbf{NCCL:} host-initiated CG, with halo exchange and reductions through NCCL.
-    \item \textbf{Host NVSHMEM:} host-initiated CG, with communication through NVSHMEM.
-    \item \textbf{OSHMPI:} host-initiated CG, with an OpenSHMEM halo exchange contributed by this thesis and CUDA-aware MPI reductions.
-    \item \textbf{Device NVSHMEM:} the monolithic solver, which runs the entire CG loop on the GPU with device-initiated NVSHMEM communication.
-    \item \textbf{Single GPU:} a control without inter-rank communication.
+    \item \emph{MPI:} host-initiated CG, with halo exchange and reductions through CUDA-aware MPI.
+    \item \emph{NCCL:} host-initiated CG, with halo exchange and reductions through NCCL.
+    \item \emph{Host NVSHMEM:} host-initiated CG, with communication through NVSHMEM.
+    \item \emph{OSHMPI:} host-initiated CG, with an OpenSHMEM halo exchange contributed by this thesis and CUDA-aware MPI reductions.
+    \item \emph{Device NVSHMEM:} the monolithic solver, which runs the entire CG loop on the GPU with device-initiated NVSHMEM communication.
+    \item \emph{Single GPU:} a control without inter-rank communication.
 \end{enumerate}
 
 The multi-GPU variants run on 2, 4, 8, 16, and 32 GPUs, using the \texttt{1n2g}, \texttt{1n4g}, \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} topologies, with three allocations of three trials per configuration. All runs solve the same manufactured solution (seed 101) to a relative residual tolerance of $10^{-6}$, with no absolute tolerance and a limit of 100\,000 iterations. The retained archive contains 507 completed runs: 354 host-initiated, 90 device-NVSHMEM, and 63 single-GPU. Incomplete attempts are not counted as trials.
@@ -405,36 +405,36 @@ Two builds of the solver are used: the CUDA solver provides every result of the 
 
 \paragraph{CUDA solver.} This is the CUDA implementation of aCG by Trotter et al.\ \cite{trotter_cpu-_2025}, extended with the OSHMPI communicator contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}}. It is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
 \begin{itemize}
-    \item \textbf{Toolchain:} NVHPC 24.5 with CUDA 12.4.
-    \item \textbf{Communication libraries:} HPC-X 2.19 for MPI, and the NCCL and NVSHMEM releases bundled with NVHPC 24.5, as in Section~\ref{sec:eval-environment}.
-    \item \textbf{OSHMPI:} built from source against the same HPC-X installation.
-    \item \textbf{Transport settings:} the Open MPI and UCX settings of Table~\ref{tab:m-runtime-settings}, taken from the benchmark configuration and shared by every communicator.
+    \item \emph{Toolchain:} NVHPC 24.5 with CUDA 12.4.
+    \item \emph{Communication libraries:} HPC-X 2.19 for MPI, and the NCCL and NVSHMEM releases bundled with NVHPC 24.5, as in Section~\ref{sec:eval-environment}.
+    \item \emph{OSHMPI:} built from source against the same HPC-X installation.
+    \item \emph{Transport settings:} the Open MPI and UCX settings of Table~\ref{tab:m-runtime-settings}, taken from the benchmark configuration and shared by every communicator.
 \end{itemize}
 Three settings deliberately differ from the benchmark defaults, and each is accounted for in the comparison:
 \begin{itemize}
-    \item \textbf{Rendezvous threshold:} UCX switches to rendezvous at 16\,KiB instead of 1\,KiB. A separate control shows this changes the composite step by only about 2--3\%.
-    \item \textbf{NCCL dispatch:} disabled beneath NVSHMEM, so host-NVSHMEM reductions use NVSHMEM's native path rather than the NCCL-dispatched path of the benchmarks. The default benchmark NVSHMEM reduction is therefore not used as a matched prediction.
-    \item \textbf{UCC:} disabled, as in \texttt{cg\_step}, whose scalar reductions it matches.
+    \item \emph{Rendezvous threshold:} UCX switches to rendezvous at 16\,KiB instead of 1\,KiB. A separate control shows this changes the composite step by only about 2--3\%.
+    \item \emph{NCCL dispatch:} disabled beneath NVSHMEM, so host-NVSHMEM reductions use NVSHMEM's native path rather than the NCCL-dispatched path of the benchmarks. The default benchmark NVSHMEM reduction is therefore not used as a matched prediction.
+    \item \emph{UCC:} disabled, as in \texttt{cg\_step}, whose scalar reductions it matches.
 \end{itemize}
 
 \paragraph{SYCL solver.} The SYCL port of aCG contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/acg-sycl}} is compared with the CUDA solver on Bump\_2911 at 1, 4, 8, and 16 GPUs, using solver-time medians over three repeats. It is built with its own environment:
 \begin{itemize}
-    \item \textbf{Toolchain:} DPC++ 6.3 with the CUDA backend, GCC 12.2, and CUDA 12.2, as for the SYCL microbenchmarks.
-    \item \textbf{Communication libraries:} Open MPI 4.1.6 and NCCL 2.22.3 from the site modules, rather than HPC-X 2.19 and NCCL 2.18.5. The comparison therefore changes the communication libraries as well as the programming model, and its ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead; the CUDA runs of that report also lack a recorded convergence classification.
-    \item \textbf{Other dependencies:} oneMath for the linear-algebra kernels, and METIS for partitioning.
+    \item \emph{Toolchain:} DPC++ 6.3 with the CUDA backend, GCC 12.2, and CUDA 12.2, as for the SYCL microbenchmarks.
+    \item \emph{Communication libraries:} Open MPI 4.1.6 and NCCL 2.22.3 from the site modules, rather than HPC-X 2.19 and NCCL 2.18.5. The comparison therefore changes the communication libraries as well as the programming model, and its ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead; the CUDA runs of that report also lack a recorded convergence classification.
+    \item \emph{Other dependencies:} oneMath for the linear-algebra kernels, and METIS for partitioning.
 \end{itemize}
 
 \subsection{Metrics and Correctness}
 
 \begin{itemize}
-    \item a\textbf{Solver time} is the time to solution. For the primary scaling view, following the reference study, the fastest residual-valid trial is selected per matrix, variant, and GPU count; all other trials are retained, and MPI variability is reported through allocation medians and ranges.
-    \item \textbf{Throughput} is work per second per GPU. Solver time alone is not enough: communicators reduce in different orders, so the same problem can converge in a slightly different number of iterations, and a variant would look faster just for needing fewer. Dividing work by time removes that effect. Work is counted as in the reference aCG study \cite{trotter_cpu-_2025}: two floating-point operations (FLOPs) per nonzero or vector element a kernel processes. For $K$ iterations on a matrix with $n$ rows and $\mathrm{nnz}$ nonzeros,
+    \item \emph{Solver time} is the time to solution. For the primary scaling view, following the reference study, the fastest residual-valid trial is selected per matrix, variant, and GPU count; all other trials are retained, and MPI variability is reported through allocation medians and ranges.
+    \item \emph{Throughput} is work per second per GPU. Solver time alone is not enough: communicators reduce in different orders, so the same problem can converge in a slightly different number of iterations, and a variant would look faster just for needing fewer. Dividing work by time removes that effect. Work is counted as in the reference aCG study \cite{trotter_cpu-_2025}: two floating-point operations (FLOPs) per nonzero or vector element a kernel processes. For $K$ iterations on a matrix with $n$ rows and $\mathrm{nnz}$ nonzeros,
     \[
     W(K)=2(K+1)\,\mathrm{nnz}+2(5K+1)\,n,
     \]
     and throughput on $P$ GPUs in solver time $T$ is $W(K)/(PT)$.
-    \item \textbf{Correctness} requires successful completion and a final residual, relative to the initial residual, within the requested tolerance. Convergence is never inferred from the exit code alone, and a run with missing correctness fields is classified as unknown rather than failed. The error against the manufactured solution is kept as a separate numerical diagnostic.
-    \item \textbf{Phase timers} have backend-dependent meanings and cannot be summed into a network-cost model. The halo timer covers only the wait remaining at halo-end, so OSHMPI's blocking communication appears mainly under \emph{other}; NVSHMEM may include communication in its SpMV interval; and the allreduce timer includes the wait for the slowest rank to arrive.
+    \item \emph{Correctness} requires successful completion and a final residual, relative to the initial residual, within the requested tolerance. Convergence is never inferred from the exit code alone, and a run with missing correctness fields is classified as unknown rather than failed. The error against the manufactured solution is kept as a separate numerical diagnostic.
+    \item \emph{Phase timers} have backend-dependent meanings and cannot be summed into a network-cost model. The halo timer covers only the wait remaining at halo-end, so OSHMPI's blocking communication appears mainly under \emph{other}; NVSHMEM may include communication in its SpMV interval; and the allreduce timer includes the wait for the slowest rank to arrive.
 \end{itemize}
 
 \section{Reproducibility and Evidence Boundaries}\label{sec:reproducibility}
@@ -450,7 +450,7 @@ Together with the benchmark tooling of Section~\ref{sec:harness}, which records 
 
 Three boundaries apply to the archived evidence:
 \begin{itemize}
-    \item \textbf{Revisions.} Repository revisions identify the imported archive, not necessarily the exact source of every measured run.
-    \item \textbf{Snapshots.} The results come from more than one measurement snapshot. The allreduce and MoE results are from a later campaign than the other microbenchmarks, and the five-size \texttt{cg\_step} sweep is retained from the earlier campaign because its later re-run covers only one grid size. The manifest records which snapshot each pattern comes from.
-    \item \textbf{Auxiliary controls.} The rail-count, scalar-placement, forced-algorithm, and dispatch controls survive as analysis summaries rather than complete trial datasets, and are reported without reconstructed error bars.
+    \item \emph{Revisions.} Repository revisions identify the imported archive, not necessarily the exact source of every measured run.
+    \item \emph{Snapshots.} The results come from more than one measurement snapshot. The allreduce and MoE results are from a later campaign than the other microbenchmarks, and the five-size \texttt{cg\_step} sweep is retained from the earlier campaign because its later re-run covers only one grid size. The manifest records which snapshot each pattern comes from.
+    \item \emph{Auxiliary controls.} The rail-count, scalar-placement, forced-algorithm, and dispatch controls survive as analysis summaries rather than complete trial datasets, and are reported without reconstructed error bars.
 \end{itemize}

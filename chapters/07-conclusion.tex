@@ -18,11 +18,11 @@ The resulting recommendation is to select configured paths for a specific applic
 
 The reconciled analysis identifies the following priorities before broadening the backend matrix:
 \begin{enumerate}
-\item \textbf{Does staged OSHMPI retain its advantage through GPU-visible completion?} Validate the implemented device-to-host/reduction/host-to-device path in both \texttt{cg\_step} and aCG. Compare the solver's MPI and staged OpenSHMEM scalar options with its halo held fixed, using one-double sums and matched runtime settings.
-\item \textbf{Does an application-like halo improve prediction?} Replay the directed communication graphs exported from the fixed sparse partitions. Measure submission, completion, and exposed wait with and without independent computation. The replay inputs are prepared; replay performance remains unmeasured.
-\item \textbf{What portion of the persistent-halo result belongs to invocation?} Compare host-called, host-on-stream, nonpersistent device-invoked, and persistent device-invoked NVSHMEM with message layout, memory, transport, signaling, batch length, and completion held fixed.
-\item \textbf{Does the favorable regime survive application-like batching?} Sweep batch length and add an interleaved halo--compute--reduction schedule rather than relying only on 100 consecutive exchanges.
-\item \textbf{Which application change explains the device-solver trend?} Match host- and device-NVSHMEM solver organization and collective dispatch, with separate controls for persistent computation and fusion.
+\item \emph{Does staged OSHMPI retain its advantage through GPU-visible completion?} Validate the implemented device-to-host/reduction/host-to-device path in both \texttt{cg\_step} and aCG. Compare the solver's MPI and staged OpenSHMEM scalar options with its halo held fixed, using one-double sums and matched runtime settings.
+\item \emph{Does an application-like halo improve prediction?} Replay the directed communication graphs exported from the fixed sparse partitions. Measure submission, completion, and exposed wait with and without independent computation. The replay inputs are prepared; replay performance remains unmeasured.
+\item \emph{What portion of the persistent-halo result belongs to invocation?} Compare host-called, host-on-stream, nonpersistent device-invoked, and persistent device-invoked NVSHMEM with message layout, memory, transport, signaling, batch length, and completion held fixed.
+\item \emph{Does the favorable regime survive application-like batching?} Sweep batch length and add an interleaved halo--compute--reduction schedule rather than relying only on 100 consecutive exchanges.
+\item \emph{Which application change explains the device-solver trend?} Match host- and device-NVSHMEM solver organization and collective dispatch, with separate controls for persistent computation and fusion.
 \end{enumerate}
 
 The complete priority report, including CUDA--SYCL correctness repair, matched NVSHMEM dispatch, GPU-posted networking, and conditional NCCL and all-to-all studies, is available in \path{experiments/missing-experiments-report.md}.

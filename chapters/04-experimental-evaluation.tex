@@ -33,6 +33,10 @@ Within a node, NVSHMEM becomes competitive over an intermediate message range, w
 
 The common-interface NCCL path is also visible in this startup-sensitive pattern. At four-byte inter-node ping-pong, oneCCL/NCCL takes 33.8\,$\mu$s against 28.8\,$\mu$s for direct NCCL, approximately 17\% more. This changes the compute interface and orchestration as well as the adapter call, so it measures the complete oneCCL/NCCL stack rather than isolated wrapper overhead. The ping-pong result is consequently a small-message half-round-trip comparison, not an estimate of an initiation-only launch saving.
 
+\begin{keypoint}[Ping-pong takeaway]
+MPI owns this pattern: lowest latency at every size across nodes, and the reference for startup cost. OSHMPI is the closest alternative at small messages, at roughly twice MPI's four-byte latency. NVSHMEM is competitive only over an intermediate intra-node range, and its device-invoked variant does not recover the startup gap. NCCL is an order of magnitude behind at four bytes, which is the cost of its stream-completion contract rather than of its transport. oneCCL/NCCL adds about 17\% to direct NCCL, and SYCL MPI tracks CUDA MPI at small sizes but not at the largest ones.
+\end{keypoint}
+
 \subsection{Halo: Repetition Changes the Trade-off}
 
 A repeated neighbor exchange offers a different opportunity from ping-pong. The fixed submission and completion cost can be spread across many exchanges, while multiple peer transfers can proceed together. Figure~\ref{fig:m-halo-regimes} contrasts isolated and steady-state execution on one and eight nodes.
@@ -54,6 +58,10 @@ MPI supplies the low-startup reference for isolated exchanges. Batching makes OS
 \end{table}
 
 The favorable regime for the persistent, kernel-invoked NVSHMEM path is thus sustained neighbor work rather than universally low latency. The SYCL MPI and oneCCL/NCCL curves further show that portable submission paths do not remove the same isolated-versus-steady distinction. This supports persistent execution as a candidate explanation in RQ1, while the host-driven OSHMPI result shows that batching and completion policy also matter independently of invocation location. Because the paths differ in signaling, persistence, sampling, and progress, these measurements do not isolate a launch-overhead saving by themselves. The inter-node NVSHMEM result specifically describes device invocation with CPU-proxy-assisted \texttt{ibrc} progress.
+
+\begin{keypoint}[Halo takeaway]
+No single stack owns this pattern; the batching contract decides it. MPI is the reference for isolated exchanges, where submission and completion are exposed. OSHMPI becomes competitive once a batch amortizes its completion cost, but saturates at 24.4\,GB/s across every multi-node topology, the lowest sustained rate measured. NVSHMEM, in its persistent device-invoked form, sustains the highest multi-node rate, 40.6--41.1\,GB/s and flat in node count, against 34.4--36.5\,GB/s for MPI. NCCL and oneCCL/NCCL sit between the two and keep the same isolated-versus-batched split, and SYCL MPI again tracks CUDA MPI.
+\end{keypoint}
 
 \subsection{Allreduce: Configuration and Payload Both Matter}
 
@@ -78,6 +86,10 @@ The agreement does not survive scale in this campaign. From \texttt{4n4g} onward
 The complete backend view also exposes the cost of oneCCL/OSHMPI's symmetric staging. On \texttt{1n4g}, the four-byte allreduce medians are 20.2\,$\mu$s directly and 18.6\,$\mu$s through oneCCL/OSHMPI. At 16\,MiB, they are 364\,$\mu$s and 6538\,$\mu$s, respectively: the adapted path is approximately 18 times slower. The direct device-resident reduction and symmetric-staging adapter use different memory and completion paths. The comparison therefore identifies the cost of the evaluated integration choice, not an intrinsic penalty of the oneCCL API.
 
 This pattern demonstrates why functional interface compatibility and performance retention must be evaluated separately. The OSHMPI adapter waits for queue dependencies, stages ordinary operands through symmetric storage, performs a blocking host operation, and returns an already-complete event. Those semantics preserve correctness but remove the asynchronous opportunity retained by the NCCL path.
+
+\begin{keypoint}[Allreduce takeaway]
+The payload size splits this pattern in two. At four bytes, MPI and OSHMPI are fastest across nodes, at 12.4 and 12.6\,$\mu$s on \texttt{2n1g} against about 20\,$\mu$s for the others. At 16\,MiB the order reverses: NCCL leads with 1104\,$\mu$s at \texttt{8n4g} against 1879\,$\mu$s for MPI, and oneCCL/NCCL follows it closely. NVSHMEM matches NCCL within a node only because it dispatches to it, and separates from every path across nodes. oneCCL/OSHMPI is the one clear outlier, about 18 times slower than direct OSHMPI at 16\,MiB because of symmetric staging. For the MPI stacks the configuration matters more than the library: UCC changes the 16\,MiB result by up to 96.5 times.
+\end{keypoint}
 
 \subsubsection{MPI with UCC: A Size-Dependent Trade-off}
 
@@ -119,6 +131,10 @@ At large payloads, NCCL-based paths regain the advantage. Table~\ref{tab:m-allto
 
 At the largest \texttt{8n4g} payload, direct NCCL and oneCCL/NCCL are within approximately 2\%. The adapter and SYCL orchestration are therefore much less visible at this bulk endpoint than in four-byte ping-pong. This is again a complete-stack comparison, not an isolated adapter measurement. Together with the staged oneCCL/OSHMPI curve, it shows that a common interface can retain a backend's bulk regime when it preserves its asynchronous data path, while a blocking staging strategy can change the regime entirely.
 
+\begin{keypoint}[All-to-all takeaway]
+NCCL and oneCCL/NCCL own the bulk regime, at 10.0 and 10.2\,GB/s on \texttt{8n4g} against 4.2\,GB/s for CUDA MPI, and are within 2\% of each other at the largest payload. NVSHMEM keeps pace within two nodes but falls to 5.7\,GB/s at 32 GPUs. MPI is only usable at small payloads once its algorithm selection is corrected, which is a configuration result rather than a library one. OSHMPI is the slowest measured path at the bulk endpoint, and oneCCL/OSHMPI remains expensive throughout because every block is staged through symmetric memory.
+\end{keypoint}
+
 \subsubsection{MPI with UCC: The Opposite Trade-off}
 
 Figure~\ref{fig:m-ucc-alltoall} isolates what makes the MPI default collapse at small payloads. At \texttt{8n4g} the non-UCC path costs between 671 and 974\,$\mu$s for every payload at or below 256 bytes per peer and then drops abruptly to 60\,$\mu$s at 512 bytes, a cliff rather than a curve; with UCC enabled the same small sizes cost between 24 and 31\,$\mu$s. The peak gain is 33.7 times at 128 bytes per peer. Here the benefit is confined to the small-message, high-rank corner: the two configurations agree to within 2\% by 8\,KiB per peer, and at 256\,KiB per peer UCC is instead slower, at 0.87 of the non-UCC time at \texttt{8n4g} and 0.56 at \texttt{2n4g}. Allreduce and all-to-all therefore want UCC enabled in opposite regions of the same size axis, which is why a single machine-wide setting cannot be correct for both.
@@ -152,9 +168,9 @@ B/peer & Linear & Pairwise & Modified Bruck & Linear sync & Default\\
 
 Modified Bruck reduces communication rounds by forwarding data, but the Open MPI implementation also rotates buffers, constructs indexed datatypes, and copies noncontiguous blocks \cite{bruck_alltoall_1997,openmpi_alltoall_source_2026}. Those local operations can be expensive on GPU-resident buffers. The UCC dispatch trace identifies its UCP transport layer, whose CUDA default uses contiguous peer slices and nonblocking tagged communication \cite{venkata_ucc_2024,openucx_ucc_source_2026}. This explains the structural difference; it does not replace a profile of individual copy costs.
 
-\subsection{Scaling from One Node to Eight}\label{sec:micro-scaling}
+\subsection{Scaling Up and Scaling Out}\label{sec:micro-scaling}
 
-Reading the four patterns across the topology axis rather than the size axis separates two different effects: losing NVLink, and adding GPUs. The steady-state halo at a 16\,MiB aggregate payload makes the first effect explicit. Within one node the aggregate rate is 325\,GB/s for OSHMPI and 280\,GB/s for CUDA MPI at \texttt{1n4g}. Moving the same exchange to \texttt{2n1g}, which keeps two ranks but places them on separate nodes, drops every stack to 20--24\,GB/s, an order-of-magnitude change produced by the interconnect alone. The rate then stays essentially flat as nodes are added: NVSHMEM holds 41.1, 40.9, and 40.6\,GB/s at \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}, and CUDA MPI holds 33.9--36.5\,GB/s over the same range. Once the exchange is inter-node, its aggregate rate is limited by what one node can inject, not by the number of nodes participating.
+Reading the four patterns across the topology axis rather than the size axis separates two different effects. \emph{Scaling up} adds GPUs inside a node and keeps every transfer on NVLink; \emph{scaling out} adds nodes and puts part of the traffic on InfiniBand. The two behave differently, and a stack can be good at one and not the other. The steady-state halo at a 16\,MiB aggregate payload makes the first effect explicit. Within one node the aggregate rate is 325\,GB/s for OSHMPI and 280\,GB/s for CUDA MPI at \texttt{1n4g}. Moving the same exchange to \texttt{2n1g}, which keeps two ranks but places them on separate nodes, drops every stack to 20--24\,GB/s, an order-of-magnitude change produced by the interconnect alone. The rate then stays essentially flat as nodes are added: NVSHMEM holds 41.1, 40.9, and 40.6\,GB/s at \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}, and CUDA MPI holds 33.9--36.5\,GB/s over the same range. Once the exchange is inter-node, its aggregate rate is limited by what one node can inject, not by the number of nodes participating.
 
 Allreduce shows the second effect, and it runs in the opposite direction. At 16\,MiB, \texttt{2n1g} costs 1557\,$\mu$s for NCCL even though only two GPUs participate, whereas \texttt{8n4g} with 32 GPUs costs 1104\,$\mu$s. Adding intra-node ranks does not simply add work: the NVLink stage of a hierarchical reduction shrinks the payload that must cross InfiniBand. The same mechanism explains why the NCCL-based paths pull away from MPI only once each node holds four GPUs, from 567\,$\mu$s against 1118\,$\mu$s at \texttt{2n4g} to 1104\,$\mu$s against 1879\,$\mu$s at \texttt{8n4g}. In the scalar regime, where no such staging is available, the four-byte allreduce instead grows monotonically with rank count, from roughly 18--20\,$\mu$s at \texttt{1n4g} to 46--49\,$\mu$s at \texttt{8n4g} for every path except NVSHMEM, whose 88\,$\mu$s belongs with its separated multi-node behavior.
 
@@ -211,6 +227,10 @@ Two qualifications bound these results. MoE keeps UCC disabled and uses the vari
 The standalone all-to-all sweep of Section~\ref{sec:micro-results} moves equal blocks between all peers, and on that evidence the NCCL-based paths own the bulk regime. MoE retains the same operation family and the same topologies, changes only the distribution of block sizes, and inverts that conclusion in two of three cases. The regime boundary that matters for this workload is therefore not the payload size that the primitive sweep varies, but the skew that it holds constant.
 
 This is the same failure mode that Section~\ref{sec:cg-step-results} finds for \texttt{cg\_step}, reached from the opposite direction: there, matching the operation and payload is insufficient because submission structure changes; here, matching the operation and the total volume is insufficient because the distribution changes. Neither result is evidence against the primitive measurements. Both constrain what a primitive measurement can be asked to predict.
+
+\begin{keypoint}[MoE takeaway]
+No stack wins all three routing cases, so this pattern has no single answer. NCCL and oneCCL/NCCL are fastest under uniform routing, at about half of CUDA MPI, but direct NCCL becomes 1.55 times slower than MPI once most tokens stay local. NVSHMEM is the opposite, and gives the fastest multi-node result of all under locality-biased routing, at 0.72 of MPI. Under a hotspot, the two put-based paths, NVSHMEM and OSHMPI, are penalized about 1.8 times relative to the \texttt{alltoallv} implementations. OSHMPI is slower than MPI in every case at 32 GPUs, by 1.70 to 1.84 times, despite matching it within a node. MPI and SYCL MPI are never fastest but never collapse.
+\end{keypoint}
 
 \section{Composition in the \texttt{cg\_step} Benchmark}\label{sec:cg-step-results}
 
@@ -278,6 +298,10 @@ At this scalar payload, a host-staged reduction can be cheaper than the device/U
 Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The cross-level comparison below therefore uses the composite step's one-double reductions.
 
 CUDA--SYCL differences remain visible in the single-GPU controls, where inter-rank communication is absent. Earlier redundant queue waits were removed before the retained composite sweep, but the remaining gap cannot be assigned entirely to submission overhead or kernel arithmetic from two endpoint timings. The single-GPU result establishes a complete-implementation cost that must be considered alongside communication.
+
+\begin{keypoint}[Composite-step takeaway]
+OSHMPI has the lowest estimate in 25 of the 30 multi-rank cells, including every multi-node one, but under a contract the solver does not share: its reduction result stays in host memory. NCCL leads the remaining five intra-node cells and is the strongest path whose contract is complete. NVSHMEM is slower here and shows the widest allocation spread, so its ordering against the others is not decisive. MPI is the reference the other stacks are measured against, and its halo uses two serialized \texttt{MPI\_Sendrecv} calls rather than the grouped exchange of the halo benchmark. The SYCL stacks carry a measurable cost even at one GPU, where no inter-rank communication occurs.
+\end{keypoint}
 
 \section{Complete aCG Solver Results}\label{sec:acg-results}
 
@@ -397,3 +421,33 @@ GPUs & SYCL/CUDA time\\
 \end{table}
 
 The ratio narrows at 16 GPUs, but the timing summaries alone do not establish why. Computation, host orchestration, and communication scaling all change their contribution to runtime. The communication-free composite controls independently show that a CUDA--SYCL implementation gap can exist without inter-rank transfers. Together, these observations motivate a matched implementation comparison with consistent correctness parsing and phase boundaries; they do not isolate a compiler penalty or establish cross-vendor performance portability.
+
+\section{NVSHMEM Across the Scale Boundary}\label{sec:nvshmem-overlook}
+
+Because the research questions ask when GPU-initiated communication pays off, and NVSHMEM is the only evaluated stack that offers it, its behavior is worth reading across the patterns rather than one at a time. Table~\ref{tab:m-nvshmem-scale} places NVSHMEM against the fastest measured stack at one node and at eight, for every pattern.
+
+\begin{table}[htbp]
+\centering
+\caption{NVSHMEM latency relative to the fastest measured stack for the same pattern and payload, scaling up within a node and scaling out to eight nodes. Lower is better; $1.0$ means NVSHMEM is the fastest path.}
+\label{tab:m-nvshmem-scale}
+\footnotesize
+\begin{tabularx}{\textwidth}{lYrr}
+\toprule
+Pattern & Payload & Scale-up & Scale-out\\
+\midrule
+Ping-pong & 4\,B & $2.6\times$ & $5.6\times$\\
+Halo, steady & 16\,MiB aggregate & $1.9\times$ & $1.0\times$\\
+Allreduce & 16\,MiB & $1.0\times$ & $2.5\times$\\
+All-to-all & 256\,KiB per peer & $1.4\times$ & $1.8\times$\\
+MoE, uniform & 32\,MiB per rank & $1.5\times$ & $1.7\times$\\
+\texttt{cg\_step} & Side 512 & $1.8\times$ & $2.9\times$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The column pair shows one consistent movement: with the halo as the single exception, every pattern places NVSHMEM further behind the leader when nodes are added than when GPUs are added within a node. The effect is largest where the measurement is latency-bound, from $2.6\times$ to $5.6\times$ in ping-pong, and smallest where it is bandwidth-bound, from $1.4\times$ to $1.8\times$ in all-to-all. Its intra-node bulk allreduce is the fastest path measured, and it loses that position entirely across nodes. The scalar case moves the same way: the four-byte allreduce costs 19.9\,$\mu$s on one node, in line with every other stack, and 88.2\,$\mu$s at 32 GPUs, where the others stay between 46 and 49\,$\mu$s.
+
+The exception identifies the regime that does suit it. The steady-state halo is the only pattern whose NVSHMEM implementation is a persistent device-invoked kernel with neighbor signaling, and it is also the only pattern NVSHMEM leads at eight nodes, at 40.6\,GB/s against 35.7\,GB/s for MPI and flat in node count. Its advantage is therefore tied to sustained, batched, neighbor-structured traffic rather than to device invocation in general. The solver results agree: the monolithic device-NVSHMEM variant gains on blocking OSHMPI as process count grows, but does not overtake NCCL.
+
+These are observations about the configured path as measured. Section~\ref{sec:ibgda-check} already records that inter-node device-initiated requests are serviced by a CPU proxy rather than posted by the GPU, and Chapter~\ref{ch:m-discussion} examines how far that, the collective dispatch configuration, and the changed execution model account for the trend.
+

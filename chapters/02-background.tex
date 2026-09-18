@@ -208,11 +208,11 @@ The operations can also be composed: a reduce-scatter followed by an allgather p
 
 Several distinct boundaries are relevant to a transfer:
 \begin{itemize}
-\item \textbf{Local completion} permits the caller to reuse the operation's local buffers according to its contract. An MPI send completion, for example, permits source-buffer reuse but does not establish that the receiver has consumed the message.
-\item \textbf{Remote completion} establishes that an update has reached the destination memory as defined by the communication interface. A receiving GPU must also observe the required memory-ordering and visibility rules before accessing it.
-\item \textbf{Notification} tells the receiver that data is ready. A flag or signal must be ordered after the payload it announces; remote completion alone does not tell the receiver when to proceed.
-\item \textbf{Ordering} constrains the relative observation of operations. It need not wait for those operations to finish or synchronize all participating ranks.
-\item \textbf{Collective synchronization} coordinates a group of ranks. A barrier establishes participation, but its treatment of outstanding communication depends on the interface; it must not be substituted for a completion primitive without checking that contract.
+\item \emph{Local completion} permits the caller to reuse the operation's local buffers according to its contract. An MPI send completion, for example, permits source-buffer reuse but does not establish that the receiver has consumed the message.
+\item \emph{Remote completion} establishes that an update has reached the destination memory as defined by the communication interface. A receiving GPU must also observe the required memory-ordering and visibility rules before accessing it.
+\item \emph{Notification} tells the receiver that data is ready. A flag or signal must be ordered after the payload it announces; remote completion alone does not tell the receiver when to proceed.
+\item \emph{Ordering} constrains the relative observation of operations. It need not wait for those operations to finish or synchronize all participating ranks.
+\item \emph{Collective synchronization} coordinates a group of ranks. A barrier establishes participation, but its treatment of outstanding communication depends on the interface; it must not be substituted for a completion primitive without checking that contract.
 \end{itemize}
 
 \emph{Progress} is the work that advances an operation after submission, such as matching requests, posting descriptors, transferring payload, or detecting completion. A nonblocking interface permits the caller to continue but does not necessarily guarantee autonomous progress. Communication can overlap GPU computation through CPU polling, a progress thread, GPU execution, or NIC offload, provided the required resources remain available. A measurement must therefore state both its completion boundary and the progress mechanism active inside that interval.

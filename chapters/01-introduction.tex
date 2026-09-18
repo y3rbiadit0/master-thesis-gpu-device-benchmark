@@ -25,13 +25,13 @@ Vendor-specific ecosystems generally provide highly optimized implementations, b
 Prior work already connects communication mechanisms to applications. Agostini et al. examine GPUDirect Async through microbenchmarks, modeling, and application cases; PICO assesses benchmark-informed choices through simulated training-trace replay; TuCCL reports end-to-end training improvements; and Trotter et al. compare host- and device-initiated CG solvers \cite{agostini_gpudirect_2018,pasqualoni_pico_2026,li_tuccl_2025,trotter_cpu-_2025}. Building on these studies, this thesis investigates three connected questions left open for the selected stacks and application:
 
 \begin{itemize}
-\item \textbf{Comparable characterization across communication stacks.}
+\item \emph{Comparable characterization across communication stacks.}
 Separate library benchmarks do not establish how the selected MPI, collective-library, and SHMEM paths rank under a shared measurement policy. A common CUDA/SYCL harness makes it possible to locate favorable performance regimes while recording the memory, completion, and progress differences that qualify the comparison.
 
-\item \textbf{Performance and integration costs of SHMEM-style communication.}
+\item \emph{Performance and integration costs of SHMEM-style communication.}
 Direct SHMEM measurements do not establish how much performance survives the buffer and completion adaptations required by a common interface. Comparing NVSHMEM and OSHMPI with MPI and NCCL exposes their direct trade-offs; implementing the missing paths in the oneCCL source used for this work exposes the integration requirements. Grouped NCCL support and an OSHMPI backend covering the benchmarked world-communicator operation set provide executable comparison paths, while a separately validated NVSHMEM runtime foundation establishes the prerequisites for a further backend.
 
-\item \textbf{Transfer from communication patterns to solver execution.}
+\item \emph{Transfer from communication patterns to solver execution.}
 It remains to be established which observations from this comparison predict application performance once irregular peers, computation, and convergence are included. Extending the published CUDA/HIP aCG suite with an OSHMPI communicator enables that test for an additional one-sided halo path. A SYCL implementation supports a subsidiary investigation of how much native CUDA solver performance a portable implementation retains on the same platform.
 \end{itemize}
 
@@ -69,9 +69,9 @@ The study uses 1 to 32 NVIDIA A100 GPUs on Leonardo's Booster partition. Isolate
 
 The findings have three main implications for stack selection:
 \begin{itemize}
-\item \textbf{Rankings depend on the communication signature.} HPC-X MPI supplies the low-startup reference for point-to-point and isolated-halo communication, persistent device-initiated NVSHMEM leads large steady-state multi-node halos, and NCCL-based paths lead large allreduce and multi-node all-to-all. Runtime configuration can change these regimes substantially, and so can the payload distribution: holding the operation, topology, and total volume fixed, the MoE benchmark reverses the bulk redistribution ranking under locality-biased routing and penalizes the one-sided paths under a hotspot distribution.
-\item \textbf{Cross-level agreement requires comparable primitives and dependencies.} The composite step's MPI and NCCL scalar-reduction intervals agree approximately with the corresponding aCG intervals, whereas its regular two-neighbor halo does not represent the solver's irregular exchange and overlap. The synthetic OSHMPI advantage does not establish a solver advantage: the application retains MPI scalar reductions and uses a blocking OSHMPI halo. The monolithic NVSHMEM solver improves relative to that blocking path at larger process counts, but also reorganizes computation and synchronization.
-\item \textbf{Solver implementation costs matter alongside communication.} The separate SYCL aCG report gives median solver times approximately 17--45\% higher than the CUDA reference at the reported GPU counts. These supporting report-level ratios do not isolate compiler or communication-library overhead; Chapter~\ref{ch:m-results} explains the remaining correctness-classification limitation.
+\item \emph{Rankings depend on the communication signature.} HPC-X MPI supplies the low-startup reference for point-to-point and isolated-halo communication, persistent device-initiated NVSHMEM leads large steady-state multi-node halos, and NCCL-based paths lead large allreduce and multi-node all-to-all. Runtime configuration can change these regimes substantially, and so can the payload distribution: holding the operation, topology, and total volume fixed, the MoE benchmark reverses the bulk redistribution ranking under locality-biased routing and penalizes the one-sided paths under a hotspot distribution.
+\item \emph{Cross-level agreement requires comparable primitives and dependencies.} The composite step's MPI and NCCL scalar-reduction intervals agree approximately with the corresponding aCG intervals, whereas its regular two-neighbor halo does not represent the solver's irregular exchange and overlap. The synthetic OSHMPI advantage does not establish a solver advantage: the application retains MPI scalar reductions and uses a blocking OSHMPI halo. The monolithic NVSHMEM solver improves relative to that blocking path at larger process counts, but also reorganizes computation and synchronization.
+\item \emph{Solver implementation costs matter alongside communication.} The separate SYCL aCG report gives median solver times approximately 17--45\% higher than the CUDA reference at the reported GPU counts. These supporting report-level ratios do not isolate compiler or communication-library overhead; Chapter~\ref{ch:m-results} explains the remaining correctness-classification limitation.
 \end{itemize}
 
 Leonardo's NVSHMEM inter-node path uses a CPU proxy because InfiniBand GPUDirect Async (IBGDA) is unavailable \cite{trotter_cpu-_2025}. Thus the device-initiated cases evaluate kernel-side invocation with proxy-assisted networking. Chapter~\ref{ch:m-results} reports the quantitative boundaries and timing qualifications. A separate exploratory NCCL version and symmetric-buffer comparison is retained in Appendix~\ref{app:nccl-preliminary}; its available summary does not establish application-visible device initiation and contributes no evidence to the research-question answers.
@@ -82,19 +82,19 @@ To answer these questions, this thesis makes five main contributions. The second
 
 \begin{enumerate}
 
-\item \textbf{A unified benchmark across vendor-specific and portable APIs.}
+\item \emph{A unified benchmark across vendor-specific and portable APIs.}
 The harness applies common process-to-GPU mapping, warm-up, timing, validation, and result-reduction policies across seven MPI, NCCL/oneCCL, NVSHMEM, and OSHMPI stacks. Its primitive and composite patterns establish the comparison for RQ1 and RQ2 and the phase-level cross-context checks used by RQ3. The suite is available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}.
 
-\item \textbf{Grouped point-to-point support for the oneCCL NCCL backend.}
+\item \emph{Grouped point-to-point support for the oneCCL NCCL backend.}
 The extension propagates oneCCL's group lifecycle to NCCL, enabling mutually dependent send/receive batches used by halo and all-to-all exchanges. It preserves completion and error handling for deferred work and is covered by dedicated grouped point-to-point tests. This supplies a measured common-interface path for RQ2. The implementation is available at \url{https://github.com/y3rbiadit0/oneCCL/tree/fix/nccl_group_support}.
 
-\item \textbf{SHMEM-family backend extensions for oneCCL.}
+\item \emph{SHMEM-family backend extensions for oneCCL.}
 The OSHMPI backend implements the benchmarked world-communicator collectives and point-to-point operations with symmetric staging for ordinary application buffers. Its measurements expose the cost of adapting oneCCL's event interface to blocking, host-driven OpenSHMEM operations. A separate NVSHMEM prototype establishes build integration, bootstrap, lifecycle, and symmetric staging, validated on one and two nodes. Its public collective entry points remain unsupported and provide no performance data. Together, these artifacts supply implementation and validation evidence for RQ2. They are available at \url{https://github.com/y3rbiadit0/oneCCL/tree/feat/oshmpi} and \url{https://github.com/y3rbiadit0/oneCCL/tree/feat/nvshmem_collectives}.
 
-\item \textbf{An OSHMPI communicator and application validation in aCG.}
+\item \emph{An OSHMPI communicator and application validation in aCG.}
 The communicator adds OpenSHMEM halo exchange while retaining CUDA-aware MPI scalar reductions. Evaluation against MPI, NCCL, host-NVSHMEM, and device-NVSHMEM solver variants on two SuiteSparse matrices connects the benchmark observations to overlap, synchronization, and convergence, supporting RQ2 and RQ3. The communicator is available at \url{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}.
 
-\item \textbf{A SYCL implementation of aCG.}
+\item \emph{A SYCL implementation of aCG.}
 The port provides distributed execution through MPI and selectable MPI or oneCCL scalar reductions. A separate solver-time comparison addresses RQ3's performance-retention question on the evaluated NVIDIA platform. The implementation is available at \url{https://github.com/y3rbiadit0/acg-sycl}.
 
 \end{enumerate}
