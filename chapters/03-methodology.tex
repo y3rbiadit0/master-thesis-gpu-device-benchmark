@@ -373,6 +373,8 @@ The \texttt{cg\_step} benchmark extracts the communication structure of one conj
     \item \emph{Payload:} a nominal two-column halo, excluding the scalar reductions.
 \end{itemize}
 
+\texttt{cg\_step} additionally has a device-initiated implementation, in which the halo exchange and both scalar reductions are issued from inside the kernel with NVSHMEM rather than from the host. It is the benchmark-level counterpart of the monolithic device solver of Section~\ref{sec:acg-method} and was measured over the same topologies and grid sides as the host implementations. It reports no phase breakdown, so it contributes step time only.
+
 \section{aCG Solver Evaluation}\label{sec:acg-method}
 
 The last evaluation level asks whether the benchmark observations hold in a complete application. It runs the aCG conjugate-gradient solver \cite{trotter_cpu-_2025} on large sparse problems with the same stacks, and compares its measured communication costs and backend ranking with those predicted by the microbenchmarks and \texttt{cg\_step}. Unlike the benchmarks, the solver introduces an irregular communication graph from a sparse partition, computation that can overlap communication, and convergence that determines how many iterations are run.

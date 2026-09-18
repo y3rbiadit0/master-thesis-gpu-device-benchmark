@@ -290,9 +290,18 @@ The OSHMPI result also needs an execution-contract qualification: its archived s
 
 \subsection{Device-Initiated Step}\label{sec:cg-device}
 
-The \texttt{cuda\_nvshmem\_device} stack issues the halo exchange and the scalar reductions from inside the kernel, so it is the benchmark-level counterpart of the monolithic device solver. It covers every topology and seven grid sides from 256 to 16\,384, with three allocations of three trials per cell, except at \texttt{8n4g}, where the smallest and largest sides are missing. Because the device implementation reports no phase timers, it appears in step time only and not in the phase breakdown below.
+The device-initiated implementation of \texttt{cg\_step} issues the halo exchange and both scalar reductions from inside the kernel, so it is the benchmark-level counterpart of the monolithic device solver. It was measured over every topology and seven grid sides from 256 to 16\,384, with three allocations of three trials per cell, except at \texttt{8n4g}, where the smallest and largest sides are missing. It reports no phase timers, so it appears in step time only and not in the phase breakdown below.
 
 Its result depends on both axes at once. Against its own host counterpart it is consistently better once communication crosses the fabric: at \texttt{8n4g} it takes 0.63 of host NVSHMEM's step time at side 512 and 0.52 at side 8192. Against the best host stack of each cell, however, it leads only where the problem is small and the GPU count low, at 0.67 of the fastest host time on \texttt{1n1g} and 0.82 on \texttt{1n4g} at side 512. It falls behind from eight GPUs upward at that side, at 1.12 to 1.25, and behind everywhere at side 8192, where its single-GPU step costs 1.95 times the fastest host stack. Device initiation therefore helps this step where per-GPU work is small enough for launch and synchronization costs to dominate, and does not compensate for a slower local execution once the stencil and dot products grow.
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\textwidth]{figures/results/cg-device-step.png}
+\caption{Step time of the device-initiated \texttt{cg\_step} against the host implementations at the smallest and a large grid side. All series come from the same later snapshot, in which the host implementations were measured with one allocation and therefore carry no range; the shaded band is the allocation range of the device implementation.}
+\label{fig:m-cg-device-step}
+\end{figure}
+
+Figure~\ref{fig:m-cg-device-step} shows both regimes directly. At side 512 the device implementation starts as the fastest path by a wide margin on one GPU and then rises fastest of all, crossing the MPI and OSHMPI curves at eight GPUs: with only 512 columns to divide, adding GPUs removes local work but adds a halo exchange and two reductions that the kernel must complete before the next step. At side 8192 the ordering is reversed and stable: every host implementation is faster at every GPU count, but the device curve descends in parallel with them, which is the strong-scaling behavior the next comparison uses.
 
 \subsection{Phase Breakdown}
 
@@ -413,7 +422,7 @@ The auxiliary configuration analysis reports that disabling NCCL dispatch materi
 
 \subsection{Device-Initiated Scaling Agreement}\label{sec:cg-device-correlation}
 
-The device stack supports a second cross-level check, on a different quantity. Neither the device benchmark nor the monolithic device solver records phase timers, so the reduction comparison of Section~\ref{sec:reduction-agreement} cannot be repeated for them. What both expose is whole-iteration time: the benchmark's step time and the solver's time per iteration. They solve different problems, so only their strong-scaling shape is comparable, and each series is normalized to its own two-GPU value before being compared.
+The device-initiated implementation supports a second cross-level check, on a different quantity. Neither the device benchmark nor the monolithic device solver records phase timers, so the reduction comparison of Section~\ref{sec:reduction-agreement} cannot be repeated for them. What both expose is whole-iteration time: the benchmark's step time and the solver's time per iteration. They solve different problems, so only their strong-scaling shape is comparable, and each series is normalized to its own two-GPU value before being compared.
 
 \begin{figure}[tb]
 \centering
