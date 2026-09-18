@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "input_repository_revision": "986e876cd976960cddbcb78702b84cd70358f59e",
+  "generated_by_benchmark_at": "2026-09-18T04:06:10",
+  "policy": "median of within-allocation trial means; range over allocation means",
+  "comparison": "device cg_step step time against device aCG time per iteration, each normalized to its own two-GPU value; neither level records phase timers, so no reduction-level comparison is possible",
+  "relation_to_main_campaign": "later benchmark snapshot; kept in separate files",
+  "sources": [
+    {
+      "repository": "benchmark",
+      "path": "docs/analysis/data/2. application_benchmark/cg_step_device/cg_step_points.json",
+      "sha256": "06cc64400eadbc320578318992c7764888f9bd3d53e9da99c548e54b88626bf2"
+    }
+  ]
+}

@@ -288,6 +288,12 @@ Figure~\ref{fig:m-cg-relative} shows why the margin matters. The direct CUDA pat
 
 The OSHMPI result also needs an execution-contract qualification: its archived scalar path ends with the reduction result in host memory. It avoids the return copy and consumer dependency present in a solver. The result identifies an efficient implementation of this synthetic step, not yet an efficient end-to-end CG reduction path.
 
+\subsection{Device-Initiated Step}\label{sec:cg-device}
+
+The \texttt{cuda\_nvshmem\_device} stack issues the halo exchange and the scalar reductions from inside the kernel, so it is the benchmark-level counterpart of the monolithic device solver. It covers every topology and seven grid sides from 256 to 16\,384, with three allocations of three trials per cell, except at \texttt{8n4g}, where the smallest and largest sides are missing. Because the device implementation reports no phase timers, it appears in step time only and not in the phase breakdown below.
+
+Its result depends on both axes at once. Against its own host counterpart it is consistently better once communication crosses the fabric: at \texttt{8n4g} it takes 0.63 of host NVSHMEM's step time at side 512 and 0.52 at side 8192. Against the best host stack of each cell, however, it leads only where the problem is small and the GPU count low, at 0.67 of the fastest host time on \texttt{1n1g} and 0.82 on \texttt{1n4g} at side 512. It falls behind from eight GPUs upward at that side, at 1.12 to 1.25, and behind everywhere at side 8192, where its single-GPU step costs 1.95 times the fastest host stack. Device initiation therefore helps this step where per-GPU work is small enough for launch and synchronization costs to dominate, and does not compensate for a slower local execution once the stencil and dot products grow.
+
 \subsection{Phase Breakdown}
 
 Table~\ref{tab:m-cg-phases} uses the separate synchronized phase pass at \texttt{4n4g}, side 512. The OSHMPI reduction phase is smaller than the corresponding MPI and NCCL phases, while NVSHMEM's halo and reduction costs contribute to its larger total. The SYCL paths also expose additional computation and runtime costs.
@@ -324,7 +330,7 @@ Unsplit step & +47.1\% & +69.5\% & +52.4\% & +64.6\%\\
 
 At this scalar payload, a host-staged reduction can be cheaper than the device/UCC path. The control does not identify a unique cause: it changes allocator, operand residency, and collective configuration together. The compute increase is consistent with an allocation-related effect, but topology-independent timing alone does not prove that registration slows kernel writes. A no-communication allocator control and a complete staged round-trip measurement are needed before generalizing this result.
 
-\subsection{Comparison with Microbenchmarks}
+\subsection{Comparison with Microbenchmarks}\label{sec:cg-comparison-micro}
 
 Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The cross-level comparison below therefore uses the composite step's one-double reductions.
 
@@ -366,7 +372,7 @@ Figure~\ref{fig:m-acg-scaling} separates the stable scaling trends from MPI vari
 
 OSHMPI increasingly outperforms the host-NVSHMEM configuration. That result must be read with the application's disabled NCCL dispatch: it compares the installed native NVSHMEM reduction path, not the NCCL-dispatched path used by the default benchmark.
 
-\subsection{Scalar-Reduction Agreement}
+\subsection{Scalar-Reduction Agreement}\label{sec:reduction-agreement}
 
 The most direct cross-level check pairs the operation actually executed rather than the communicator's name (Table~\ref{tab:m-acg-reduction-pairing}). Both the composite step and steady CG iteration perform two separate one-double global sums. The comparison uses half the composite reduction phase and compares it with the application's recorded cost per reduction.
 
@@ -404,6 +410,29 @@ Direct OSHMPI & No matched archived scalar path & Benchmark stages to host; appl
 The mean discrepancies range from 7.8\% to 11.1\%. Individual cells can differ more: the NCCL Bump estimate is approximately 20\% high at eight and 16 GPUs. Figure~\ref{fig:m-acg-reduction-prediction} makes this distinction visible; a mean error is not an upper bound on every comparison. Because no model is fitted or held out and the application interval includes rank-arrival skew, the result establishes approximate scalar-cost agreement across the measured rank range, not general prediction accuracy or a numerical prediction of complete solver time.
 
 The auxiliary configuration analysis reports that disabling NCCL dispatch materially changes NVSHMEM reduction time and gives matched errors of approximately 14--21\%. The matched per-trial arm is not present in the imported default JSON, so it is not plotted as an independently regenerated prediction. Repeating that control with explicit metadata would bring NVSHMEM to the same reproducibility level as the MPI/NCCL pairs. The separately recorded UCX-threshold control changes the composite MPI step by only approximately 2--3\%, which is too small to explain the much larger application variability.
+
+\subsection{Device-Initiated Scaling Agreement}\label{sec:cg-device-correlation}
+
+The device stack supports a second cross-level check, on a different quantity. Neither the device benchmark nor the monolithic device solver records phase timers, so the reduction comparison of Section~\ref{sec:reduction-agreement} cannot be repeated for them. What both expose is whole-iteration time: the benchmark's step time and the solver's time per iteration. They solve different problems, so only their strong-scaling shape is comparable, and each series is normalized to its own two-GPU value before being compared.
+
+\begin{figure}[tb]
+\centering
+\includegraphics[width=\textwidth]{figures/results/cg-device-scaling.png}
+\caption{Strong scaling of the device-initiated \texttt{cg\_step} at three grid sides against the device-NVSHMEM solver, each normalized to its own two-GPU value. Lower is better; a series that rises does not scale.}
+\label{fig:m-cg-device-scaling}
+\end{figure}
+
+Figure~\ref{fig:m-cg-device-scaling} shows that the agreement depends entirely on how much local work the benchmark carries. At side 8192 the two curves almost coincide: the benchmark falls to 0.20 of its two-GPU time at 32 GPUs, against 0.26 for Bump\_2911 and 0.16 for Queen\_4147, a mean absolute deviation of 8.0\% and 12.6\% respectively (Table~\ref{tab:m-cg-device-correlation}). At side 512 the benchmark does not scale at all but grows to 3.55 times its two-GPU time, because at that size the step is dominated by the halo and the two reductions, and adding GPUs only adds communication. The deviation there is 582\% and 853\%.
+
+\begin{table}[tb]
+\centering
+\caption{Mean absolute deviation between the normalized strong-scaling curves of the device-initiated \texttt{cg\_step} and the device-NVSHMEM solver, by grid side.}
+\label{tab:m-cg-device-correlation}
+\footnotesize
+\input{data/main-campaign/cg-device-correlation-table.tex}
+\end{table}
+
+The practical consequence is a condition on the benchmark rather than a property of the solver. A communication benchmark reproduces this solver's scaling only when its local work per GPU is comparable, and the grid side that satisfies that is the largest one measured. The same benchmark at the size chosen to expose communication predicts the opposite trend. This is the composition limit of Section~\ref{sec:cg-comparison-micro} again, seen in the device-initiated path.
 
 \subsection{Halo Structure and Overlap}
 
