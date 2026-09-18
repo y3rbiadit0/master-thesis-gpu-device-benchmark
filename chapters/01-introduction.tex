@@ -83,19 +83,19 @@ To answer these questions, this thesis makes five main contributions. The second
 \begin{enumerate}
 
 \item \emph{A unified benchmark across vendor-specific and portable APIs.}
-The harness applies common process-to-GPU mapping, warm-up, timing, validation, and result-reduction policies across seven MPI, NCCL/oneCCL, NVSHMEM, and OSHMPI stacks. Its primitive and composite patterns establish the comparison for RQ1 and RQ2 and the phase-level cross-context checks used by RQ3. The suite is available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}.
+The harness applies common process-to-GPU mapping, warm-up, timing, validation, and result-reduction policies across seven MPI, NCCL/oneCCL, NVSHMEM, and OSHMPI stacks. Its primitive and composite patterns establish the comparison for RQ1 and RQ2 and the phase-level cross-context checks used by RQ3. The suite is available in \cite{merenda_gpu_comm_benchmark_2026}.
 
 \item \emph{Grouped point-to-point support for the oneCCL NCCL backend.}
-The extension propagates oneCCL's group lifecycle to NCCL, enabling mutually dependent send/receive batches used by halo and all-to-all exchanges. It preserves completion and error handling for deferred work and is covered by dedicated grouped point-to-point tests. This supplies a measured common-interface path for RQ2. The implementation is available at \url{https://github.com/y3rbiadit0/oneCCL/tree/fix/nccl_group_support}.
+The extension propagates oneCCL's group lifecycle to NCCL, enabling mutually dependent send/receive batches used by halo and all-to-all exchanges. It preserves completion and error handling for deferred work and is covered by dedicated grouped point-to-point tests. This supplies a measured common-interface path for RQ2. The implementation is available in \cite{merenda_oneccl_nccl_groups_2026}.
 
 \item \emph{SHMEM-family backend extensions for oneCCL.}
-The OSHMPI backend implements the benchmarked world-communicator collectives and point-to-point operations with symmetric staging for ordinary application buffers. Its measurements expose the cost of adapting oneCCL's event interface to blocking, host-driven OpenSHMEM operations. A separate NVSHMEM prototype establishes build integration, bootstrap, lifecycle, and symmetric staging, validated on one and two nodes. Its public collective entry points remain unsupported and provide no performance data. Together, these artifacts supply implementation and validation evidence for RQ2. They are available at \url{https://github.com/y3rbiadit0/oneCCL/tree/feat/oshmpi} and \url{https://github.com/y3rbiadit0/oneCCL/tree/feat/nvshmem_collectives}.
+The OSHMPI backend implements the benchmarked world-communicator collectives and point-to-point operations with symmetric staging for ordinary application buffers. Its measurements expose the cost of adapting oneCCL's event interface to blocking, host-driven OpenSHMEM operations. A separate NVSHMEM prototype establishes build integration, bootstrap, lifecycle, and symmetric staging, validated on one and two nodes. Its public collective entry points remain unsupported and provide no performance data. Together, these artifacts supply implementation and validation evidence for RQ2. They are available in \cite{merenda_oneccl_oshmpi_2026,merenda_oneccl_nvshmem_2026}.
 
 \item \emph{An OSHMPI communicator and application validation in aCG.}
-The communicator adds OpenSHMEM halo exchange while retaining CUDA-aware MPI scalar reductions. Evaluation against MPI, NCCL, host-NVSHMEM, and device-NVSHMEM solver variants on two SuiteSparse matrices connects the benchmark observations to overlap, synchronization, and convergence, supporting RQ2 and RQ3. The communicator is available at \url{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}.
+The communicator adds OpenSHMEM halo exchange while retaining CUDA-aware MPI scalar reductions. Evaluation against MPI, NCCL, host-NVSHMEM, and device-NVSHMEM solver variants on two SuiteSparse matrices connects the benchmark observations to overlap, synchronization, and convergence, supporting RQ2 and RQ3. The communicator is available in \cite{merenda_acg_oshmpi_2026}.
 
 \item \emph{A SYCL implementation of aCG.}
-The port provides distributed execution through MPI and selectable MPI or oneCCL scalar reductions. A separate solver-time comparison addresses RQ3's performance-retention question on the evaluated NVIDIA platform. The implementation is available at \url{https://github.com/y3rbiadit0/acg-sycl}.
+The port provides distributed execution through MPI and selectable MPI or oneCCL scalar reductions. A separate solver-time comparison addresses RQ3's performance-retention question on the evaluated NVIDIA platform. The implementation is available in \cite{merenda_acg_sycl_2026}.
 
 \end{enumerate}
 

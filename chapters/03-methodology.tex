@@ -55,7 +55,7 @@ A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combinati
 
 \subsection{Benchmark Tooling}\label{sec:harness}
 
-All campaigns were run with the command-line tooling of the benchmark suite contributed by this thesis (Chapter~\ref{ch}), available at \url{https://github.com/y3rbiadit0/gpu-comm-benchmark}. It covers the workflow from an empty checkout to recorded results, so that every stack is built, launched, and logged in the same way:
+All campaigns were run with the command-line tooling of the benchmark suite contributed by this thesis \cite{merenda_gpu_comm_benchmark_2026}. It covers the workflow from an empty checkout to recorded results, so that every stack is built, launched, and logged in the same way:
 
 \begin{itemize}
     \item \emph{Initialization.} One command bootstraps the source-built dependencies, including OSHMPI and the two oneCCL backends, in dependency order, and builds all seven stacks from shared build presets. Libraries provided by the site, such as HPC-X MPI, are taken from the system modules.
@@ -216,9 +216,9 @@ oneCCL/OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{CCL\_OSHMPI\_STAGING\_S
 \paragraph{oneCCL adapters.}\label{sec:oneccl-method} Two stacks reach their backend through adapters contributed by this thesis, so each measures the adapted path rather than the backend alone. Both also run SYCL rather than CUDA, so a comparison with the direct backend changes the compute runtime as well.
 
 \begin{itemize}
-    \item \emph{NCCL adapter.} Forwards oneCCL's group calls to NCCL, so a dependent send/receive batch is submitted as one group and completes asynchronously through the returned event.
-    \item \emph{OSHMPI adapter.} Maps collectives to OpenSHMEM operations where equivalents exist and composes the rest, for example all-to-all-v from puts and reduce-scatter from an allreduce. Operands are staged through a symmetric arena, and because the OpenSHMEM call blocks on the host, the returned event is already complete: completion is correct, but submission is no longer asynchronous. Staging and synchronization are inside the timed interval.
-    \item \emph{NVSHMEM adapter.} A runtime foundation only: it establishes communicator selection, bootstrap, lifecycle, and symmetric staging on one and two nodes, but its collective and point-to-point operations are unsupported. It contributes integration evidence and no measurements.
+    \item \emph{NCCL adapter} \cite{merenda_oneccl_nccl_groups_2026}. Forwards oneCCL's group calls to NCCL, so a dependent send/receive batch is submitted as one group and completes asynchronously through the returned event.
+    \item \emph{OSHMPI adapter} \cite{merenda_oneccl_oshmpi_2026}. Maps collectives to OpenSHMEM operations where equivalents exist and composes the rest, for example all-to-all-v from puts and reduce-scatter from an allreduce. Operands are staged through a symmetric arena, and because the OpenSHMEM call blocks on the host, the returned event is already complete: completion is correct, but submission is no longer asynchronous. Staging and synchronization are inside the timed interval.
+    \item \emph{NVSHMEM adapter} \cite{merenda_oneccl_nvshmem_2026}. A runtime foundation only: it establishes communicator selection, bootstrap, lifecycle, and symmetric staging on one and two nodes, but its collective and point-to-point operations are unsupported. It contributes integration evidence and no measurements.
 \end{itemize}
 
 \subsection{Leonardo Considerations}\label{sec:ibgda-check}
@@ -403,7 +403,7 @@ The multi-GPU variants run on 2, 4, 8, 16, and 32 GPUs, using the \texttt{1n2g},
 
 Two builds of the solver are used: the CUDA solver provides every result of the benchmark-to-solver comparison, and the SYCL solver is used only for a supporting CUDA--SYCL comparison.
 
-\paragraph{CUDA solver.} This is the CUDA implementation of aCG by Trotter et al.\ \cite{trotter_cpu-_2025}, extended with the OSHMPI communicator contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/aCG-oshmpi/tree/oshmpi}}. It is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
+\paragraph{CUDA solver.} This is the CUDA implementation of aCG by Trotter et al.\ \cite{trotter_cpu-_2025}, extended with the OSHMPI communicator contributed by this thesis \cite{merenda_acg_oshmpi_2026}. It is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
 \begin{itemize}
     \item \emph{Toolchain:} NVHPC 24.5 with CUDA 12.4.
     \item \emph{Communication libraries:} HPC-X 2.19 for MPI, and the NCCL and NVSHMEM releases bundled with NVHPC 24.5, as in Section~\ref{sec:eval-environment}.
@@ -417,7 +417,7 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
     \item \emph{UCC:} disabled, as in \texttt{cg\_step}, whose scalar reductions it matches.
 \end{itemize}
 
-\paragraph{SYCL solver.} The SYCL port of aCG contributed by this thesis\footnote{\url{https://github.com/y3rbiadit0/acg-sycl}} is compared with the CUDA solver on Bump\_2911 at 1, 4, 8, and 16 GPUs, using solver-time medians over three repeats. It is built with its own environment:
+\paragraph{SYCL solver.} The SYCL port of aCG contributed by this thesis \cite{merenda_acg_sycl_2026} is compared with the CUDA solver on Bump\_2911 at 1, 4, 8, and 16 GPUs, using solver-time medians over three repeats. It is built with its own environment:
 \begin{itemize}
     \item \emph{Toolchain:} DPC++ 6.3 with the CUDA backend, GCC 12.2, and CUDA 12.2, as for the SYCL microbenchmarks.
     \item \emph{Communication libraries:} Open MPI 4.1.6 and NCCL 2.22.3 from the site modules, rather than HPC-X 2.19 and NCCL 2.18.5. The comparison therefore changes the communication libraries as well as the programming model, and its ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead; the CUDA runs of that report also lack a recorded convergence classification.

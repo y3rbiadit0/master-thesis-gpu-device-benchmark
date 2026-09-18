@@ -32,6 +32,17 @@
 
 % ---- Core packages -------------------------------------------------
 \RequirePackage{graphicx}
+
+% Float placement: LaTeX's defaults reserve so little room for text on a float
+% page that a full-width figure plus a table produces a page of floats with
+% large blank gaps. These values let floats share a page with text instead.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{4}
 \graphicspath{{figures/}}             % so \includegraphics{name} just works
 \RequirePackage{booktabs}
 \RequirePackage{tabularx}

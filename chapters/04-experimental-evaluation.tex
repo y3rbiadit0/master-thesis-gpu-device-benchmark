@@ -21,15 +21,15 @@ The first comparison asks whether device-side invocation improves a dependency-o
 \label{fig:m-pingpong-regimes}
 \end{figure}
 
-\begin{table}[htbp]
+Within a node, NVSHMEM becomes competitive over an intermediate message range, while MPI again improves relative to it at large payloads. Table~\ref{tab:m-pingpong-inter} also shows that CUDA and SYCL MPI cannot be assumed to agree at every size: their small-message results are close to the MPI startup regime, but their large-message endpoints differ substantially. A shared MPI installation supplies a useful comparison, not a guarantee of identical execution costs.
+
+\begin{table}[tb]
 \centering
 \caption{Inter-node ping-pong latency on \texttt{2n1g}, including SYCL paths. Values are allocation-based medians in \,$\mu$s.}
 \label{tab:m-pingpong-inter}
 \footnotesize
 \input{data/main-campaign/pingpong-table.tex}
 \end{table}
-
-Within a node, NVSHMEM becomes competitive over an intermediate message range, while MPI again improves relative to it at large payloads. Table~\ref{tab:m-pingpong-inter} also shows that CUDA and SYCL MPI cannot be assumed to agree at every size: their small-message results are close to the MPI startup regime, but their large-message endpoints differ substantially. A shared MPI installation supplies a useful comparison, not a guarantee of identical execution costs.
 
 The common-interface NCCL path is also visible in this startup-sensitive pattern. At four-byte inter-node ping-pong, oneCCL/NCCL takes 33.8\,$\mu$s against 28.8\,$\mu$s for direct NCCL, approximately 17\% more. This changes the compute interface and orchestration as well as the adapter call, so it measures the complete oneCCL/NCCL stack rather than isolated wrapper overhead. The ping-pong result is consequently a small-message half-round-trip comparison, not an estimate of an initiation-only launch saving.
 
