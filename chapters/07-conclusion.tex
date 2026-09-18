@@ -14,7 +14,7 @@ The resulting recommendation is to select configured paths for a specific applic
 
 \section{Future Work}
 
-\subsection{Priority Questions for Matched Follow-Up}
+\subsection{Priority Experiments}
 
 The reconciled analysis identifies the following priorities before broadening the backend matrix:
 \begin{enumerate}
@@ -27,7 +27,7 @@ The reconciled analysis identifies the following priorities before broadening th
 
 The complete priority report, including CUDA--SYCL correctness repair, matched NVSHMEM dispatch, GPU-posted networking, and conditional NCCL and all-to-all studies, is available in \path{experiments/missing-experiments-report.md}.
 
-\subsection{Broader Experimental and Implementation Work}
+\subsection{Broader Directions}
 
 The first priority is to improve experimental provenance. Future campaigns should store source revisions, dependency commits, module versions, node names, GPU and NIC identifiers, rank placement, environment variables, and launcher commands in every result artifact. All cells should use the same number of independent allocations, and reports should include job-level distributions and confidence intervals rather than relying primarily on fastest trials.
 

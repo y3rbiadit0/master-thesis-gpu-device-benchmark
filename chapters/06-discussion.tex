@@ -14,7 +14,7 @@ The strongest cross-level agreement is narrower: the matched MPI and NCCL one-do
 Pattern-oriented benchmarks identify candidate regimes, but application selection requires the communication schedule and its completion dependencies. A low primitive cost is useful only to the extent that it reduces exposed application time under an equivalent result state.
 \end{resultbox}
 
-\section{Answers to the Research Questions}
+\section{Research Questions Revisited}
 
 \paragraph{RQ1: conditions for beneficial GPU invocation.}
 The evaluated persistent, kernel-invoked NVSHMEM path is favorable for large, batched regular halo exchanges, while MPI retains the small-message and isolated-exchange advantage. In aCG, the monolithic device-NVSHMEM implementation improves relative to blocking OSHMPI at larger process counts but remains behind NCCL in the retained representative curves. The MoE hotspot case adds a limit in the other direction: when 80\% of tokens target one rank, the NVSHMEM and OSHMPI put-based paths are about 1.8 times slower than the \texttt{alltoallv} implementations at 32 GPUs, because neither has a collective algorithm available to reorganize the incast. Because persistence, batching, API, signaling, and solver organization change together, the campaign does not isolate an initiation-only speedup. Inter-node NVSHMEM uses the \texttt{ibrc} CPU proxy, so the result also does not establish the benefit of GPU-posted networking.
@@ -42,7 +42,7 @@ Ping-pong, halo, allreduce, and MoE cells normally contain five jobs and fifteen
 \paragraph{Preliminary NCCL evidence.}
 The newer NCCL study, retained in Appendix~\ref{app:nccl-preliminary}, has only rounded three-run medians and qualitative spread information. Missing source revisions, run commands, datatype, correctness logs, and timing boundaries prevent replication from the summary alone. Comparing 2.18.5 plain with 2.31.2 symmetric changes both version and memory handling; comparing the two 2.31.2 columns still combines allocation and registration. Neither comparison isolates device initiation, and the proposed warm-up and GDAKI failure explanations remain unverified. The study identifies a follow-up candidate after the main scalar-completion and halo-representation gaps are addressed.
 
-\section{Benchmark and Rerun Decisions}
+\section{Benchmark Decisions}
 
 The existing archive is sufficient to present backend-complete microbenchmark curves, correct the all-to-all size axis, compare representative solver medians, and report the archived \texttt{cg\_step} contract. Those changes require reanalysis or presentation only. They do not repair comparisons whose operands, result location, invocation, or application schedule differ.
 

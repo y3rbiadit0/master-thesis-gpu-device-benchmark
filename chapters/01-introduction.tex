@@ -4,7 +4,7 @@ Applications distributed across graphics processing units (GPUs) must coordinate
 
 This thesis investigates that selection problem through a progression from communication patterns to a complete application. A common benchmark identifies the regimes in which different stacks are effective; extensions to oneCCL examine how additional communication paths can be exposed through a shared interface; and an extended Conjugate Gradient (CG) solver tests whether the benchmark guidance transfers to application execution. This chapter develops the motivation and research gaps behind that progression, defines the research questions, and summarizes the scope, findings, and contributions.
 
-\section{Selecting Communication Stacks for Distributed GPU Applications}
+\section{Motivation}
 
 GPUs provide the parallelism and memory bandwidth used by scientific simulations and large-scale artificial-intelligence workloads. Distributing these workloads introduces communication with different performance requirements: sparse solvers exchange boundary values and reduce scalar dot products, while distributed training combines gradients or redistributes activations. Scalability depends on the cost of these operations and on whether their dependencies leave communication exposed on the application's critical path \cite{unat_landscape_2026,choi_end--end_2020}.
 
@@ -20,7 +20,7 @@ These alternatives create a practical selection problem. The relevant input is t
 
 Vendor-specific ecosystems generally provide highly optimized implementations, but they couple applications to a particular hardware and software stack. SYCL and oneCCL provide source-level abstractions that reduce this coupling. Source portability, runtime backend interchangeability, and performance portability are nevertheless distinct properties: a common interface may add orchestration, staging, or synchronization costs, and measurements on NVIDIA A100 GPUs cannot by themselves establish cross-vendor performance portability \cite{hammond_comparative_2019,shen_sycl_2026}. This thesis therefore treats CUDA and SYCL variants as concrete implementation stacks and supporting controls, rather than making cross-vendor portability a separate experimental claim.
 
-\subsection{Research Gap and Approach}
+\subsection{Research Gap}
 
 Prior work already connects communication mechanisms to applications. Agostini et al. examine GPUDirect Async through microbenchmarks, modeling, and application cases; PICO assesses benchmark-informed choices through simulated training-trace replay; TuCCL reports end-to-end training improvements; and Trotter et al. compare host- and device-initiated CG solvers \cite{agostini_gpudirect_2018,pasqualoni_pico_2026,li_tuccl_2025,trotter_cpu-_2025}. Building on these studies, this thesis investigates three connected questions left open for the selected stacks and application:
 
@@ -63,7 +63,7 @@ The application also makes the portability question concrete. Expressing the sol
 To what extent do the microbenchmarks and composite CG step predict communication costs and backend rankings in aCG, and which application dependencies explain agreement or divergence? For the SYCL version, how much native CUDA solver performance is retained on the evaluated platform?
 \end{researchquestion}
 
-\section{Scope and Main Findings}
+\section{Scope and Findings}
 
 The study uses 1 to 32 NVIDIA A100 GPUs on Leonardo's Booster partition. Isolated point-to-point, halo, reduction, and all-to-all tests cover a union of seven CUDA- and SYCL-based stacks; exact backend availability differs by pattern. Two application microbenchmarks follow: \texttt{moe} replaces the equal-block assumption of all-to-all with routing-dependent variable-count dispatch and combine, and a composite \texttt{cg\_step} benchmark adds a host-driven halo exchange and the small reductions characteristic of a CG iteration. The aCG campaign then evaluates complete host-initiated and monolithic device-initiated solvers on two large sparse matrices \cite{trotter_cpu-_2025}. The SYCL solver comparison uses a separate report for one matrix through 16 GPUs. Redistribution is validated at the microbenchmark level only; no complete application exercises it here.
 
@@ -76,7 +76,7 @@ The findings have three main implications for stack selection:
 
 Leonardo's NVSHMEM inter-node path uses a CPU proxy because InfiniBand GPUDirect Async (IBGDA) is unavailable \cite{trotter_cpu-_2025}. Thus the device-initiated cases evaluate kernel-side invocation with proxy-assisted networking. Chapter~\ref{ch:m-results} reports the quantitative boundaries and timing qualifications. A separate exploratory NCCL version and symmetric-buffer comparison is retained in Appendix~\ref{app:nccl-preliminary}; its available summary does not establish application-visible device initiation and contributes no evidence to the research-question answers.
 
-\section{Major Contributions}
+\section{Contributions}
 
 To answer these questions, this thesis makes five main contributions. The second and third extend oneCCL beyond the baseline backend behavior, while the fourth and fifth extend aCG beyond the published CUDA/HIP suite.
 

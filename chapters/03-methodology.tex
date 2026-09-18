@@ -2,7 +2,7 @@
 
 This chapter defines the experiment behind the comparison of host-driven and device-initiated communication on a GPU-accelerated cluster. It sets out the measurement design and its parameters, the platform and the configured stacks that are actually compared, the timing and statistical protocol, the communication patterns and the application validation built on them, and the boundaries of what the retained evidence supports. The recurring concern is attribution: the evaluated paths differ in compute interface, memory handling, completion semantics, and transport as well as in where communication is invoked, so the design states throughout which of those differences a given comparison holds fixed and which it does not.
 
-\section{Research Planning}\label{sec:research-planning-levels}
+\section{Research Design}\label{sec:research-planning-levels}
 
 The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three levels, and the campaigns were executed in that order, because each level uses the preceding one to choose what is worth measuring:
 
@@ -91,7 +91,7 @@ The analysis distinguishes the archived campaigns from later implementation chan
 
 All experiments were run on the Booster partition of the Leonardo supercomputer at CINECA \cite{turisini_leonardo_2024}, ranked 12th in the June 2026 TOP500 list \cite{top500_june2026}. Intra-node experiments use a single node with one, two, or four GPUs; multi-node experiments use two, four, or eight nodes of the same partition, up to 32 GPUs. One process drives one GPU throughout. This section describes the node hardware, the communication paths it provides, the software environment, and the stacks built on it.
 
-\subsection{Booster Node Specifications}
+\subsection{Node Architecture}
 
 \begin{itemize}
     \item \emph{Model:} Atos BullSequana X2135 ``Da Vinci'' single-node GPU blade.
@@ -103,7 +103,7 @@ All experiments were run on the Booster partition of the Leonardo supercomputer 
     \item \emph{Operating system and scheduler:} Red Hat Enterprise Linux 8, with Slurm.
 \end{itemize}
 
-\subsection{Intra- and Inter-Node Communication Support}
+\subsection{Communication Domains}
 
 The node provides two communication domains with an order-of-magnitude difference in bandwidth, and the topology set is chosen to observe each separately and in combination:
 
@@ -173,7 +173,7 @@ Stack & Ping-pong & Halo & Allreduce & All-to-all & \texttt{moe} & \texttt{cg\_s
 \end{tabular}
 \end{table}
 
-\subsection{Backend Considerations}\label{sec:runtime-method}
+\subsection{Runtime Configuration}\label{sec:runtime-method}
 
 Each stack runs with a fixed runtime configuration, applied identically to every cell of that stack by the benchmark tooling. Table~\ref{tab:m-runtime-settings} lists the settings that affect the measured path; everything else keeps library defaults.
 
@@ -221,7 +221,7 @@ oneCCL/OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{CCL\_OSHMPI\_STAGING\_S
     \item \emph{NVSHMEM adapter} \cite{merenda_oneccl_nvshmem_2026}. A runtime foundation only: it establishes communicator selection, bootstrap, lifecycle, and symmetric staging on one and two nodes, but its collective and point-to-point operations are unsupported. It contributes integration evidence and no measurements.
 \end{itemize}
 
-\subsection{Leonardo Considerations}\label{sec:ibgda-check}
+\subsection{Platform Constraints}\label{sec:ibgda-check}
 
 \paragraph{No GPU-initiated network posting.} NVSHMEM can let a GPU kernel post InfiniBand requests directly through IBGDA, but this path is not available on the evaluated system. Table~\ref{tab:m-ibgda-check} compares the recorded driver configuration with the documented prerequisites \cite{nvidia_nvshmem_install_2026}: the base driver, peer-memory, and OFED requirements are met, but the peer-mapping and stream-memory settings IBGDA relies on are disabled or not reported. These observations explain the missing prerequisites; they do not by themselves prove why the transport is unavailable. A two-node diagnostic run confirmed that NVSHMEM selected the \texttt{ibrc} transport. Device-initiated inter-node requests in this thesis are therefore serviced by a CPU proxy, consistent with the lack of IBGDA support reported for Leonardo by Trotter et al.\ \cite{trotter_cpu-_2025}. Results for device-initiated NVSHMEM describe proxy-assisted networking, not GPU-posted networking.
 
@@ -248,11 +248,11 @@ Stream memory operations & Enabled for the documented path & Disabled\\
 
 \paragraph{InfiniBand service level.} All InfiniBand traffic from UCX, NCCL, and NVSHMEM uses service level 1.
 
-\section{Benchmarks and Measurement Protocol}\label{sec:benchmark-method}
+\section{Benchmark Design}\label{sec:benchmark-method}
 
 All benchmarks share one measurement contract, and differ only in the operation they time, the point at which each stack considers that operation complete, and how their payload is counted. This section first defines the shared contract, then describes each benchmark in the order of the evaluation levels: the four communication microbenchmarks, then the two application microbenchmarks. It closes with how samples are aggregated into the reported results.
 
-\subsection{Common Protocol}\label{sec:completion-method}
+\subsection{Measurement Protocol}\label{sec:completion-method}
 
 \paragraph{Timing.} Every benchmark uses GPU-resident buffers with deterministic contents. After the warm-up iterations, each rank records the elapsed time of every timed iteration, from submission of the operation to its observed completion. Buffer initialization, the initial rank barrier, validation, and reporting are outside the timed interval. Because a distributed operation completes only when its slowest participant does, sample $i$ is the maximum over the $P$ ranks,
 \begin{equation}
@@ -373,11 +373,11 @@ The \texttt{cg\_step} benchmark extracts the communication structure of one conj
     \item \emph{Payload:} a nominal two-column halo, excluding the scalar reductions.
 \end{itemize}
 
-\section{Application Validation with aCG}\label{sec:acg-method}
+\section{aCG Solver Evaluation}\label{sec:acg-method}
 
 The last evaluation level asks whether the benchmark observations hold in a complete application. It runs the aCG conjugate-gradient solver \cite{trotter_cpu-_2025} on large sparse problems with the same stacks, and compares its measured communication costs and backend ranking with those predicted by the microbenchmarks and \texttt{cg\_step}. Unlike the benchmarks, the solver introduces an irregular communication graph from a sparse partition, computation that can overlap communication, and convergence that determines how many iterations are run.
 
-\subsection{Problems and Solver Variants}
+\subsection{Problems and Variants}
 
 The solver is evaluated on two symmetric positive definite matrices from the SuiteSparse Matrix Collection \cite{davis_suitesparse_2011}. Each is partitioned once with METIS, and the same partition is reused by every solver variant.
 
@@ -437,7 +437,7 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
     \item \emph{Phase timers} have backend-dependent meanings and cannot be summed into a network-cost model. The halo timer covers only the wait remaining at halo-end, so OSHMPI's blocking communication appears mainly under \emph{other}; NVSHMEM may include communication in its SpMV interval; and the allreduce timer includes the wait for the slowest rank to arrive.
 \end{itemize}
 
-\section{Reproducibility and Evidence Boundaries}\label{sec:reproducibility}
+\section{Reproducibility and Limitations}\label{sec:reproducibility}
 
 All results reported in this thesis are provided in a supplementary archive distributed with it. The archive contains:
 \begin{itemize}

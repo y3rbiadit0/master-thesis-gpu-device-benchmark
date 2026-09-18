@@ -8,7 +8,7 @@ The discussion proceeds from interconnects and GPU execution to communication se
 
 A multi-GPU application communicates within nodes and across a network between nodes. Each domain admits several payload routes and divisions of work between the GPU, CPU, and network interface controller (NIC). Hardware connectivity constrains these choices, while the application and communication stack determine which supported mechanisms are used.
 
-\subsection{Invocation, Progress, and Memory Are Separate Axes}\label{sec:initiation-axes}
+\subsection{Invocation, Progress, and Memory}\label{sec:initiation-axes}
 
 \emph{GPU-aware} describes an interface's ability to accept device buffers; \emph{GPU-initiated} describes where an operation is invoked. Neither term specifies who posts a network request or whether communication overlaps computation. Table~\ref{tab:m-initiation-axes} keeps these distinctions explicit. In particular, a CPU-launched communication kernel is not evidence that the application itself calls a communication API from GPU code, and a device-side call may still depend on a CPU progress thread \cite{unat_landscape_2026,hamidouche_kernel-initiated_2026}.
 
@@ -34,7 +34,7 @@ These dimensions must be identified together when interpreting a measurement. A 
 
 \subsection{Intra-Node Communication}\label{sec:intra-node}
 
-\subsubsection{The Interconnect}
+\subsubsection{Intra-Node Interconnects}
 
 Within a node, GPUs communicate through PCI Express or a dedicated accelerator fabric. PCIe also connects storage and network devices, so peer traffic can share links and switches with other activity. NVIDIA's NVLink provides higher-bandwidth GPU connectivity, either through direct links or through NVSwitch; AMD systems use Infinity Fabric with xGMI links. In each case, peer-memory bandwidth remains distinct from the bandwidth of a GPU's local high-bandwidth memory (HBM) \cite{song_survey_2025}.
 
@@ -78,13 +78,13 @@ Fabric assistance & Ordinary transfers or multicast/reduction & Can replicate or
 
 \subsection{Inter-Node Communication}\label{sec:inter-node}
 
-\subsubsection{The Interconnect}
+\subsubsection{Inter-Node Interconnects}
 
 Across nodes, HPC systems commonly use InfiniBand or comparable RDMA-capable fabrics. Remote Direct Memory Access (RDMA) allows a network adapter to access registered remote memory without a matching receive or CPU copy at the target. Software still establishes registration, access rights, and synchronization. RDMA over Converged Ethernet (RoCE) provides related capabilities over a suitably configured Ethernet network. Both can be accessed through verbs interfaces, with performance dependent on adapters, routing, and congestion \cite{hamidouche_gpu-initiated_2025}.
 
 GPU--NIC affinity matters: a nearby NIC can avoid additional PCIe or inter-socket traversal, while unfavorable placement can reduce peer-to-peer throughput \cite{hamidouche_gpu-initiated_2025}. The number and placement of adapters also bound network injection bandwidth and affect how libraries distribute concurrent transfers.
 
-\subsubsection{Types of Inter-Node Communication}
+\subsubsection{Inter-Node Payload Routes}
 
 Describing a library simply as ``GPU-side'' or ``CPU-side'' is imprecise, because a single communication call decomposes into several operations that may be performed by different actors. Unat et al.\ \cite{unat_landscape_2026} classify communication by \emph{who performs each operation}. Table~\ref{tab:m-comm-types} adapts this perspective to the paths discussed here, distinguishing host setup from steady-state invocation and network posting. Removing the CPU from the steady-state control path does not imply removing host-side memory registration or communicator creation.
 
@@ -160,7 +160,7 @@ A halo expressed through nonblocking MPI receives and sends can post every trans
 
 \subsection{Collective Operations}\label{sec:collectives}
 
-\subsubsection{Definition and Participation}
+\subsubsection{Participation and Semantics}
 
 A \emph{collective operation} is defined over the ranks of a communicator as one logical data transformation or synchronization. Participation does not imply simultaneous entry, and most collectives are not barriers. A blocking collective's return establishes its local completion contract; a nonblocking collective establishes that contract when its request completes. A stream-enqueued collective instead completes at the corresponding device execution boundary.
 
@@ -168,7 +168,7 @@ All ranks must issue compatible collective calls in an order permitted by the in
 
 A collective specifies a result rather than an algorithm. An allreduce, for example, can use a ring or a tree to produce the same logical reduction. Its schedule determines communication rounds, traffic distribution, and resource use; Section~\ref{sec:collective-algorithms} develops these choices.
 
-\subsubsection{Patterns and Structural Attributes}
+\subsubsection{Structural Attributes}
 
 Collective patterns describe how sources, destinations, and results are related across the participating ranks. Four structural attributes govern both the cost of an operation and the difficulty of implementing it well.
 
@@ -229,7 +229,7 @@ A communication signature combines operation sequence, message-size distribution
 
 \paragraph{Latency-sensitive inference.} Tensor-parallel decoding can place repeated small collectives on the token-generation critical path, making startup latency important even when communication volume is modest \cite{shen_every_2026}. Training, MoE, and inference provide motivation for the measured regimes; complete learning applications are outside the evaluation scope.
 
-\subsubsection{Conjugate Gradient: Communication and Dependencies}\label{sec:cg-background}
+\subsubsection{Conjugate Gradient}\label{sec:cg-background}
 
 Standard Conjugate Gradient (CG) solves $Ax=b$ for a symmetric positive-definite matrix $A$. At iteration $k$, it maintains an approximation $x_k$, residual $r_k=b-Ax_k$, and search direction $p_k$. Sparse matrix--vector multiplication (SpMV) and vector updates have low arithmetic intensity, while global dot products create repeated synchronization dependencies. These properties make CG sensitive to both memory bandwidth and communication latency \cite{trotter_cpu-_2025}.
 
@@ -268,13 +268,13 @@ In floating-point arithmetic, changing reduction order can change the computed c
 
 The evaluated stacks draw on MPI, OpenSHMEM, and specialized collective libraries. MPI and OpenSHMEM are specifications with multiple implementations; NCCL, RCCL, and oneCCL are libraries with related but distinct interfaces. Their operation coverage, memory contracts, execution ordering, and progress mechanisms determine how they can implement the communication signatures above.
 
-\subsection{Two-Sided Message Passing: MPI}\label{sec:mpi}
+\subsection{MPI}\label{sec:mpi}
 
 \subsubsection{The MPI Standard}
 
 MPI defines send/receive communication, collectives, and one-sided RMA. The send/receive operations used by the direct MPI paths here are \emph{two-sided}: messages match through source, destination, tag, and communicator rules. A standard-mode send may complete locally before its receive is posted if the implementation buffers the message. MPI's separate RMA interface exposes memory windows for remote access and provides the substrate used by OSHMPI.
 
-\subsubsection{GPU-Aware MPI and Its Implementations}
+\subsubsection{GPU-Aware MPI}
 
 \emph{GPU-aware MPI} extends implementations so that device pointers may be passed directly to MPI calls. This removes explicit staging from application code and permits an implementation to use GPUDirect RDMA or intra-node peer access, but accepting a device pointer does not guarantee that a direct path was selected: the build, transport provider, message size, and topology may still lead to internal staging.
 
@@ -288,7 +288,7 @@ MPICH, Open MPI, and vendor distributions such as HPC-X and Intel MPI differ in 
 
 UCC \cite{ucc_2025} is a collective-library component that Open MPI can select in place of its native collective modules. Its architecture separates collective layers from transport layers; in the installed configuration, the basic collective layer dispatches CUDA-buffer operations to the UCP transport layer, which in turn uses UCX endpoints and tagged communication over the configured shared-memory, CUDA, and InfiniBand transports \cite{venkata_ucc_2024,openucx_ucc_source_2026}. UCC therefore does not replace UCX in this stack. It replaces Open MPI's collective schedule while retaining UCX/UCP as the data-movement substrate.
 
-\subsection{One-Sided PGAS Models: OpenSHMEM and Its Implementations}\label{sec:pgas}
+\subsection{OpenSHMEM}\label{sec:pgas}
 
 In a Partitioned Global Address Space model, processes can access designated remote memory through operations such as \texttt{put} and \texttt{get}. The target application need not post a matching receive for each transfer, although setup, synchronization, and implementation progress may still require its participation.
 
@@ -302,7 +302,7 @@ The completion distinctions in Section~\ref{sec:completion-semantics} have concr
 
 A put followed by an appropriately ordered signal, or a combined put-with-signal primitive, lets the receiver wait for a ready condition before accessing the payload. Buffer reuse requires a further guarantee that the receiver has finished consuming the previous data. Barriers can coordinate phases, while peer acknowledgments and suitably synchronized alternating buffers can avoid global synchronization. Modern OpenSHMEM collectives operate on \emph{teams}, analogous to communicators; older interfaces use active sets. Device implementations additionally specify which threads participate and which host- or device-issued operations a completion primitive covers \cite{ma_demystifying_2026,ravi_unified_2026}.
 
-\subsubsection{Implementations}
+\subsubsection{OpenSHMEM Implementations}
 
 NVSHMEM and OSHMPI are evaluated directly. ROC\_SHMEM and Intel SHMEM provide architectural context for GPU-side execution on other vendors' systems.
 
@@ -328,13 +328,13 @@ OSHMPI implements OpenSHMEM over MPI RMA and collective operations. Its progress
 
 One-sided access can express irregular writes without posting a receive for every message, but the application must manage remote offsets, capacity, notification, and safe reuse. Device-side variants add the choice of thread or group scope and must preserve progress within persistent kernels. Integrating communication into computation can also make phase attribution harder for kernel-based profiling. These requirements are the qualitative programming evidence examined alongside timing in RQ2 \cite{unat_landscape_2026,trotter_cpu-_2025}.
 
-\subsection{Collective Communication Libraries: the xCCL Family}\label{sec:xccl}
+\subsection{The xCCL Family}\label{sec:xccl}
 
 The xCCL family specializes in collective communication for accelerator systems \cite{weingram_xccl_2023}. NCCL targets NVIDIA GPUs, RCCL targets AMD GPUs, and oneCCL provides a common interface with multiple implementation paths.
 
 The original campaign's NCCL and oneCCL/NCCL interfaces are host-initiated and asynchronous with respect to a device stream or queue: the host enqueues communication and can continue without waiting for completion. This does not describe every oneCCL backend: the OSHMPI mapping is blocking. Topology handling is also implementation-specific. NCCL builds logical topologies and selects algorithms internally, while middleware such as oneCCL can delegate transport discovery and collective choices to lower layers. The application-facing API therefore hides different progress and selection mechanisms.
 
-\subsubsection{NCCL (NVIDIA)}\label{sec:nccl}
+\subsubsection{NCCL}\label{sec:nccl}
 NVIDIA's Collective Communication Library \cite{nvidia_nccl_repo} supplies topology-aware communication for NVIDIA GPUs. The NCCL~2.18.5 host interface used in the main campaign exposes allreduce, broadcast, reduce, allgather, reduce-scatter, and point-to-point send/receive. Communicators are initialized using a shared unique identifier or convenience routines for ranks managed within one process \cite{hu_demystifying_2025}.
 
 \paragraph{Interface.} Relative to the MPI examples above, an NCCL allreduce expresses the same global reduction but enqueues it on a CUDA stream, so it is ordered with kernels and copies on that stream without requiring a blocking host call. A halo has no native neighborhood collective in the host API and is instead expressed as grouped \texttt{ncclSend}/\texttt{ncclRecv} operations. This narrower surface lets NCCL specialize aggressively for GPU topology, but it also means that operation coverage and grouping semantics form part of the comparison.
@@ -373,10 +373,10 @@ A performance crossover can therefore reflect an algorithm or protocol switch wh
 
 The device API uses collectively registered symmetric windows, adopting memory-access ideas associated with PGAS systems \cite{hamidouche_gpu-initiated_2025}. Such registration can also accelerate host-called collectives, so registered buffers alone do not identify device initiation \cite{nvidia_nccl_registration_2026}. Likewise, LSA reachability does not imply Multimem support. These distinctions govern the separate preliminary version and memory-path comparison in Section~\ref{sec:nccl-preliminary-results}; the main campaign uses host-initiated NCCL calls.
 
-\subsubsection{RCCL (AMD)}\label{sec:rccl}
+\subsubsection{RCCL}\label{sec:rccl}
 RCCL provides an NCCL-compatible collective interface for AMD GPUs \cite{amd_rccl_2026,amd_rccl_repo}. Its implementation accounts for AMD execution resources and Infinity Fabric topology, so API similarity does not imply identical algorithms or performance. It supplies context for the published cross-vendor aCG study but is not measured on Leonardo.
 
-\subsubsection{oneCCL (multi-vendor)}\label{sec:oneccl}
+\subsubsection{oneCCL}\label{sec:oneccl}
 oneCCL is the oneAPI ecosystem's collective library, maintained by the UXL Foundation \cite{uxl_oneccl_2026}. It provides a common interface for supported CPU and accelerator paths. Communicators identify participating ranks and device contexts; streams carry execution context; and operations return events representing completion. The interface supports asynchronous execution, although a particular backend may complete work before returning. Its operation surface includes allgather(v), allreduce, alltoall(v), barrier, broadcast, reduce, reduce-scatter, and point-to-point communication \cite{weingram_xccl_2023,unat_landscape_2026}.
 
 oneCCL combines native collective implementations with delegation to other libraries. Its native paths use an Abstract Transport Layer (ATL) over MPI or libfabric, while SYCL and Level Zero support Intel GPU execution and data movement \cite{unat_landscape_2026}. Alternative backends can delegate operations to NCCL or to the SHMEM adapters developed here. Backend availability remains a build-time dependency even when the application-facing API is unchanged.
@@ -393,7 +393,7 @@ For all-to-all, \emph{Bruck's algorithm} trades local data reorganization and ad
 
 Libraries select schedules using runtime heuristics or explicit controls. Open MPI's tuned component uses fixed and dynamic decision rules \cite{pjesivac_mpi_collectives_2007,openmpi_alltoall_source_2026}; NCCL selects algorithms, protocols, and channel counts. PICO and TuCCL show that alternative configurations can outperform defaults for particular workloads and systems \cite{pasqualoni_pico_2026,li_tuccl_2025}. Their detailed findings are discussed in Chapter~\ref{ch:m-related}.
 
-\subsection{Comparison}
+\subsection{Library Comparison}
 
 Table~\ref{tab:m-backends} maps the exact stacks relevant to the experiments onto the distinctions above. It describes the interface visible to the application, which may differ from the native capabilities of an underlying library.
 
