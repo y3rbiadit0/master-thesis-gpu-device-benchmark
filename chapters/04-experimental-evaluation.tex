@@ -176,7 +176,7 @@ Allreduce shows the second effect, and it runs in the opposite direction. At 16\
 
 These two effects bound what the later levels can show. A stack that wins intra-node has not been shown to win at scale, because the NVLink regime it won in disappears at \texttt{2n1g}; and a stack that loses at two ranks may recover at 32, because hierarchical staging only becomes available when nodes hold several GPUs. The remaining topology panels are in Appendix~\ref{app:complete-results}.
 
-\subsection{The Portability Cost of SYCL Is Small in Communication}\label{sec:sycl-portability}
+\subsection{SYCL Portability Effects}\label{sec:sycl-portability}
 
 Two of the seven stacks compile the same benchmark source through SYCL instead of CUDA, which makes the portability cost measurable directly. Table~\ref{tab:m-sycl-portability} summarizes it over every measured cell: for each pattern it gives the ratio of SYCL MPI to CUDA MPI, the two stacks that differ only in compute interface, and the corresponding ratio of oneCCL/NCCL to direct NCCL, which differs in adapter as well.
 
