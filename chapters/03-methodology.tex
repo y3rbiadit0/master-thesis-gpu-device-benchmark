@@ -99,8 +99,8 @@ All experiments were run on the Booster partition of the Leonardo supercomputer 
     \item \emph{GPU:} four NVIDIA A100 SXM4 GPUs with 64\,GB of HBM2e each.
     \item \emph{Memory:} 512\,GB DDR4 at 3200\,MHz ($8 \times 64$\,GB).
     \item \emph{Intra-node interconnect:} NVLink~3.0, with each GPU connected directly to the other three by four links, giving 200\,GB/s of bidirectional bandwidth per GPU pair; there is no NVSwitch.
-    \item \emph{Network:} NVIDIA Mellanox InfiniBand HDR in a DragonFly+ topology, with two dual-port HDR100 adapters per node, exposed as four 100\,Gb/s interfaces.
-    \item \emph{Scheduler:} Slurm.
+    \item \emph{Network:} NVIDIA Mellanox InfiniBand HDR in a DragonFly+ topology. Each node exposes four ConnectX-6 (MT4123) host channel adapters, one active port each at 100\,Gb/s with a 4096-byte MTU, firmware 20.39.2048.
+    \item \emph{Operating system and scheduler:} Red Hat Enterprise Linux 8, with Slurm.
 \end{itemize}
 
 \subsection{Intra- and Inter-Node Communication Support}
@@ -121,7 +121,7 @@ Comparing \texttt{1n4g} with \texttt{2n1g} therefore separates a change of inter
     \item \emph{InfiniBand stack:} MLNX\_OFED 23.04-1.1.3.
     \item \emph{CUDA toolchain:} NVHPC 24.5 with CUDA 12.4, for the CUDA benchmarks and aCG.
     \item \emph{SYCL toolchain:} DPC++ 6.3 built from intel/llvm with the CUDA backend, GCC 12.2, and CUDA 12.2, for the SYCL benchmarks and solver.
-    \item \emph{MPI:} HPC-X 2.19, providing Open MPI over UCX, with UCC 1.4.0 as an optional collective component. It serves the CUDA and SYCL MPI paths and is the substrate of OSHMPI.
+    \item \emph{MPI:} HPC-X 2.19, providing Open MPI 4.1.7a1 over UCX 1.17.0, with UCC 1.4.0 as an optional collective component. It serves the CUDA and SYCL MPI paths and is the substrate of OSHMPI. The installation is built with CUDA support, and UCX with \texttt{gdrcopy}, so GPU buffers are accepted directly by the point-to-point, RMA, and shared-memory components (\texttt{pml} and \texttt{osc} resolve to \texttt{ucx}, and the intra-node byte transport to \texttt{smcuda}).
     \item \emph{NCCL:} 2.18.5, for the direct NCCL path and beneath oneCCL.
     \item \emph{NVSHMEM:} 2.11.0, for the host- and device-invoked SHMEM paths.
     \item \emph{OSHMPI and oneCCL:} built from source at pinned revisions, including the NCCL and OSHMPI backend extensions of this thesis. The oneCCL/NCCL build launches and bootstraps with its bundled Intel MPI, while NCCL carries the payload.

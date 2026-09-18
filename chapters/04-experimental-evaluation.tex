@@ -176,6 +176,37 @@ Allreduce shows the second effect, and it runs in the opposite direction. At 16\
 
 These two effects bound what the later levels can show. A stack that wins intra-node has not been shown to win at scale, because the NVLink regime it won in disappears at \texttt{2n1g}; and a stack that loses at two ranks may recover at 32, because hierarchical staging only becomes available when nodes hold several GPUs. The remaining topology panels are in Appendix~\ref{app:complete-results}.
 
+\subsection{The Portability Cost of SYCL Is Small in Communication}\label{sec:sycl-portability}
+
+Two of the seven stacks compile the same benchmark source through SYCL instead of CUDA, which makes the portability cost measurable directly. Table~\ref{tab:m-sycl-portability} summarizes it over every measured cell: for each pattern it gives the ratio of SYCL MPI to CUDA MPI, the two stacks that differ only in compute interface, and the corresponding ratio of oneCCL/NCCL to direct NCCL, which differs in adapter as well.
+
+\begin{table}[tb]
+\centering
+\caption{SYCL relative to CUDA over all measured cells of each pattern, as median and maximum of the per-cell ratio. Values above one favor CUDA.}
+\label{tab:m-sycl-portability}
+\footnotesize
+\begin{tabularx}{\textwidth}{lYrrr}
+\toprule
+Pattern & Cells & SYCL/CUDA median & SYCL/CUDA max & oneCCL/NCCL median\\
+\midrule
+Ping-pong & 46 & $1.01$ & $1.84$ & $1.10$\\
+Halo, isolated & 126 & $1.02$ & $1.19$ & $1.32$\\
+Halo, steady & 126 & $1.01$ & $1.07$ & $1.13$\\
+Allreduce & 161 & $1.00$ & $1.06$ & $1.02$\\
+All-to-all & 119 & $1.01$ & $1.06$ & $1.02$\\
+MoE & 21 & $1.00$ & $1.08$ & $1.02$\\
+\midrule
+\texttt{cg\_step} & 35 & $1.28$ & $1.51$ & $1.57$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+For the five patterns that time communication alone, SYCL costs about 1\% at the median and stays within 8\% in all but one case. Ping-pong is the exception, where the largest messages reach $1.84\times$; small messages there sit in the MPI startup regime, which both stacks share, while the large-message endpoints diverge. On this evidence, expressing a GPU-aware MPI exchange through SYCL rather than CUDA is close to free, which is the expected result: the payload path, transport, and completion boundary are identical, and only the host-side submission and the buffer's allocator change.
+
+The composite step is the one pattern with a clear gap, at $1.28\times$ median, and it is also the only pattern that includes computation. Its single-GPU control, where no inter-rank transfer occurs at all, separates the two contributions: at side 512 the step costs 116.9\,$\mu$s under SYCL MPI against 79.0\,$\mu$s under CUDA MPI, a $1.48\times$ ratio with communication removed entirely. The portability cost measured here therefore belongs to kernels and host orchestration, not to the communication path, and the same conclusion constrains the solver-level CUDA--SYCL ratios of Section~\ref{sec:acg-results}.
+
+The oneCCL/NCCL column behaves differently, because it adds an adapter to the compute-interface change. It is within 2\% of direct NCCL for the three collective patterns, but reaches $1.32\times$ for the isolated halo and $1.10\times$ for ping-pong, the two cases where submission cost is exposed rather than amortized. A common interface is therefore inexpensive where the operation is large enough to hide its submission, and visible where it is not.
+
 These primitive results leave several plausible candidates: MPI for startup-sensitive transfers, persistent NVSHMEM for large repeated halos, and NCCL-based paths for bulk collectives. The next question is whether composing operations preserves those advantages.
 
 \section{Routing-Dependent Redistribution in the \texttt{moe} Benchmark}\label{sec:moe-results}
