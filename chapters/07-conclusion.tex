@@ -1,4 +1,4 @@
-\chapter{Conclusions and Outlook}
+\chapter{Conclusions and Outlook}\label{ch:m-conclusion}
 
 This thesis developed a bottom-up method for locating favorable distributed-GPU communication paths and testing which observations survive composition and complete solver execution. A unified benchmark suite measured point-to-point, halo, allreduce, and all-to-all patterns, then MoE and CG-inspired application microbenchmarks, through CUDA-aware and SYCL-aware MPI, NCCL, oneCCL, NVSHMEM, and OSHMPI, including persistent kernel-invoked NVSHMEM neighbor kernels. The software contributions extend oneCCL with grouped NCCL point-to-point handling, an OSHMPI backend for the benchmarked operation set, and a validated NVSHMEM backend foundation, and extend aCG with an OSHMPI communicator and a SYCL implementation. Together, these five contributions connect interface engineering and controlled communication measurements to two large sparse matrices through 32 A100 GPUs.
 
@@ -14,7 +14,7 @@ The resulting recommendation is to select configured paths for a specific applic
 
 \section{Future Work}
 
-\subsection{Priority Experiments}
+\subsection{Priority Experiments}\label{sec:priority-experiments}
 
 The reconciled analysis identifies the following priorities before broadening the backend matrix:
 \begin{enumerate}

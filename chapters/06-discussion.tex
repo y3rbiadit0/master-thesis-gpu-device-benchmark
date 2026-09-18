@@ -14,6 +14,35 @@ The strongest cross-level agreement is narrower: the matched MPI and NCCL one-do
 Pattern-oriented benchmarks identify candidate regimes, but application selection requires the communication schedule and its completion dependencies. A low primitive cost is useful only to the extent that it reduces exposed application time under an equivalent result state.
 \end{resultbox}
 
+\section{NVSHMEM Scaling Behavior}\label{sec:nvshmem-overlook}
+
+Because the research questions ask when GPU-initiated communication pays off, and NVSHMEM is the only evaluated stack that offers it, its behavior is worth reading across the patterns rather than one at a time. Table~\ref{tab:m-nvshmem-scale} places NVSHMEM against the fastest measured stack at one node and at eight, for every pattern.
+
+\begin{table}[htbp]
+\centering
+\caption{NVSHMEM latency relative to the fastest measured stack for the same pattern and payload, scaling up within a node and scaling out to eight nodes. Lower is better; $1.0$ means NVSHMEM is the fastest path.}
+\label{tab:m-nvshmem-scale}
+\footnotesize
+\begin{tabularx}{\textwidth}{lYrr}
+\toprule
+Pattern & Payload & Scale-up & Scale-out\\
+\midrule
+Ping-pong & 4\,B & $2.6\times$ & $5.6\times$\\
+Halo, steady & 16\,MiB aggregate & $1.9\times$ & $1.0\times$\\
+Allreduce & 16\,MiB & $1.0\times$ & $2.5\times$\\
+All-to-all & 256\,KiB per peer & $1.4\times$ & $1.8\times$\\
+MoE, uniform & 32\,MiB per rank & $1.5\times$ & $1.7\times$\\
+\texttt{cg\_step} & Side 512 & $1.8\times$ & $2.9\times$\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The column pair shows one consistent movement: with the halo as the single exception, every pattern places NVSHMEM further behind the leader when nodes are added than when GPUs are added within a node. The effect is largest where the measurement is latency-bound, from $2.6\times$ to $5.6\times$ in ping-pong, and smallest where it is bandwidth-bound, from $1.4\times$ to $1.8\times$ in all-to-all. Its intra-node bulk allreduce is the fastest path measured, and it loses that position entirely across nodes. The scalar case moves the same way: the four-byte allreduce costs 19.9\,$\mu$s on one node, in line with every other stack, and 88.2\,$\mu$s at 32 GPUs, where the others stay between 46 and 49\,$\mu$s.
+
+The exception identifies the regime that does suit it. The steady-state halo is the only pattern whose NVSHMEM implementation is a persistent device-invoked kernel with neighbor signaling, and it is also the only pattern NVSHMEM leads at eight nodes, at 40.6\,GB/s against 35.7\,GB/s for MPI and flat in node count. Its advantage is therefore tied to sustained, batched, neighbor-structured traffic rather than to device invocation in general. The solver results agree: the monolithic device-NVSHMEM variant gains on blocking OSHMPI as process count grows, but does not overtake NCCL.
+
+Three properties of the evaluated configuration are candidate explanations, and the campaign does not separate them. First, inter-node device-initiated requests are serviced by a CPU proxy rather than posted by the GPU, because IBGDA is unavailable on this system (Section~\ref{sec:ibgda-check}); a proxy adds host involvement per request, which costs most where requests are small and frequent, and that is where the measured gap is largest. Second, the benchmark dispatches NVSHMEM collectives to NCCL, so the intra-node agreement is a property of that configuration and its disappearance across nodes may be a change of selected path rather than of algorithm. Third, the device-invoked variants change batching, signaling, and kernel organization at the same time as invocation. Separating these requires the matched-initiation controls listed in Section~\ref{sec:priority-experiments}; until then, the favorable regime for device-initiated NVSHMEM on this platform is the one the halo identifies, and scaling out is where it is least competitive.
+
 \section{Research Questions Revisited}
 
 \paragraph{RQ1: conditions for beneficial GPU invocation.}
