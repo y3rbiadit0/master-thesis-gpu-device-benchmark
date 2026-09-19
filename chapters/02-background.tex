@@ -86,11 +86,11 @@ GPU--NIC affinity matters: a nearby NIC can avoid additional PCIe or inter-socke
 
 \subsubsection{Inter-Node Payload Routes}
 
-Describing a library simply as ``GPU-side'' or ``CPU-side'' is imprecise, because a single communication call decomposes into several operations that may be performed by different actors. Unat et al.\ \cite{unat_landscape_2026} classify communication by \emph{who performs each operation}. Table~\ref{tab:m-comm-types} adapts this perspective to the paths discussed here, distinguishing host setup from steady-state invocation and network posting. Removing the CPU from the steady-state control path does not imply removing host-side memory registration or communicator creation.
+Describing a library simply as ``GPU-side'' or ``CPU-side'' is imprecise, because a single communication call decomposes into several operations that may be performed by different actors. A survey of GPU-centric communication classifies it by \emph{who performs each operation} \cite{unat_landscape_2026}. Table~\ref{tab:m-comm-types} adapts this perspective to the paths discussed here, distinguishing host setup from steady-state invocation and network posting. Removing the CPU from the steady-state control path does not imply removing host-side memory registration or communicator creation.
 
 \begin{table}[htbp]
 \centering
-\caption{Representative inter-node paths, adapted from Unat et al.\ \cite{unat_landscape_2026}. Setup includes registration; posting denotes submission of network work.}
+\caption{Representative inter-node paths, adapted from \cite{unat_landscape_2026}. Setup includes registration; posting denotes submission of network work.}
 \label{tab:m-comm-types}
 \footnotesize
 \begin{tabularx}{\textwidth}{YlllY}
@@ -317,12 +317,12 @@ Two implementation properties are directly relevant to interpreting the NVSHMEM 
 ROC\_SHMEM, developed as rocSHMEM within the ROCm systems repository, provides device-side one-sided communication for AMD GPUs \cite{amd_rocshmem_repo}. Its GPU-IB and reverse-offload paths illustrate the same distinction between direct GPU posting and host-proxy progress. Correct visibility of incoming network writes depends on the backend's ordering and synchronization mechanisms, as it does for NVIDIA implementations \cite{unat_landscape_2026}.
 
 \paragraph{Intel SHMEM.}
-Intel SHMEM combines OpenSHMEM-style communication with device calls inside SYCL kernels \cite{intel_ishmem_repo,brooks_intel_shmem_2024}. The implementation described by Brooks et al. uses peer mappings and Level Zero for intra-node transfers, and a host proxy to an OpenSHMEM runtime for inter-node communication. OSHMPI is identified as a possible alternative proxy runtime. Its work-group-scoped operations provide an analogue to NVSHMEM's cooperative operation scopes. This architecture demonstrates how a portable compute interface can coexist with implementation-specific memory mappings and progress.
+Intel SHMEM combines OpenSHMEM-style communication with device calls inside SYCL kernels \cite{intel_ishmem_repo,brooks_intel_shmem_2024}. That implementation uses peer mappings and Level Zero for intra-node transfers, and a host proxy to an OpenSHMEM runtime for inter-node communication. OSHMPI is identified as a possible alternative proxy runtime. Its work-group-scoped operations provide an analogue to NVSHMEM's cooperative operation scopes. This architecture demonstrates how a portable compute interface can coexist with implementation-specific memory mappings and progress.
 
 \paragraph{OSHMPI (portable, over MPI).}
 OSHMPI implements OpenSHMEM over MPI RMA and collective operations. Its progress and data movement depend on the underlying MPI implementation; GPU support additionally requires suitable device-memory capabilities and allocation extensions. The direct path evaluated here uses a CUDA symmetric space for halo buffers, while the oneCCL adapter supplies symmetric staging for ordinary buffers. This makes OSHMPI a useful case for examining how a common one-sided interface maps onto host-driven MPI mechanisms. The application-specific choice to retain MPI scalar reductions is described in Section~\ref{sec:acg-method}.
 
-\paragraph{Diverging GPU extensions.} Common OpenSHMEM origins do not imply identical GPU contracts. Implementations differ in allocation placement, symmetric-operand requirements, operation scopes, capability queries, and stream- or queue-ordered completion. Ravi et al. document these differences and propose a unified GPU-aware extension \cite{ravi_unified_2026}. Adapters must therefore check the concrete implementation's memory and participation requirements rather than infer them from API names alone.
+\paragraph{Diverging GPU extensions.} Common OpenSHMEM origins do not imply identical GPU contracts. Implementations differ in allocation placement, symmetric-operand requirements, operation scopes, capability queries, and stream- or queue-ordered completion. These differences are documented in a proposal for a unified GPU-aware extension \cite{ravi_unified_2026}. Adapters must therefore check the concrete implementation's memory and participation requirements rather than infer them from API names alone.
 
 \subsubsection{Programming Trade-offs}
 
@@ -339,13 +339,13 @@ NVIDIA's Collective Communication Library \cite{nvidia_nccl_repo} supplies topol
 
 \paragraph{Interface.} Relative to the MPI examples above, an NCCL allreduce expresses the same global reduction but enqueues it on a CUDA stream, so it is ordered with kernels and copies on that stream without requiring a blocking host call. A halo has no native neighborhood collective in the host API and is instead expressed as grouped \texttt{ncclSend}/\texttt{ncclRecv} operations. This narrower surface lets NCCL specialize aggressively for GPU topology, but it also means that operation coverage and grouping semantics form part of the comparison.
 
-\paragraph{Algorithms, channels, and protocols.} In the legacy NCCL path analyzed by Hu et al., collectives are composed from reusable primitives over logical ring and double-binary-tree topologies established at communicator creation \cite{hu_demystifying_2025}. Work is divided into \emph{channels}, each operating on a disjoint buffer slice and generally launched as a CUDA block. Multiple channels help saturate links and can spread traffic across network adapters, while excessive channel counts add resource and synchronization overhead. Other NCCL versions and platforms may expose additional algorithms, including hardware-assisted and symmetric-memory paths, so ring and tree should be read as the principal algorithms of the analyzed path rather than the complete current search space.
+\paragraph{Algorithms, channels, and protocols.} In the analyzed legacy NCCL path, collectives are composed from reusable primitives over logical ring and double-binary-tree topologies established at communicator creation \cite{hu_demystifying_2025}. Work is divided into \emph{channels}, each operating on a disjoint buffer slice and generally launched as a CUDA block. Multiple channels help saturate links and can spread traffic across network adapters, while excessive channel counts add resource and synchronization overhead. Other NCCL versions and platforms may expose additional algorithms, including hardware-assisted and symmetric-memory paths, so ring and tree should be read as the principal algorithms of the analyzed path rather than the complete current search space.
 
 Orthogonally to the algorithm, the analyzed legacy path selects among Simple, LL, and LL128 protocols, summarized in Table~\ref{tab:m-nccl-proto}. The choice trades payload efficiency against synchronization cost and is constrained by hardware: LL128 depends on write-atomicity properties that are not available on every route \cite{hu_demystifying_2025}.
 
 \begin{table}[htbp]
 \centering
-\caption{Protocols in the legacy NCCL path analyzed by Hu et al.\ \cite{hu_demystifying_2025}. Values are configuration-specific reference figures.}
+\caption{Protocols in the legacy NCCL path analyzed in \cite{hu_demystifying_2025}. Values are configuration-specific reference figures.}
 \label{tab:m-nccl-proto}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYYY}
@@ -461,4 +461,4 @@ Each Booster node is an Atos BullSequana X2135 ``Da Vinci'' blade integrating on
 
 This configuration provides both communication domains described in Section~\ref{sec:interconnects} within one machine. Single-node and multi-node runs reveal sensitivity to placement and fabric, but they do not isolate topology from algorithmic behavior: libraries may change algorithms, protocols, staging, and progress mechanisms when a communicator crosses a node boundary. The experimental design must therefore report the complete selected stack and interpret each transition as a cross-layer change.
 
-IBGDA is unavailable in the evaluated Leonardo environment, as also reported by Trotter et al.\ \cite{trotter_cpu-_2025}. Direct NVSHMEM therefore uses the \texttt{ibrc} CPU-proxy path for inter-node device requests. Section~\ref{sec:ibgda-check} reports the availability check, Section~\ref{sec:runtime-method} specifies runtime configuration, and Section~\ref{sec:eval-environment} records the software environment.
+IBGDA is unavailable in the evaluated Leonardo environment, as also reported for this system \cite{trotter_cpu-_2025}. Direct NVSHMEM therefore uses the \texttt{ibrc} CPU-proxy path for inter-node device requests. Section~\ref{sec:ibgda-check} reports the availability check, Section~\ref{sec:runtime-method} specifies runtime configuration, and Section~\ref{sec:eval-environment} records the software environment.

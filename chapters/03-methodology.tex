@@ -223,7 +223,7 @@ oneCCL/OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{CCL\_OSHMPI\_STAGING\_S
 
 \subsection{Platform Constraints}\label{sec:ibgda-check}
 
-\paragraph{No GPU-initiated network posting.} NVSHMEM can let a GPU kernel post InfiniBand requests directly through IBGDA, but this path is not available on the evaluated system. Table~\ref{tab:m-ibgda-check} compares the recorded driver configuration with the documented prerequisites \cite{nvidia_nvshmem_install_2026}: the base driver, peer-memory, and OFED requirements are met, but the peer-mapping and stream-memory settings IBGDA relies on are disabled or not reported. These observations explain the missing prerequisites; they do not by themselves prove why the transport is unavailable. A two-node diagnostic run confirmed that NVSHMEM selected the \texttt{ibrc} transport. Device-initiated inter-node requests in this thesis are therefore serviced by a CPU proxy, consistent with the lack of IBGDA support reported for Leonardo by Trotter et al.\ \cite{trotter_cpu-_2025}. Results for device-initiated NVSHMEM describe proxy-assisted networking, not GPU-posted networking.
+\paragraph{No GPU-initiated network posting.} NVSHMEM can let a GPU kernel post InfiniBand requests directly through IBGDA, but this path is not available on the evaluated system. Table~\ref{tab:m-ibgda-check} compares the recorded driver configuration with the documented prerequisites \cite{nvidia_nvshmem_install_2026}: the base driver, peer-memory, and OFED requirements are met, but the peer-mapping and stream-memory settings IBGDA relies on are disabled or not reported. These observations explain the missing prerequisites; they do not by themselves prove why the transport is unavailable. A two-node diagnostic run confirmed that NVSHMEM selected the \texttt{ibrc} transport. Device-initiated inter-node requests in this thesis are therefore serviced by a CPU proxy, consistent with the lack of IBGDA support previously reported for Leonardo \cite{trotter_cpu-_2025}. Results for device-initiated NVSHMEM describe proxy-assisted networking, not GPU-posted networking.
 
 \begin{table}[htbp]
 \centering
@@ -405,7 +405,7 @@ The multi-GPU variants run on 2, 4, 8, 16, and 32 GPUs, using the \texttt{1n2g},
 
 Two builds of the solver are used: the CUDA solver provides every result of the benchmark-to-solver comparison, and the SYCL solver is used only for a supporting CUDA--SYCL comparison.
 
-\paragraph{CUDA solver.} This is the CUDA implementation of aCG by Trotter et al.\ \cite{trotter_cpu-_2025}, extended with the OSHMPI communicator contributed by this thesis \cite{merenda_acg_oshmpi_2026}. It is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
+\paragraph{CUDA solver.} This is the published CUDA implementation of aCG \cite{trotter_cpu-_2025}, extended with the OSHMPI communicator contributed by this thesis \cite{merenda_acg_oshmpi_2026}. It is built and run in the same software environment as the CUDA microbenchmarks, so that a difference between benchmark and solver results is not a difference in library versions:
 \begin{itemize}
     \item \emph{Toolchain:} NVHPC 24.5 with CUDA 12.4.
     \item \emph{Communication libraries:} HPC-X 2.19 for MPI, and the NCCL and NVSHMEM releases bundled with NVHPC 24.5, as in Section~\ref{sec:eval-environment}.
