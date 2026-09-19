@@ -294,7 +294,7 @@ In a Partitioned Global Address Space model, processes can access designated rem
 
 \subsubsection{The OpenSHMEM Standard}
 
-OpenSHMEM standardizes a PGAS API and memory model. GPU allocation support and device-callable operations are properties of its implementations and extensions.
+OpenSHMEM (Open SHared MEMory) is a Partitioned Global Address Space (PGAS) library interface specification \cite{openshmem_spec}, derived from the SHMEM programming model originally introduced by Cray Research in 1993 for the Cray T3D \cite{cray_t3d_history}. It provides one-sided communication operations over remotely accessible symmetric data objects. The standard covers the API and its memory model only: GPU allocation support and device-callable operations are properties of individual implementations and extensions.
 
 The central concept is \emph{symmetric memory}: corresponding objects exist on participating processing elements (PEs), and a local symmetric address together with a PE identifier identifies the remote object. Symmetric heap allocations are collective and must satisfy matching allocation requirements; the interface does not require the application to assume identical virtual addresses in different processes. RMA requires the remotely accessed operand to be symmetric, while requirements on local operands and collective buffers depend on the operation and implementation. An adapter accepting ordinary application buffers must stage operands that do not meet these contracts. The oneCCL/OSHMPI backend provides that staging path.
 
