@@ -346,7 +346,7 @@ Each rank sends a distinct, equal-sized block to every rank, including itself, o
 
 \subsection{Application Microbenchmarks}
 
-The application microbenchmarks keep the protocol above but time a workload's communication sequence instead of a single operation. Both run on every topology, including a single-rank control.
+The application microbenchmarks keep the measurement protocol of Section~\ref{sec:completion-method} but time a workload's communication sequence instead of a single operation. Both run on every topology, including a single-rank control.
 
 \subsubsection{MoE Dispatch and Combine}\label{sec:moe-method}
 
@@ -381,7 +381,7 @@ The last evaluation level asks whether the benchmark observations hold in a comp
 
 \subsection{Problems and Variants}
 
-The solver is evaluated on two symmetric positive definite matrices from the SuiteSparse Matrix Collection \cite{davis_suitesparse_2011}. Each is partitioned once with METIS, and the same partition is reused by every solver variant.
+The solver is evaluated on two symmetric positive definite matrices from the SuiteSparse Matrix Collection \cite{davis_suitesparse_2011}. Each is partitioned once with METIS \cite{karypis_metis_2026}, a multilevel graph partitioner that divides the matrix graph into balanced parts while minimizing the number of edges cut, so that the resulting partition determines both the per-rank work and the halo each rank must exchange. The same partition is reused by every solver variant.
 
 \begin{enumerate}
     \item \emph{Bump\_2911:} 2\,911\,419 rows and 127\,729\,899 nonzeros.
