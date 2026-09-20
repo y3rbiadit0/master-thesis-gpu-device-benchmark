@@ -372,14 +372,14 @@ Figure~\ref{fig:m-acg-backend-median} first presents every native multi-GPU path
 \input{data/main-campaign/acg-oshmpi-table.tex}
 \end{table}
 
-\begin{figure}[htbp]
+Figure~\ref{fig:m-acg-scaling} separates the stable scaling trends from MPI variability. The monolithic NVSHMEM solver improves relative to blocking OSHMPI at larger process counts, although NCCL remains ahead in these work-normalized curves. This is consistent with reducing repeated host synchronization under the proxy-assisted configuration of Section~\ref{sec:ibgda-check}, but also reflects changed solver organization.
+
+\begin{figure}[!hbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-campaign-summary.png}
 \caption{aCG scaling and variability. Left: analytical throughput of fastest-valid trials normalized to the one-GPU reference. Right: MPI solver time by allocation, with median markers and trial minimum--maximum ranges. The dashed device-NVSHMEM series changes solver organization as well as initiation.}
 \label{fig:m-acg-scaling}
 \end{figure}
-
-Figure~\ref{fig:m-acg-scaling} separates the stable scaling trends from MPI variability. The monolithic NVSHMEM solver improves relative to blocking OSHMPI at larger process counts, although NCCL remains ahead in these work-normalized curves. This is consistent with reducing repeated host synchronization under the proxy-assisted configuration of Section~\ref{sec:ibgda-check}, but also reflects changed solver organization.
 
 OSHMPI increasingly outperforms the host-NVSHMEM configuration. That result must be read with the application's disabled NCCL dispatch: it compares the installed native NVSHMEM reduction path, not the NCCL-dispatched path used by the default benchmark.
 
@@ -404,14 +404,14 @@ Direct OSHMPI & No matched archived scalar path & Benchmark stages to host; appl
 \end{tabularx}
 \end{table}
 
-\begin{table}[htbp]
+The mean discrepancies range from 7.8\% to 11.1\% (Table~\ref{tab:m-acg-reduction-correlation}). Individual cells can differ more: the NCCL Bump estimate is approximately 20\% high at eight and 16 GPUs. Figure~\ref{fig:m-acg-reduction-prediction} makes this distinction visible; a mean error is not an upper bound on every comparison. Because no model is fitted or held out and the application interval includes rank-arrival skew, the result establishes approximate scalar-cost agreement across the measured rank range, not general prediction accuracy or a numerical prediction of complete solver time.
+
+\begin{table}[!hbp]
 \centering
 \caption{Mean absolute percentage discrepancy over five measured rank counts, regenerated from the retained cross-level pairs.}
 \label{tab:m-acg-reduction-correlation}
 \input{data/main-campaign/reduction-error-table.tex}
 \end{table}
-
-The mean discrepancies range from 7.8\% to 11.1\%. Individual cells can differ more: the NCCL Bump estimate is approximately 20\% high at eight and 16 GPUs. Figure~\ref{fig:m-acg-reduction-prediction} makes this distinction visible; a mean error is not an upper bound on every comparison. Because no model is fitted or held out and the application interval includes rank-arrival skew, the result establishes approximate scalar-cost agreement across the measured rank range, not general prediction accuracy or a numerical prediction of complete solver time.
 
 \begin{figure}[!hbp]
 \centering
