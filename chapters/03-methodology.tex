@@ -45,7 +45,7 @@ Independent allocations & Scheduler jobs with separate node assignments & 5\\
 \end{tabularx}
 \end{table}
 
-A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combination, swept over the payload axis. Topology is given as $N$ nodes by $G$ GPUs rather than as a rank count, because equal rank counts can use different interconnects; \texttt{1n4g} and \texttt{2n1g} are both measured for that reason. Each pattern has a fixed collective policy, such as whether UCC is enabled, described in Section~\ref{sec:runtime-method}. A \emph{campaign} is one complete run of a benchmark over all of its cells: every stack and topology it declares, with all repetitions, under the same tooling and configuration. Each benchmark's results come from one campaign, and the aCG solver runs form a campaign of their own; together, these make up the \emph{main campaign} reported in Chapter~\ref{ch:m-results}.
+A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combination, swept over the payload axis. Topology is given as $N$ nodes by $G$ GPUs rather than as a rank count, because equal rank counts can use different interconnects; \texttt{1n2g} and \texttt{2n1g} are both measured for that reason. Each pattern has a fixed collective policy, such as whether UCC is enabled, described in Section~\ref{sec:runtime-method}. A \emph{campaign} is one complete run of a benchmark over all of its cells: every stack and topology it declares, with all repetitions, under the same tooling and configuration. Each benchmark's results come from one campaign, and the aCG solver runs form a campaign of their own; together, these make up the \emph{main campaign} reported in Chapter~\ref{ch:m-results}.
 
 \paragraph{Timing.} Each trial first runs untimed warm-up iterations, which absorb one-time costs such as buffer registration, connection establishment, and algorithm selection, and then its timed iterations. A timed iteration covers the complete operation from submission to observed completion; setup and correctness checks are excluded (Section~\ref{sec:completion-method}). The timed iterations of a trial form one sample series and are not treated as independent repetitions.
 
@@ -98,8 +98,8 @@ All experiments were run on the Booster partition of the Leonardo supercomputer 
     \item \emph{Processor:} one Intel Xeon Platinum 8358 (Ice Lake), 32 cores at 2.60\,GHz.
     \item \emph{GPU:} four NVIDIA A100 SXM4 GPUs with 64\,GB of HBM2e each.
     \item \emph{Memory:} 512\,GB DDR4 at 3200\,MHz ($8 \times 64$\,GB).
-    \item \emph{Intra-node interconnect:} NVLink~3.0, with each GPU connected directly to the other three by four links, giving 200\,GB/s of bidirectional bandwidth per GPU pair; there is no NVSwitch.
-    \item \emph{Network:} NVIDIA Mellanox InfiniBand HDR in a DragonFly+ topology. Each node exposes four ConnectX-6 (MT4123) host channel adapters, one active port each at 100\,Gb/s with a 4096-byte MTU, firmware 20.39.2048.
+    \item \emph{Intra-node interconnect:} NVLink~3.0, with each GPU connected directly to the other three by four links, giving 200\,GB/s of bidirectional bandwidth per GPU pair; there is no NVSwitch or NVLink SHARP support.
+    \item \emph{Network:} NVIDIA Mellanox InfiniBand HDR in a DragonFly+ topology. The recorded node configuration exposes four ConnectX-6 (MT4123) network devices, one active port each at 100\,Gb/s with a 4096-byte MTU, firmware 20.39.2048.
     \item \emph{Operating system and scheduler:} Red Hat Enterprise Linux 8, with Slurm.
 \end{itemize}
 
@@ -112,7 +112,7 @@ The node provides two communication domains with an order-of-magnitude differenc
     \item \emph{Inter-node communication} between nodes travels over InfiniBand, where GPUDirect RDMA lets the adapter read and write registered GPU memory directly. One HDR100 port carries 100\,Gb/s, or 12.5\,GB/s. The \texttt{2n1g} topology isolates this domain with one GPU per node, while \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} combine both domains at 8, 16, and 32 GPUs.
 \end{enumerate}
 
-Comparing \texttt{1n2g} with \texttt{2n1g} changes the communication domain while holding the GPU count fixed, a distinction that a rank-count axis alone would hide. Direct GPU-memory access by the network adapter does not imply GPU-side request posting. IBGDA is unavailable on the evaluated system, so NVSHMEM's device-initiated inter-node requests are serviced through a CPU proxy while the payload can still use GPUDirect RDMA (Section~\ref{sec:ibgda-check}).
+Comparing \texttt{1n2g} with \texttt{2n1g} changes the communication domain while holding the GPU count fixed, a distinction that a rank-count axis alone would hide. This comparison reveals sensitivity to placement and fabric, but does not isolate topology from algorithmic behavior: libraries may change algorithms, protocols, staging, and progress mechanisms when a communicator crosses a node boundary. Each transition is therefore interpreted as a change in the complete configured stack. Direct GPU-memory access by the network adapter does not imply GPU-side request posting; Section~\ref{sec:ibgda-check} identifies the posting mechanism used in the evaluated NVSHMEM configuration.
 
 \subsection{Libraries and Drivers}
 
@@ -223,7 +223,7 @@ oneCCL/OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{CCL\_OSHMPI\_STAGING\_S
 
 \subsection{Platform Constraints}\label{sec:ibgda-check}
 
-\paragraph{No GPU-initiated network posting.} NVSHMEM can let a GPU kernel post InfiniBand requests directly through IBGDA, but this path is not available on the evaluated system. Table~\ref{tab:m-ibgda-check} compares the recorded driver configuration with the documented prerequisites \cite{nvidia_nvshmem_install_2026}: the base driver, peer-memory, and OFED requirements are met, but the peer-mapping and stream-memory settings IBGDA relies on are disabled or not reported. These observations explain the missing prerequisites; they do not by themselves prove why the transport is unavailable. A two-node diagnostic run confirmed that NVSHMEM selected the \texttt{ibrc} transport. Device-initiated inter-node requests in this thesis are therefore serviced by a CPU proxy, consistent with the lack of IBGDA support previously reported for Leonardo \cite{trotter_cpu-_2025}. Results for device-initiated NVSHMEM describe proxy-assisted networking, not GPU-posted networking.
+\paragraph{NVSHMEM network posting.} IBGDA is unavailable in the evaluated environment. Table~\ref{tab:m-ibgda-check} compares the recorded driver configuration with the documented prerequisites \cite{nvidia_nvshmem_install_2026}: the base driver, peer-memory, and OFED requirements are met, but the peer-mapping and stream-memory settings IBGDA relies on are disabled or not reported. These observations identify prerequisite gaps without establishing a unique cause of unavailability. A two-node diagnostic run confirmed that NVSHMEM selected the \texttt{ibrc} transport. Device-initiated inter-node requests are therefore serviced by a CPU proxy, consistent with the lack of IBGDA support previously reported for Leonardo \cite{trotter_cpu-_2025}. This concerns request posting: the payload can still use GPUDirect RDMA without staging through host memory.
 
 \begin{table}[htbp]
 \centering

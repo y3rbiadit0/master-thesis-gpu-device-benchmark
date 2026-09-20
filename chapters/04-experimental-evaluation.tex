@@ -57,7 +57,7 @@ MPI supplies the low-startup reference for isolated exchanges. Batching makes OS
 \input{data/main-campaign/halo_1d-bandwidth-table.tex}
 \end{table}
 
-The favorable regime for the persistent, kernel-invoked NVSHMEM path is thus sustained neighbor work rather than universally low latency. The SYCL MPI and oneCCL/NCCL curves further show that portable submission paths do not remove the same isolated-versus-steady distinction. This supports persistent execution as a candidate explanation in RQ1, while the host-driven OSHMPI result shows that batching and completion policy also matter independently of invocation location. Because the paths differ in signaling, persistence, sampling, and progress, these measurements do not isolate a launch-overhead saving by themselves. The inter-node NVSHMEM result specifically describes device invocation with CPU-proxy-assisted \texttt{ibrc} progress.
+The favorable regime for the persistent, kernel-invoked NVSHMEM path is thus sustained neighbor work rather than universally low latency. The SYCL MPI and oneCCL/NCCL curves further show that portable submission paths do not remove the same isolated-versus-steady distinction. This supports persistent execution as a candidate explanation in RQ1, while the host-driven OSHMPI result shows that batching and completion policy also matter independently of invocation location. Because the paths differ in signaling, persistence, sampling, and progress, these measurements do not isolate a launch-overhead saving by themselves. The inter-node advantage is achieved under the proxy-assisted configuration of Section~\ref{sec:ibgda-check}.
 
 \begin{keypoint}[Halo takeaway]
 No single stack owns this pattern; the batching contract decides it. MPI is the reference for isolated exchanges, where submission and completion are exposed. OSHMPI becomes competitive once a batch amortizes its completion cost, but saturates at 24.4\,GB/s across every multi-node topology, the lowest sustained rate measured. NVSHMEM, in its persistent device-invoked form, sustains the highest multi-node rate, 40.6--41.1\,GB/s and flat in node count, against 34.4--36.5\,GB/s for MPI. NCCL and oneCCL/NCCL sit between the two and keep the same isolated-versus-batched split, and SYCL MPI again tracks CUDA MPI.
@@ -377,7 +377,7 @@ Figure~\ref{fig:m-acg-backend-median} first presents every native multi-GPU path
 \label{fig:m-acg-scaling}
 \end{figure}
 
-Figure~\ref{fig:m-acg-scaling} separates the stable scaling trends from MPI variability. The monolithic NVSHMEM solver improves relative to blocking OSHMPI at larger process counts, although NCCL remains ahead in these work-normalized curves. This is consistent with reducing repeated host synchronization, but also reflects changed solver organization. Inter-node device requests still use the CPU proxy.
+Figure~\ref{fig:m-acg-scaling} separates the stable scaling trends from MPI variability. The monolithic NVSHMEM solver improves relative to blocking OSHMPI at larger process counts, although NCCL remains ahead in these work-normalized curves. This is consistent with reducing repeated host synchronization under the proxy-assisted configuration of Section~\ref{sec:ibgda-check}, but also reflects changed solver organization.
 
 OSHMPI increasingly outperforms the host-NVSHMEM configuration. That result must be read with the application's disabled NCCL dispatch: it compares the installed native NVSHMEM reduction path, not the NCCL-dispatched path used by the default benchmark.
 
