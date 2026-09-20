@@ -248,7 +248,7 @@ Stream memory operations & Enabled for the documented path & Disabled\\
 
 \paragraph{InfiniBand service level.} All InfiniBand traffic from UCX, NCCL, and NVSHMEM uses service level 1.
 
-\section{Benchmark Design}\label{sec:benchmark-method}
+\section{Benchmark Specification}\label{sec:benchmark-method}
 
 All benchmarks share one measurement contract, and differ only in the operation they time, the point at which each stack considers that operation complete, and how their payload is counted. This section first defines the shared contract, then describes each benchmark in the order of the evaluation levels: the four communication microbenchmarks, then the two application microbenchmarks. How samples are aggregated into the reported values is defined with the experiment parameters in Section~\ref{sec:execution-procedure}.
 
