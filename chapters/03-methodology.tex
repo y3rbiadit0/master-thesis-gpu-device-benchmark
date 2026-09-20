@@ -2,7 +2,7 @@
 
 This chapter defines the experiment behind the comparison of host-driven and device-initiated communication on a GPU-accelerated cluster. It sets out the measurement design and its parameters, the platform and the configured stacks that are actually compared, the timing and statistical protocol, the communication patterns and the application validation built on them, and the boundaries of what the retained evidence supports. The recurring concern is attribution: the evaluated paths differ in compute interface, memory handling, completion semantics, and transport as well as in where communication is invoked, so the design states throughout which of those differences a given comparison holds fixed and which it does not.
 
-\section{Research Design}\label{sec:research-planning-levels}
+\section{Research Approach}\label{sec:research-planning-levels}
 
 The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three levels, and the campaigns were executed in that order, because each level uses the preceding one to choose what is worth measuring:
 
