@@ -1,6 +1,6 @@
 \chapter{Experimental Evaluation}\label{ch:m-results}
 
-This chapter presents the results in the order of the evaluation levels of Section~\ref{sec:research-planning-levels}: first the communication microbenchmarks, then the \texttt{moe} and \texttt{cg\_step} application microbenchmarks, and finally the aCG solver. Across all of them, the performance of a backend depends strongly on the communication pattern and on the configuration of the underlying libraries.
+This chapter follows the evaluation levels of Section~\ref{sec:research-planning-levels}: first the communication microbenchmarks, then the \texttt{moe} and \texttt{cg\_step} application microbenchmarks, and finally the aCG solver. Across all of them, the performance of a backend depends strongly on the communication pattern and on the configuration of the underlying libraries.
 
 Each section follows the same topology progression, from \texttt{1n2g} and \texttt{1n4g} on NVLink, through \texttt{2n1g} on a single InfiniBand link, to \texttt{2n4g}--\texttt{8n4g} with both domains active. The question it answers throughout is whether a stack that performs well within a node keeps that advantage once communication crosses the network.
 
@@ -23,7 +23,7 @@ The first comparison asks whether device-side invocation improves a dependency-o
 
 Within a node, NVSHMEM becomes competitive over an intermediate message range, while MPI again improves relative to it at large payloads. Table~\ref{tab:m-pingpong-inter} also shows that CUDA and SYCL MPI cannot be assumed to agree at every size: their small-message results are close to the MPI startup regime, but their large-message endpoints differ substantially. A shared MPI installation supplies a useful comparison, not a guarantee of identical execution costs.
 
-\begin{table}[tb]
+\begin{table}[htbp]
 \centering
 \caption{Inter-node ping-pong latency on \texttt{2n1g}, including SYCL paths. Values are allocation-based medians in \,$\mu$s.}
 \label{tab:m-pingpong-inter}
@@ -180,7 +180,7 @@ These two effects bound what the later levels can show. A stack that wins intra-
 
 Two of the seven stacks compile the same benchmark source through SYCL instead of CUDA, which makes the portability cost measurable directly. Table~\ref{tab:m-sycl-portability} summarizes it over every measured cell: for each pattern it gives the ratio of SYCL MPI to CUDA MPI, the two stacks that differ only in compute interface, and the corresponding ratio of oneCCL/NCCL to direct NCCL, which differs in adapter as well.
 
-\begin{table}[tb]
+\begin{table}[htbp]
 \centering
 \caption{SYCL relative to CUDA over all measured cells of each pattern, as median and maximum of the per-cell ratio. Values above one favor CUDA.}
 \label{tab:m-sycl-portability}
@@ -217,6 +217,8 @@ The two application microbenchmarks address different threats to the primitive r
 
 The MoE archive is complete for the six declared stacks across all seven topologies and all three routing cases, with five allocations of three trials per cell. Total useful volume is held fixed at 32\,MiB per rank for dispatch and combine together, so a difference between routing cases is a difference in distribution, not in bytes moved.
 
+Figure~\ref{fig:m-moe-scaling} reproduces the interconnect boundary identified in Section~\ref{sec:micro-scaling} and adds a second, routing-dependent one. Under \texttt{uniform} routing the intra-node curves fall from \texttt{1n2g} to \texttt{1n4g}, because a fixed per-rank token count is divided among more experts while NVLink absorbs the traffic: CUDA MPI improves from 253\,$\mu$s to 179\,$\mu$s. Crossing to \texttt{2n1g} costs roughly an order of magnitude, to 1743\,$\mu$s, and beyond that the stacks separate. NCCL and oneCCL/NCCL rise to only about 3.0\,ms at \texttt{8n4g}, while the MPI paths reach about 6.0\,ms and OSHMPI 10.4\,ms.
+
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/moe-routing-scaling.png}
@@ -224,7 +226,7 @@ The MoE archive is complete for the six declared stacks across all seven topolog
 \label{fig:m-moe-scaling}
 \end{figure}
 
-Figure~\ref{fig:m-moe-scaling} reproduces the interconnect boundary identified in Section~\ref{sec:micro-scaling} and adds a second, routing-dependent one. Under \texttt{uniform} routing the intra-node curves fall from \texttt{1n2g} to \texttt{1n4g}, because a fixed per-rank token count is divided among more experts while NVLink absorbs the traffic: CUDA MPI improves from 253\,$\mu$s to 179\,$\mu$s. Crossing to \texttt{2n1g} costs roughly an order of magnitude, to 1743\,$\mu$s, and beyond that the stacks separate. NCCL and oneCCL/NCCL rise to only about 3.0\,ms at \texttt{8n4g}, while the MPI paths reach about 6.0\,ms and OSHMPI 10.4\,ms.
+Table~\ref{tab:m-moe} gives the endpoints. The intra-node columns are tightly grouped: at \texttt{1n4g} under \texttt{uniform} routing the six stacks span 179--301\,$\mu$s. The multi-node columns are not: the same six stacks span 3038--10350\,$\mu$s. Selecting a stack on the intra-node result alone would be uninformative here, because the measurement that separates the candidates is the one that crosses the fabric.
 
 \begin{table}[htbp]
 \centering
@@ -234,9 +236,9 @@ Figure~\ref{fig:m-moe-scaling} reproduces the interconnect boundary identified i
 \input{data/main-campaign/moe-table.tex}
 \end{table}
 
-Table~\ref{tab:m-moe} gives the endpoints. The intra-node columns are tightly grouped: at \texttt{1n4g} under \texttt{uniform} routing the six stacks span 179--301\,$\mu$s. The multi-node columns are not: the same six stacks span 3038--10350\,$\mu$s. Selecting a stack on the intra-node result alone would be uninformative here, because the measurement that separates the candidates is the one that crosses the fabric.
-
 \subsection{Backend Ranking}
+
+Figure~\ref{fig:m-moe-sensitivity} is the central MoE result. No stack is faster than CUDA MPI in all three routing cases, and three of the five compared stacks cross from below one to above one as the routing changes. The two NCCL-based paths are fastest under \texttt{uniform} routing, at almost exactly half of CUDA MPI's time, but under \texttt{locality80} direct NCCL is 1.55 times slower than CUDA MPI: when 80\% of tokens stay local, the remaining exchange is small and irregular, and NCCL's grouped point-to-point path no longer amortizes its submission cost over a bulk transfer. NVSHMEM shows the opposite profile, moving from 0.83 under \texttt{uniform} to 0.72 under \texttt{locality80}, the lowest measured value at \texttt{8n4g}, where per-destination puts suit many small, uneven blocks.
 
 \begin{figure}[htbp]
 \centering
@@ -244,8 +246,6 @@ Table~\ref{tab:m-moe} gives the endpoints. The intra-node columns are tightly gr
 \caption{MoE latency at \texttt{8n4g} relative to CUDA MPI at the same topology and routing case. Bars below one favor the compared stack. No stack is below one in all three cases.}
 \label{fig:m-moe-sensitivity}
 \end{figure}
-
-Figure~\ref{fig:m-moe-sensitivity} is the central MoE result. No stack is faster than CUDA MPI in all three routing cases, and three of the five compared stacks cross from below one to above one as the routing changes. The two NCCL-based paths are fastest under \texttt{uniform} routing, at almost exactly half of CUDA MPI's time, but under \texttt{locality80} direct NCCL is 1.55 times slower than CUDA MPI: when 80\% of tokens stay local, the remaining exchange is small and irregular, and NCCL's grouped point-to-point path no longer amortizes its submission cost over a bulk transfer. NVSHMEM shows the opposite profile, moving from 0.83 under \texttt{uniform} to 0.72 under \texttt{locality80}, the lowest measured value at \texttt{8n4g}, where per-destination puts suit many small, uneven blocks.
 
 The \texttt{hotspot80} case separates the stacks by a different mechanism. Directing 80\% of tokens at rank 0 makes every path substantially slower in absolute terms, to 34.0\,ms for CUDA MPI at \texttt{8n4g}, but it penalizes the two one-sided paths roughly twice as much: NVSHMEM reaches 62.0\,ms and OSHMPI 62.7\,ms, about 1.8 times CUDA MPI. The \texttt{alltoallv} implementations schedule a skewed exchange, whereas the SHMEM paths issue per-destination puts in the order the ranks produce them and have no collective algorithm available to reorganize the resulting incast. This is consistent with the structural difference, though the measurement does not separate scheduling from NIC-level congestion at the target.
 
@@ -277,14 +277,14 @@ The composite archive covers seven topologies, five global grid sides, and six b
 \input{data/main-campaign/cg-winner-table.tex}
 \end{table}
 
+Figure~\ref{fig:m-cg-relative} shows why the margin matters. The direct CUDA paths approach one another as single-GPU work grows. At larger rank counts, communication and orchestration remain visible, and NVSHMEM exhibits substantial allocation variation. Some intra-node NCCL and OSHMPI estimates are close enough that assigning a categorical winner overstates the evidence.
+
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-step-relative.png}
 \caption{Composite-step time relative to CUDA MPI at the same global grid side and topology. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack.}
 \label{fig:m-cg-relative}
 \end{figure}
-
-Figure~\ref{fig:m-cg-relative} shows why the margin matters. The direct CUDA paths approach one another as single-GPU work grows. At larger rank counts, communication and orchestration remain visible, and NVSHMEM exhibits substantial allocation variation. Some intra-node NCCL and OSHMPI estimates are close enough that assigning a categorical winner overstates the evidence.
 
 The OSHMPI result also needs an execution-contract qualification: its archived scalar path ends with the reduction result in host memory. It avoids the return copy and consumer dependency present in a solver. The result identifies an efficient implementation of this synthetic step, not yet an efficient end-to-end CG reduction path.
 
@@ -433,7 +433,7 @@ The device-initiated implementation supports a second cross-level check, on a di
 
 Figure~\ref{fig:m-cg-device-scaling} shows that the agreement depends entirely on how much local work the benchmark carries. At side 8192 the two curves almost coincide: the benchmark falls to 0.20 of its two-GPU time at 32 GPUs, against 0.26 for Bump\_2911 and 0.16 for Queen\_4147, a mean absolute deviation of 8.0\% and 12.6\% respectively (Table~\ref{tab:m-cg-device-correlation}). At side 512 the benchmark does not scale at all but grows to 3.55 times its two-GPU time, because at that size the step is dominated by the halo and the two reductions, and adding GPUs only adds communication. The deviation there is 582\% and 853\%.
 
-\begin{table}[tb]
+\begin{table}[htbp]
 \centering
 \caption{Mean absolute deviation between the normalized strong-scaling curves of the device-initiated \texttt{cg\_step} and the device-NVSHMEM solver, by grid side.}
 \label{tab:m-cg-device-correlation}
