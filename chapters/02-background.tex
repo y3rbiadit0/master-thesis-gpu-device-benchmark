@@ -34,7 +34,9 @@ These dimensions must be identified together when interpreting a measurement. A 
 
 \subsection{Intra-Node Communication}\label{sec:intra-node}
 
-\subsubsection{Intra-Node Interconnects}
+Communication between GPUs within a compute node depends on the available device-to-device connectivity and the software mechanisms used to access peer memory. The following discussion connects physical bandwidth limits with payload routing and memory access.
+
+\subsubsection{Physical Connectivity and Bandwidth}
 
 Within a node, GPUs communicate through PCI Express or a dedicated accelerator fabric. PCIe also connects storage and network devices, so peer traffic can share links and switches with other activity. NVIDIA's NVLink provides higher-bandwidth GPU connectivity, either through direct links or through NVSwitch; AMD systems use Infinity Fabric with xGMI links. In each case, peer-memory bandwidth remains distinct from the bandwidth of a GPU's local high-bandwidth memory (HBM) \cite{song_survey_2025}.
 
@@ -78,13 +80,15 @@ Fabric assistance & Ordinary transfers or multicast/reduction & Can replicate or
 
 \subsection{Inter-Node Communication}\label{sec:inter-node}
 
-\subsubsection{Inter-Node Interconnects}
+Communication across compute nodes adds network adapters and a fabric to the transfer path. Its performance depends on GPU--NIC placement, payload routing, and how network requests are submitted and progressed. The following discussion introduces the network infrastructure, then distinguishes data movement from request posting.
+
+\subsubsection{Network Fabrics and GPU--NIC Affinity}
 
 Across nodes, HPC systems commonly use InfiniBand or comparable RDMA-capable fabrics. Remote Direct Memory Access (RDMA) allows a network adapter to access registered remote memory without a matching receive or CPU copy at the target. Software still establishes registration, access rights, and synchronization. RDMA over Converged Ethernet (RoCE) provides related capabilities over a suitably configured Ethernet network. Both can be accessed through verbs interfaces, with performance dependent on adapters, routing, and congestion \cite{hamidouche_gpu-initiated_2025}.
 
 GPU--NIC affinity matters: a nearby NIC can avoid additional PCIe or inter-socket traversal, while unfavorable placement can reduce peer-to-peer throughput \cite{hamidouche_gpu-initiated_2025}. The number and placement of adapters also bound network injection bandwidth and affect how libraries distribute concurrent transfers.
 
-\subsubsection{Inter-Node Payload Routes}
+\subsubsection{Payload Movement and Request Posting}
 
 Describing a library simply as ``GPU-side'' or ``CPU-side'' is imprecise, because a single communication call decomposes into several operations that may be performed by different actors. A survey of GPU-centric communication classifies it by \emph{who performs each operation} \cite{unat_landscape_2026}. Table~\ref{tab:m-comm-types} adapts this perspective to the paths discussed here, distinguishing host setup from steady-state invocation and network posting. Removing the CPU from the steady-state control path does not imply removing host-side memory registration or communicator creation.
 
