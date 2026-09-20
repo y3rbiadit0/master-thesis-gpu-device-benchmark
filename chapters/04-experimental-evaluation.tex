@@ -17,7 +17,7 @@ The first comparison asks whether device-side invocation improves a dependency-o
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/pingpong-regimes.png}
-\caption{Ping-pong latency for all six measured stacks within one node and across two nodes. Points are medians of five allocation means; shading spans those means. Latency is half the round-trip time.}
+\caption{\texttt{pingpong} latency for all six measured stacks within one node and across two nodes. Points are medians of five allocation means; shading spans those means. Latency is half the round-trip time.}
 \label{fig:m-pingpong-regimes}
 \end{figure}
 
@@ -25,7 +25,7 @@ Within a node, NVSHMEM becomes competitive over an intermediate message range, w
 
 \begin{table}[htbp]
 \centering
-\caption{Inter-node ping-pong latency on \texttt{2n1g}, including SYCL paths. Values are allocation-based medians in \,$\mu$s.}
+\caption{Inter-node \texttt{pingpong} latency on \texttt{2n1g}, including SYCL paths. Values are allocation-based medians in \,$\mu$s.}
 \label{tab:m-pingpong-inter}
 \footnotesize
 \input{data/main-campaign/pingpong-table.tex}
@@ -72,13 +72,13 @@ The agreement does not survive scale in this campaign. From \texttt{4n4g} onward
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/allreduce-backends.png}
-\caption{Allreduce latency for all seven measured stacks at representative topologies. Points are medians of allocation means and shading spans those means. The input payload is per rank; the single-rank control is discussed separately.}
+\caption{\texttt{allreduce} latency for all seven measured stacks at representative topologies. Points are medians of allocation means and shading spans those means. The input payload is per rank; the single-rank control is discussed separately.}
 \label{fig:m-allreduce-backends}
 \end{figure}
 
 \begin{table}[htbp]
 \centering
-\caption{Peak allreduce bus bandwidth in GB/s, recomputed as input bytes divided by allocation-median latency and multiplied by $2(P-1)/P$.}
+\caption{Peak \texttt{allreduce} bus bandwidth in GB/s, recomputed as input bytes divided by allocation-median latency and multiplied by $2(P-1)/P$.}
 \label{tab:m-allreduce-bandwidth}
 \input{data/main-campaign/allreduce-bandwidth-table.tex}
 \end{table}
@@ -100,22 +100,22 @@ The trade-off runs the other way at small payloads, which is why the policy is a
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/ucc-ab-allreduce.png}
-\caption{Paired UCC allreduce control for CUDA MPI. Top: the measured cost of each configuration, so the divergence at large payloads is visible in absolute terms. Bottom: the resulting speedup, shaded green where UCC is faster and red where it is slower. Values are matched summary means; the SYCL MPI series tracks these curves closely and is omitted for legibility.}
+\caption{Paired UCC \texttt{allreduce} control for CUDA MPI. Top: the measured cost of each configuration, so the divergence at large payloads is visible in absolute terms. Bottom: the resulting speedup, shaded green where UCC is faster and red where it is slower. Values are matched summary means; the SYCL MPI series tracks these curves closely and is omitted for legibility.}
 \label{fig:m-ucc-allreduce}
 \end{figure}
 
 The discontinuity near 4\,KiB is consistent with the UCC TL/UCP source's change from a latency-oriented recursive k-nomial schedule to scatter-reduce/allgather k-nomial \cite{openucx_ucc_source_2026}. Source defaults explain a plausible mechanism, while forcing alternatives or recording the exact selected schedule would strengthen attribution for individual cells. The experiment uses one fixed UCC policy for the standalone allreduce sweep, so it does not claim a pointwise optimal configuration.
 
-The single-rank allreduce control is anomalously slow for large buffers: the auxiliary UCC data report approximately 21\,ms at 16\,MiB, despite no inter-rank reduction. That cost is essentially unchanged by the UCC setting, at 21.9\,ms disabled against 21.4\,ms enabled, so it is not a collective-component effect. It is the same order of magnitude as the 34.9\,ms non-UCC four-rank result above, which is consistent with both being dominated by a local copy or reduction implementation rather than by transfer, though a one-rank control cannot separate those two by itself. It is excluded as a reference for network startup.
+The single-rank \texttt{allreduce} control is anomalously slow for large buffers: the auxiliary UCC data report approximately 21\,ms at 16\,MiB, despite no inter-rank reduction. That cost is essentially unchanged by the UCC setting, at 21.9\,ms disabled against 21.4\,ms enabled, so it is not a collective-component effect. It is the same order of magnitude as the 34.9\,ms non-UCC four-rank result above, which is consistent with both being dominated by a local copy or reduction implementation rather than by transfer, though a one-rank control cannot separate those two by itself. It is excluded as a reference for network startup.
 
 \subsection{All-to-All}
 
-All-to-all gives the clearest example of a configuration changing the apparent library ranking, and its UCC profile is the opposite of allreduce's. Figure~\ref{fig:m-alltoall-backends} first shows all seven measured stacks against bytes per peer, rather than the topology-dependent aggregate send-buffer size. The MPI default changes regime sharply as rank count and per-peer size increase, while oneCCL/OSHMPI's staged path remains substantially more expensive.
+\texttt{alltoall} gives the clearest example of a configuration changing the apparent library ranking, and its UCC profile is the opposite of \texttt{allreduce}'s. Figure~\ref{fig:m-alltoall-backends} first shows all seven measured stacks against bytes per peer, rather than the topology-dependent aggregate send-buffer size. The MPI default changes regime sharply as rank count and per-peer size increase, while oneCCL/OSHMPI's staged path remains substantially more expensive.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/alltoall-backends.png}
-\caption{All-to-all latency for all seven measured stacks at representative topologies. The horizontal axis is payload per peer; points are medians of allocation means and shading spans those means.}
+\caption{\texttt{alltoall} latency for all seven measured stacks at representative topologies. The horizontal axis is payload per peer; points are medians of allocation means and shading spans those means.}
 \label{fig:m-alltoall-backends}
 \end{figure}
 
@@ -123,7 +123,7 @@ At large payloads, NCCL-based paths regain the advantage. Table~\ref{tab:m-allto
 
 \begin{table}[htbp]
 \centering
-\caption{All-to-all aggregate bandwidth at 256\,KiB per peer, in GB/s. The numerator includes each rank's self block.}
+\caption{\texttt{alltoall} aggregate bandwidth at 256\,KiB per peer, in GB/s. The numerator includes each rank's self block.}
 \label{tab:m-alltoall-bandwidth}
 \footnotesize
 \input{data/main-campaign/alltoall-bandwidth-table.tex}
@@ -137,13 +137,13 @@ NCCL and oneCCL/NCCL own the bulk regime, at 10.0 and 10.2\,GB/s on \texttt{8n4g
 
 \subsubsection{Algorithm Selection and UCC}
 
-Figure~\ref{fig:m-ucc-alltoall} isolates what makes the MPI default collapse at small payloads. At \texttt{8n4g} the non-UCC path costs between 671 and 974\,$\mu$s for every payload at or below 256 bytes per peer and then drops abruptly to 60\,$\mu$s at 512 bytes, a cliff rather than a curve; with UCC enabled the same small sizes cost between 24 and 31\,$\mu$s. The peak gain is 33.7 times at 128 bytes per peer. Here the benefit is confined to the small-message, high-rank corner: the two configurations agree to within 2\% by 8\,KiB per peer, and at 256\,KiB per peer UCC is instead slower, at 0.87 of the non-UCC time at \texttt{8n4g} and 0.56 at \texttt{2n4g}. Allreduce and all-to-all therefore want UCC enabled in opposite regions of the same size axis, which is why a single machine-wide setting cannot be correct for both.
+Figure~\ref{fig:m-ucc-alltoall} isolates what makes the MPI default collapse at small payloads. At \texttt{8n4g} the non-UCC path costs between 671 and 974\,$\mu$s for every payload at or below 256 bytes per peer and then drops abruptly to 60\,$\mu$s at 512 bytes, a cliff rather than a curve; with UCC enabled the same small sizes cost between 24 and 31\,$\mu$s. The peak gain is 33.7 times at 128 bytes per peer. Here the benefit is confined to the small-message, high-rank corner: the two configurations agree to within 2\% by 8\,KiB per peer, and at 256\,KiB per peer UCC is instead slower, at 0.87 of the non-UCC time at \texttt{8n4g} and 0.56 at \texttt{2n4g}. \texttt{allreduce} and \texttt{alltoall} therefore want UCC enabled in opposite regions of the same size axis, which is why a single machine-wide setting cannot be correct for both.
 
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/ucc-ab-alltoall.png}
-\caption{Paired UCC all-to-all control for CUDA MPI, against bytes per peer. Top: measured cost of each configuration; the flat non-UCC plateau below 512\,B per peer at \texttt{8n4g} is the modified-Bruck default. Bottom: the resulting speedup. The benefit is concentrated at small payloads and reverses at the largest ones, the opposite of the allreduce profile in Figure~\ref{fig:m-ucc-allreduce}.}
+\caption{Paired UCC \texttt{alltoall} control for CUDA MPI, against bytes per peer. Top: measured cost of each configuration; the flat non-UCC plateau below 512\,B per peer at \texttt{8n4g} is the modified-Bruck default. Bottom: the resulting speedup. The benefit is concentrated at small payloads and reverses at the largest ones, the opposite of the allreduce profile in Figure~\ref{fig:m-ucc-allreduce}.}
 \label{fig:m-ucc-alltoall}
 \end{figure}
 
@@ -172,7 +172,7 @@ Modified Bruck reduces communication rounds by forwarding data, but the Open MPI
 
 Reading the four patterns across the topology axis rather than the size axis separates two different effects. \emph{Scaling up} adds GPUs inside a node and keeps every transfer on NVLink; \emph{scaling out} adds nodes and puts part of the traffic on InfiniBand. The two behave differently, and a stack can be good at one and not the other. The steady-state halo at a 16\,MiB aggregate payload makes the first effect explicit. Within one node the aggregate rate is 325\,GB/s for OSHMPI and 280\,GB/s for CUDA MPI at \texttt{1n4g}. Moving the same exchange to \texttt{2n1g}, which keeps two ranks but places them on separate nodes, drops every stack to 20--24\,GB/s, an order-of-magnitude change produced by the interconnect alone. The rate then stays essentially flat as nodes are added: NVSHMEM holds 41.1, 40.9, and 40.6\,GB/s at \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}, and CUDA MPI holds 33.9--36.5\,GB/s over the same range. Once the exchange is inter-node, its aggregate rate is limited by what one node can inject, not by the number of nodes participating.
 
-Allreduce shows the second effect, and it runs in the opposite direction. At 16\,MiB, \texttt{2n1g} costs 1557\,$\mu$s for NCCL even though only two GPUs participate, whereas \texttt{8n4g} with 32 GPUs costs 1104\,$\mu$s. Adding intra-node ranks does not simply add work: the NVLink stage of a hierarchical reduction shrinks the payload that must cross InfiniBand. The same mechanism explains why the NCCL-based paths pull away from MPI only once each node holds four GPUs, from 567\,$\mu$s against 1118\,$\mu$s at \texttt{2n4g} to 1104\,$\mu$s against 1879\,$\mu$s at \texttt{8n4g}. In the scalar regime, where no such staging is available, the four-byte allreduce instead grows monotonically with rank count, from roughly 18--20\,$\mu$s at \texttt{1n4g} to 46--49\,$\mu$s at \texttt{8n4g} for every path except NVSHMEM, whose 88\,$\mu$s belongs with its separated multi-node behavior.
+\texttt{allreduce} shows the second effect, and it runs in the opposite direction. At 16\,MiB, \texttt{2n1g} costs 1557\,$\mu$s for NCCL even though only two GPUs participate, whereas \texttt{8n4g} with 32 GPUs costs 1104\,$\mu$s. Adding intra-node ranks does not simply add work: the NVLink stage of a hierarchical reduction shrinks the payload that must cross InfiniBand. The same mechanism explains why the NCCL-based paths pull away from MPI only once each node holds four GPUs, from 567\,$\mu$s against 1118\,$\mu$s at \texttt{2n4g} to 1104\,$\mu$s against 1879\,$\mu$s at \texttt{8n4g}. In the scalar regime, where no such staging is available, the four-byte allreduce instead grows monotonically with rank count, from roughly 18--20\,$\mu$s at \texttt{1n4g} to 46--49\,$\mu$s at \texttt{8n4g} for every path except NVSHMEM, whose 88\,$\mu$s belongs with its separated multi-node behavior.
 
 These two effects bound what the later levels can show. A stack that wins intra-node has not been shown to win at scale, because the NVLink regime it won in disappears at \texttt{2n1g}; and a stack that loses at two ranks may recover at 32, because hierarchical staging only becomes available when nodes hold several GPUs. The remaining topology panels are in Appendix~\ref{app:complete-results}.
 
@@ -189,19 +189,19 @@ Two of the seven stacks compile the same benchmark source through SYCL instead o
 \toprule
 Pattern & Cells & SYCL/CUDA median & SYCL/CUDA max & oneCCL/NCCL median\\
 \midrule
-Ping-pong & 46 & $1.01$ & $1.84$ & $1.10$\\
-Halo, isolated & 126 & $1.02$ & $1.19$ & $1.32$\\
-Halo, steady & 126 & $1.01$ & $1.07$ & $1.13$\\
-Allreduce & 161 & $1.00$ & $1.06$ & $1.02$\\
-All-to-all & 119 & $1.01$ & $1.06$ & $1.02$\\
-MoE & 21 & $1.00$ & $1.08$ & $1.02$\\
+\texttt{pingpong} & 46 & $1.01$ & $1.84$ & $1.10$\\
+\texttt{halo\_1d}, isolated & 126 & $1.02$ & $1.19$ & $1.32$\\
+\texttt{halo\_1d}, steady & 126 & $1.01$ & $1.07$ & $1.13$\\
+\texttt{allreduce} & 161 & $1.00$ & $1.06$ & $1.02$\\
+\texttt{alltoall} & 119 & $1.01$ & $1.06$ & $1.02$\\
+\texttt{moe} & 21 & $1.00$ & $1.08$ & $1.02$\\
 \midrule
 \texttt{cg\_step} & 35 & $1.28$ & $1.51$ & $1.57$\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-For the five patterns that time communication alone, SYCL costs about 1\% at the median and stays within 8\% in all but one case. Ping-pong is the exception, where the largest messages reach $1.84\times$; small messages there sit in the MPI startup regime, which both stacks share, while the large-message endpoints diverge. On this evidence, expressing a GPU-aware MPI exchange through SYCL rather than CUDA is close to free, which is the expected result: the payload path, transport, and completion boundary are identical, and only the host-side submission and the buffer's allocator change.
+For the five patterns that time communication alone, SYCL costs about 1\% at the median and stays within 8\% in all but one case. \texttt{pingpong} is the exception, where the largest messages reach $1.84\times$; small messages there sit in the MPI startup regime, which both stacks share, while the large-message endpoints diverge. On this evidence, expressing a GPU-aware MPI exchange through SYCL rather than CUDA is close to free, which is the expected result: the payload path, transport, and completion boundary are identical, and only the host-side submission and the buffer's allocator change.
 
 The composite step is the one pattern with a clear gap, at $1.28\times$ median, and it is also the only pattern that includes computation. Its single-GPU control, where no inter-rank transfer occurs at all, separates the two contributions: at side 512 the step costs 116.9\,$\mu$s under SYCL MPI against 79.0\,$\mu$s under CUDA MPI, a $1.48\times$ ratio with communication removed entirely. The portability cost measured here therefore belongs to kernels and host orchestration, not to the communication path, and the same conclusion constrains the solver-level CUDA--SYCL ratios of Section~\ref{sec:acg-results}.
 
@@ -215,14 +215,14 @@ The two application microbenchmarks address different threats to the primitive r
 
 \subsection{Routing Cases}
 
-The MoE archive is complete for the six declared stacks across all seven topologies and all three routing cases, with five allocations of three trials per cell. Total useful volume is held fixed at 32\,MiB per rank for dispatch and combine together, so a difference between routing cases is a difference in distribution, not in bytes moved.
+The \texttt{moe} archive is complete for the six declared stacks across all seven topologies and all three routing cases, with five allocations of three trials per cell. Total useful volume is held fixed at 32\,MiB per rank for dispatch and combine together, so a difference between routing cases is a difference in distribution, not in bytes moved.
 
 Figure~\ref{fig:m-moe-scaling} reproduces the interconnect boundary identified in Section~\ref{sec:micro-scaling} and adds a second, routing-dependent one. Under \texttt{uniform} routing the intra-node curves fall from \texttt{1n2g} to \texttt{1n4g}, because a fixed per-rank token count is divided among more experts while NVLink absorbs the traffic: CUDA MPI improves from 253\,$\mu$s to 179\,$\mu$s. Crossing to \texttt{2n1g} costs roughly an order of magnitude, to 1743\,$\mu$s, and beyond that the stacks separate. NCCL and oneCCL/NCCL rise to only about 3.0\,ms at \texttt{8n4g}, while the MPI paths reach about 6.0\,ms and OSHMPI 10.4\,ms.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/moe-routing-scaling.png}
-\caption{MoE dispatch-and-combine latency for the six measured stacks at every topology, under the three routing cases. Points are medians of five allocation means and shading spans those means. The dotted line separates intra-node NVLink topologies from those crossing InfiniBand. At \texttt{1n1g} all three cases degenerate to a local copy.}
+\caption{\texttt{moe} dispatch-and-combine latency for the six measured stacks at every topology, under the three routing cases. Points are medians of five allocation means and shading spans those means. The dotted line separates intra-node NVLink topologies from those crossing InfiniBand. At \texttt{1n1g} all three cases degenerate to a local copy.}
 \label{fig:m-moe-scaling}
 \end{figure}
 
@@ -230,7 +230,7 @@ Table~\ref{tab:m-moe} gives the endpoints. The intra-node columns are tightly gr
 
 \begin{table}[htbp]
 \centering
-\caption{MoE dispatch-and-combine latency in \,$\mu$s, medians of allocation means, contrasting the largest intra-node topology with the largest multi-node topology for each routing case.}
+\caption{\texttt{moe} dispatch-and-combine latency in \,$\mu$s, medians of allocation means, contrasting the largest intra-node topology with the largest multi-node topology for each routing case.}
 \label{tab:m-moe}
 \footnotesize
 \input{data/main-campaign/moe-table.tex}
@@ -238,12 +238,12 @@ Table~\ref{tab:m-moe} gives the endpoints. The intra-node columns are tightly gr
 
 \subsection{Backend Ranking}
 
-Figure~\ref{fig:m-moe-sensitivity} is the central MoE result. No stack is faster than CUDA MPI in all three routing cases, and three of the five compared stacks cross from below one to above one as the routing changes. The two NCCL-based paths are fastest under \texttt{uniform} routing, at almost exactly half of CUDA MPI's time, but under \texttt{locality80} direct NCCL is 1.55 times slower than CUDA MPI: when 80\% of tokens stay local, the remaining exchange is small and irregular, and NCCL's grouped point-to-point path no longer amortizes its submission cost over a bulk transfer. NVSHMEM shows the opposite profile, moving from 0.83 under \texttt{uniform} to 0.72 under \texttt{locality80}, the lowest measured value at \texttt{8n4g}, where per-destination puts suit many small, uneven blocks.
+Figure~\ref{fig:m-moe-sensitivity} is the central \texttt{moe} result. No stack is faster than CUDA MPI in all three routing cases, and three of the five compared stacks cross from below one to above one as the routing changes. The two NCCL-based paths are fastest under \texttt{uniform} routing, at almost exactly half of CUDA MPI's time, but under \texttt{locality80} direct NCCL is 1.55 times slower than CUDA MPI: when 80\% of tokens stay local, the remaining exchange is small and irregular, and NCCL's grouped point-to-point path no longer amortizes its submission cost over a bulk transfer. NVSHMEM shows the opposite profile, moving from 0.83 under \texttt{uniform} to 0.72 under \texttt{locality80}, the lowest measured value at \texttt{8n4g}, where per-destination puts suit many small, uneven blocks.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.78\textwidth]{figures/results/moe-routing-sensitivity.png}
-\caption{MoE latency at \texttt{8n4g} relative to CUDA MPI at the same topology and routing case. Bars below one favor the compared stack. No stack is below one in all three cases.}
+\caption{\texttt{moe} latency at \texttt{8n4g} relative to CUDA MPI at the same topology and routing case. Bars below one favor the compared stack. No stack is below one in all three cases.}
 \label{fig:m-moe-sensitivity}
 \end{figure}
 
@@ -251,11 +251,11 @@ The \texttt{hotspot80} case separates the stacks by a different mechanism. Direc
 
 OSHMPI is the one stack that is slower than CUDA MPI in every routing case at \texttt{8n4g}, by 1.70 to 1.84 times, despite matching MPI within one node at \texttt{1n4g} under two of the three cases. Its per-phase quiet, device synchronization, and barrier are inexpensive when every put lands on NVLink and expensive once each of them must complete across the fabric.
 
-Two qualifications bound these results. MoE keeps UCC disabled and uses the variable-count Open MPI path, so the MPI series is one fixed configuration rather than a tuned result, and the all-to-all tuning of Section~\ref{sec:micro-results} does not transfer to it untested. Second, the reported volume is useful application bytes including tokens that never leave their source rank, so the \texttt{locality80} latencies correspond to much less traffic than their byte count suggests; they are comparable across stacks, not convertible into a link rate.
+Two qualifications bound these results. \texttt{moe} keeps UCC disabled and uses the variable-count Open MPI path, so the MPI series is one fixed configuration rather than a tuned result, and the all-to-all tuning of Section~\ref{sec:micro-results} does not transfer to it untested. Second, the reported volume is useful application bytes including tokens that never leave their source rank, so the \texttt{locality80} latencies correspond to much less traffic than their byte count suggests; they are comparable across stacks, not convertible into a link rate.
 
 \subsection{Comparison with All-to-All}
 
-The standalone all-to-all sweep of Section~\ref{sec:micro-results} moves equal blocks between all peers, and on that evidence the NCCL-based paths own the bulk regime. MoE retains the same operation family and the same topologies, changes only the distribution of block sizes, and inverts that conclusion in two of three cases. The regime boundary that matters for this workload is therefore not the payload size that the primitive sweep varies, but the skew that it holds constant.
+The standalone \texttt{alltoall} sweep of Section~\ref{sec:micro-results} moves equal blocks between all peers, and on that evidence the NCCL-based paths own the bulk regime. \texttt{moe} retains the same operation family and the same topologies, changes only the distribution of block sizes, and inverts that conclusion in two of three cases. The regime boundary that matters for this workload is therefore not the payload size that the primitive sweep varies, but the skew that it holds constant.
 
 This is the same failure mode that Section~\ref{sec:cg-step-results} finds for \texttt{cg\_step}, reached from the opposite direction: there, matching the operation and payload is insufficient because submission structure changes; here, matching the operation and the total volume is insufficient because the distribution changes. Neither result is evidence against the primitive measurements. Both constrain what a primitive measurement can be asked to predict.
 

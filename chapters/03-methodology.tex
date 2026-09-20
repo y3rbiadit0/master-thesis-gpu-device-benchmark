@@ -51,7 +51,7 @@ A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combinati
 
 \paragraph{Independence.} Every cell was run as five independent repetitions. Each repetition is a separate scheduler job that obtains its own allocation, so repetitions share no process state and may differ in nodes and network routes. Within one allocation the benchmark is launched three times. Only allocations are treated as independent samples: trial means are averaged within each allocation, the reported value is the median of the allocation means, and shaded bands show their minimum--maximum range, which describes observed variation rather than a confidence interval.
 
-\paragraph{Exceptions to the defaults.} The retained all-to-all and \texttt{cg\_step} sweeps contain three allocations instead of five, each still with three trials; their counts are reported as measured and not reweighted. \texttt{cg\_step} also uses 50 timed and 10 warm-up iterations instead of 100 and 20.
+\paragraph{Exceptions to the defaults.} The retained \texttt{alltoall} and \texttt{cg\_step} sweeps contain three allocations instead of five, each still with three trials; their counts are reported as measured and not reweighted. \texttt{cg\_step} also uses 50 timed and 10 warm-up iterations instead of 100 and 20.
 
 \subsection{Benchmark Tooling}\label{sec:harness}
 
@@ -160,7 +160,7 @@ Identifier & Compute interface & Communication path\\
 \scriptsize
 \begin{tabular}{lcccccc}
 \toprule
-Stack & Ping-pong & Halo & Allreduce & All-to-all & \texttt{moe} & \texttt{cg\_step}\\
+Stack & \texttt{pingpong} & \texttt{halo\_1d} & \texttt{allreduce} & \texttt{alltoall} & \texttt{moe} & \texttt{cg\_step}\\
 \midrule
 \texttt{cuda\_mpi} & Yes & Yes & Yes & Yes & Yes & Yes\\
 \texttt{sycl\_mpi} & Yes & Yes & Yes & Yes & Yes & Yes\\
@@ -207,7 +207,7 @@ oneCCL/OSHMPI & \texttt{SHMEM\_SYMMETRIC\_SIZE}, \texttt{CCL\_OSHMPI\_STAGING\_S
 \end{tabularx}
 \end{table}
 
-\paragraph{MPI and OSHMPI.} Both use the same HPC-X installation and UCX settings, but map operations differently: MPI uses two-sided and collective calls, OSHMPI uses MPI RMA, so a shared transport does not make their costs comparable as interface overhead. UCC is enabled for the standalone allreduce and all-to-all sweeps and disabled for \texttt{moe} and \texttt{cg\_step}, whose small or variable-count exchanges fall where UCC is slower or unmeasured. This is a fixed policy per pattern rather than the better of two settings per point; its effect is quantified by the paired UCC comparison in Chapter~\ref{ch:m-results}.
+\paragraph{MPI and OSHMPI.} Both use the same HPC-X installation and UCX settings, but map operations differently: MPI uses two-sided and collective calls, OSHMPI uses MPI RMA, so a shared transport does not make their costs comparable as interface overhead. UCC is enabled for the standalone \texttt{allreduce} and \texttt{alltoall} sweeps and disabled for \texttt{moe} and \texttt{cg\_step}, whose small or variable-count exchanges fall where UCC is slower or unmeasured. This is a fixed policy per pattern rather than the better of two settings per point; its effect is quantified by the paired UCC comparison in Chapter~\ref{ch:m-results}.
 
 \paragraph{NCCL.} Algorithm and protocol selection are left to NCCL. The oneCCL/NCCL stack is launched and bootstrapped through the Intel MPI bundled with its build, using the TCP provider across nodes; NCCL still carries the payload over InfiniBand.
 
@@ -258,7 +258,7 @@ All benchmarks share one measurement contract, and differ only in the operation 
 \begin{equation}
 t_i=\max_{r\in\{0,\ldots,P-1\}}t_{i,r},
 \end{equation}
-and the trial latency is the arithmetic mean of that series. Ping-pong is the only exception, as described below.
+and the trial latency is the arithmetic mean of that series. \texttt{pingpong} is the only exception, as described below.
 
 \paragraph{Completion.} The timed interval ends at the completion boundary of each stack, which is part of the measured cost rather than an implementation detail. Table~\ref{tab:m-completion} summarizes the boundary each stack family uses; the benchmark descriptions below note where a pattern departs from it.
 
@@ -350,9 +350,9 @@ The application microbenchmarks keep the measurement protocol of Section~\ref{se
 
 \subsubsection{MoE Dispatch and Combine}\label{sec:moe-method}
 
-The MoE benchmark times one top-1 dispatch and its inverse combine, without expert computation. Every rank holds $T=16{,}384$ tokens of $H=256$ float32 features, each assigned to one expert rank; dispatch sends the tokens to their experts in variable-sized blocks, and combine returns each block unchanged. Three deterministic routing cases change only how tokens are distributed, never how many bytes are moved:
+The \texttt{moe} benchmark times one top-1 dispatch and its inverse combine, without expert computation. Every rank holds $T=16{,}384$ tokens of $H=256$ float32 features, each assigned to one expert rank; dispatch sends the tokens to their experts in variable-sized blocks, and combine returns each block unchanged. Three deterministic routing cases change only how tokens are distributed, never how many bytes are moved:
 \begin{itemize}
-    \item \texttt{uniform}: tokens are spread evenly across ranks, the case closest to the all-to-all benchmark.
+    \item \texttt{uniform}: tokens are spread evenly across ranks, the case closest to the \texttt{alltoall} benchmark.
     \item \texttt{locality80}: about 80\% of tokens stay on their source rank.
     \item \texttt{hotspot80}: about 80\% of tokens target rank 0, creating a deliberate incast onto one GPU and its network adapter.
 \end{itemize}
@@ -362,7 +362,7 @@ A latency difference between routing cases is therefore attributable to distribu
     \item \emph{Correctness:} every rank checks the dispatch layout, token ownership, ordering, and payload, then checks that combine reproduced the packed send buffer exactly.
     \item \emph{Payload:} useful application volume, $2 \cdot T H \cdot 4$ bytes per rank for dispatch and combine, including tokens that never leave their rank. It is not the traffic crossing a link.
 \end{itemize}
-MoE runs with UCC disabled (Section~\ref{sec:runtime-method}), a setting not tuned for the variable-count path it uses, so its MPI results describe one fixed configuration.
+\texttt{moe} runs with UCC disabled (Section~\ref{sec:runtime-method}), a setting not tuned for the variable-count path it uses, so its MPI results describe one fixed configuration.
 
 \subsubsection{CG Step}
 
@@ -453,6 +453,6 @@ Together with the benchmark tooling of Section~\ref{sec:harness}, which records 
 Three boundaries apply to the archived evidence:
 \begin{itemize}
     \item \emph{Revisions.} Repository revisions identify the imported archive, not necessarily the exact source of every measured run.
-    \item \emph{Snapshots.} The results come from more than one measurement snapshot. The allreduce and MoE results are from a later campaign than the other microbenchmarks, and the five-size \texttt{cg\_step} sweep is retained from the earlier campaign because its later re-run covers only one grid size. The manifest records which snapshot each pattern comes from.
+    \item \emph{Snapshots.} The results come from more than one measurement snapshot. The \texttt{allreduce} and \texttt{moe} results are from a later campaign than the other microbenchmarks, and the five-size \texttt{cg\_step} sweep is retained from the earlier campaign because its later re-run covers only one grid size. The manifest records which snapshot each pattern comes from.
     \item \emph{Auxiliary controls.} The rail-count, scalar-placement, forced-algorithm, and dispatch controls survive as analysis summaries rather than complete trial datasets, and are reported without reconstructed error bars.
 \end{itemize}
