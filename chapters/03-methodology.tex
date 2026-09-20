@@ -112,7 +112,7 @@ The node provides two communication domains with an order-of-magnitude differenc
     \item \emph{Inter-node communication} between nodes travels over InfiniBand, where GPUDirect RDMA lets the adapter read and write registered GPU memory directly. One HDR100 port carries 100\,Gb/s, or 12.5\,GB/s. The \texttt{2n1g} topology isolates this domain with one GPU per node, while \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g} combine both domains at 8, 16, and 32 GPUs.
 \end{enumerate}
 
-Comparing \texttt{1n4g} with \texttt{2n1g} therefore separates a change of interconnect from a change of scale, which a rank-count axis alone would conflate. Device-initiated inter-node transfers are the exception to direct GPU-to-NIC posting: InfiniBand GPUDirect Async (IBGDA) is not available on the evaluated system, so NVSHMEM services them through a CPU proxy (Section~\ref{sec:ibgda-check}).
+Comparing \texttt{1n2g} with \texttt{2n1g} changes the communication domain while holding the GPU count fixed, a distinction that a rank-count axis alone would hide. Direct GPU-memory access by the network adapter does not imply GPU-side request posting. IBGDA is unavailable on the evaluated system, so NVSHMEM's device-initiated inter-node requests are serviced through a CPU proxy while the payload can still use GPUDirect RDMA (Section~\ref{sec:ibgda-check}).
 
 \subsection{Libraries and Drivers}
 
