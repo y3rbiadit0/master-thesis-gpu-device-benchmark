@@ -1,0 +1,25 @@
+\chapter{Related Work and Positioning}\label{ch:m-related}
+
+GPU-initiated communication gives kernels control over data movement and synchronization, but its performance depends on how that control is exercised. Building on the mechanisms in Chapter~\ref{ch:m-problem}, the literature supports six conclusions about its benefits, limitations, and the comparisons still needed.
+
+\begin{itemize}
+    \item \emph{Device invocation and autonomous networking are distinct capabilities.}
+    GPU-aware MPI accepts device buffers while retaining host-side invocation. GPUDirect Async demonstrated that GPUs could trigger host-prepared network operations, with application-dependent gains \cite{agostini_gpudirect_2018}. NVSHMEM and NCCL GIN extend device control to communication calls within kernels. However, direct GPU-to-NIC posting requires suitable hardware and runtime support; device calls can instead use CPU proxy progress \cite{unat_landscape_2026,hamidouche_kernel-initiated_2026}. A performance comparison must therefore identify both where an operation originates and how it progresses.
+
+    \item \emph{Removing host coordination does not guarantee a faster operation.}
+    Device APIs enable fine-grained exchanges, fusion, and persistent execution, but the issuing kernel must provide sufficient parallelism. On H200, a system-level analysis of NVSHMEM finds its block-scoped AllReduce competitive at small messages yet limited to about 30\,GB/s, against 264\,GB/s for the host on-stream path with multi-CTA execution and NVLink SHARP algorithms \cite{ma_demystifying_2026}. This exposes a latency--throughput trade-off: invocation location, operation scope, and collective implementation jointly determine performance.
+
+    \item \emph{NCCL now offers an alternative device-communication runtime to NVSHMEM.}
+    NCCL GIN provides one-sided networking through direct GPU-posted and proxy-assisted backends \cite{hamidouche_kernel-initiated_2026}. Its DeepEP integration retains high-throughput dispatch and combine performance within approximately 1--2\% of NVSHMEM across the evaluated scales and precisions. This demonstrates performance retention for a specialized device-driven schedule. It does not establish superiority over host-driven alternatives: routing, batching, synchronization, and kernel organization remain integral to the measured implementation.
+
+    \item \emph{Low-latency collectives require efficient device-side synchronization.}
+    Low-latency primitives built on NCCL's existing device API combine barrier-free protocols, symmetric memory, double buffering, and optional multicast \cite{shen_every_2026}. The reported 128-byte AllReduce reaches approximately 7\% above an estimated hardware lower bound on GB200 at \texttt{1n2g}. Multi-library comparisons and measured gains in vLLM and cuSOLVERMp demonstrate practical benefits. That evaluation concerns a single NVLink domain, even across physical nodes; it does not establish RDMA scale-out performance or an initiation-only speedup. Its relevance to CG lies in reducing exposed scalar-collective latency.
+
+    \item \emph{Application benefits depend on computation and completion dependencies.}
+    A published comparison covers CG implementations using GPU-aware MPI, NCCL/RCCL, and NVSHMEM, including a monolithic GPU-driven solver \cite{trotter_cpu-_2025}. There the device variant shows promising strong scaling, while host-driven variants remain favorable under the available computational kernels and communication configurations. Thus, eliminating host orchestration can exchange one bottleneck for another. Primitive improvements must be assessed against exposed application time, accounting for local work, overlap, and when a dependent GPU operation can consume the result.
+
+    \item \emph{The open question is how favorable regimes transfer across patterns and backends.}
+    Existing work already includes multi-library comparisons and application validation. Collective studies also show that topology and runtime configuration alter rankings \cite{desensi_exploring_2024,pasqualoni_pico_2026}. The contribution here is to connect primitive, composite, and solver measurements on one platform: comparing MPI, OSHMPI, NVSHMEM, NCCL, and measured oneCCL/SYCL paths, then testing which observations survive irregular routing, operation composition, and application dependencies through \texttt{moe}, \texttt{cg\_step}, and aCG.
+\end{itemize}
+
+This thesis therefore provides a conditional account of configured-backend performance. Its main campaign is run with host-initiated NCCL and proxy-assisted NVSHMEM networking, in the versions and configuration that Chapter~\ref{ch:m-methodology} records. It identifies where evaluated device-invoked paths are favorable, while persistence, batching, signaling, and solver organization also change. These comparisons neither isolate initiation alone nor measure the newer NCCL device API. Chapter~\ref{ch:m-discussion} relates the observed regimes to application requirements and identifies the controls needed for causal attribution.
