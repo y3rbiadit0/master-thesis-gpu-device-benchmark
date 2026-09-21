@@ -43,9 +43,15 @@
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{2}
 \setcounter{totalnumber}{4}
-% \FloatBarrier confines a float to the subsection that discusses it, for the
-% cases where a float would otherwise drift past the next heading.
+% Confine every float to the sectioning unit that discusses it. Without this a
+% float may be typeset past the next heading, so a figure introduced in one
+% subsection can appear under the following one. Placement specifiers only
+% express a preference; the barrier is what makes the boundary binding.
 \RequirePackage{placeins}
+\RequirePackage{etoolbox}
+\pretocmd{\section}{\FloatBarrier}{}{}
+\pretocmd{\subsection}{\FloatBarrier}{}{}
+\pretocmd{\subsubsection}{\FloatBarrier}{}{}
 \graphicspath{{figures/}}             % so \includegraphics{name} just works
 \RequirePackage{booktabs}
 \RequirePackage{tabularx}

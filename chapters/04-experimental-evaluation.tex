@@ -303,7 +303,6 @@ Figure~\ref{fig:m-cg-device-step} shows both regimes directly. At side 512 the d
 \label{fig:m-cg-device-step}
 \end{figure}
 
-\FloatBarrier
 
 \subsection{Phase Breakdown}
 
@@ -422,7 +421,6 @@ The mean discrepancies range from 7.8\% to 11.1\% (Table~\ref{tab:m-acg-reductio
 
 The auxiliary configuration analysis reports that disabling NCCL dispatch materially changes NVSHMEM reduction time and gives matched errors of approximately 14--21\%. The matched per-trial arm is not present in the imported default JSON, so it is not plotted as an independently regenerated prediction. Repeating that control with explicit metadata would bring NVSHMEM to the same reproducibility level as the MPI/NCCL pairs. The separately recorded UCX-threshold control changes the composite MPI step by only approximately 2--3\%, which is too small to explain the much larger application variability.
 
-\FloatBarrier
 
 \subsection{Device-Initiated Scaling Agreement}\label{sec:cg-device-correlation}
 
@@ -447,7 +445,6 @@ Figure~\ref{fig:m-cg-device-scaling} shows that the agreement depends entirely o
 
 The practical consequence is a condition on the benchmark rather than a property of the solver. A communication benchmark reproduces this solver's scaling only when its local work per GPU is comparable, and the grid side that satisfies that is the largest one measured. The same benchmark at the size chosen to expose communication predicts the opposite trend. This is the composition limit of Section~\ref{sec:cg-comparison-micro} again, seen in the device-initiated path.
 
-\FloatBarrier
 
 \subsection{Halo Structure and Overlap}
 
