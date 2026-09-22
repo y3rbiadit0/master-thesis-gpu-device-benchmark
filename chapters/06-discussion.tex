@@ -1,4 +1,6 @@
-\chapter{Synthesis, Benchmark Decisions, and Validity}\label{ch:m-discussion}
+\chapter{Discussion}\label{ch:m-discussion}
+
+This chapter interprets the measurements in Chapter~\ref{ch:m-results} in terms of when GPU-initiated communication benefits an application and which communication patterns support that benefit. It first connects the primitive, composite, and conjugate gradient results, then examines NVSHMEM's behavior across patterns and topologies. The resulting synthesis answers the research questions and establishes the limits of those answers, with particular attention to completion dependencies, progress mechanisms, and differences between the evaluated implementations.
 
 \section{Cross-Level Synthesis}
 
@@ -71,29 +73,7 @@ Ping-pong, halo, allreduce, and MoE cells normally contain five jobs and fifteen
 \paragraph{Preliminary NCCL evidence.}
 The newer NCCL study, retained in Appendix~\ref{app:nccl-preliminary}, has only rounded three-run medians and qualitative spread information. Missing source revisions, run commands, datatype, correctness logs, and timing boundaries prevent replication from the summary alone. Comparing 2.18.5 plain with 2.31.2 symmetric changes both version and memory handling; comparing the two 2.31.2 columns still combines allocation and registration. Neither comparison isolates device initiation, and the proposed warm-up and GDAKI failure explanations remain unverified. The study identifies a follow-up candidate after the main scalar-completion and halo-representation gaps are addressed.
 
-\section{Benchmark Decisions}
-
-The existing archive is sufficient to present backend-complete microbenchmark curves, correct the all-to-all size axis, compare representative solver medians, and report the archived \texttt{cg\_step} contract. Those changes require reanalysis or presentation only. They do not repair comparisons whose operands, result location, invocation, or application schedule differ.
-
-\begin{table}[htbp]
-\centering
-\caption{Highest-priority missing experiments and the claim each would resolve.}
-\label{tab:m-missing-experiments}
-\footnotesize
-\begin{tabularx}{\textwidth}{lYY}
-\toprule
-Priority & Experiment & Claim resolved\\
-\midrule
-1 & Complete FP64 OSHMPI reduction round trip with a dependent GPU consumer & Whether the synthetic OSHMPI advantage survives solver-ready completion\\
-2 & Replay the directed aCG halo graph with and without calibrated local work & Whether peer structure and exposed wait explain the benchmark--solver divergence\\
-3 & Match host, on-stream, nonpersistent-device, and persistent-device NVSHMEM & Whether invocation itself contributes beyond API, batching, memory, and persistence\\
-4 & Sweep NVSHMEM batch length and add an interleaved halo--compute--reduction schedule & Whether the favorable 100-exchange regime exists at application-like batch lengths\\
-5 & Match host- and device-NVSHMEM aCG organization and collective dispatch & Whether invocation, fusion, or solver organization explains the scaling difference\\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-Priorities 1 and 2 close the largest benchmark-to-application gaps. Priorities 3 and 4 are necessary before making an initiation-only causal claim. A verified IBGDA campaign is a separate platform requirement for claims about GPU-posted networking. Complete protocols, decision rules, and conditional experiments are recorded in \path{experiments/missing-experiments-report.md} and \path{experiments/targeted-controls.md}.
+These limitations motivate the four research directions in Section~\ref{sec:priority-experiments}: validation on IBGDA-enabled clusters, isolation of initiation effects, stronger benchmark--application correspondence, and evaluation of newer device-communication interfaces.
 
 \begin{keypoint}[Scope of the claims]
 The results establish which complete configured stacks performed best for the measured communication signatures on Leonardo. They do not establish an intrinsic ordering among the MPI, collective, and PGAS programming models.
