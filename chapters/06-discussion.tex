@@ -74,9 +74,6 @@ The second axis of the study changes the compute interface rather than the commu
 
 This constrains how the solver-level ratios may be read. The reported SYCL/CUDA median solver times of 1.17--1.45 (Section~\ref{sec:acg-results}) are of the same order as the communication-free control, so nothing in the present evidence requires a communication explanation for them. The conservative reading is that the solver gap is dominated by the same kernel and orchestration costs the control isolates, and that the communication path contributes little to it.
 
-\paragraph{Pending: verified aCG SYCL campaign.}
-\emph{TBD.} The equal-accuracy aCG SYCL comparison is not yet part of the reconciled archive: the CUDA correctness classification requires the reprocessing described in Section~\ref{sec:acg-method}, so the values in Section~\ref{sec:acg-results} are retained as supporting timings rather than a verified comparison. The completed campaign is expected to supply matched-correctness solver times on the same topology axis as the CUDA solver, together with a phase breakdown that separates kernel time from exposed communication. This section will then state whether the communication-free control fully explains the solver-level ratio, or whether an additional communication cost appears once the SYCL solver scales out. Until then the portability half of RQ3 is answered at microbenchmark and composite level only.
-
 \section{Research Questions Revisited}
 
 \paragraph{RQ1: conditions for beneficial GPU invocation.}
