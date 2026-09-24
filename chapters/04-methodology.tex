@@ -80,7 +80,7 @@ Question & Evidence & What the comparison establishes\\
 \midrule
 RQ1 & Primitive and composite measurements; persistent NVSHMEM kernels; monolithic aCG & Favorable regimes of the evaluated execution paths\\
 RQ2 & Direct SHMEM measurements; grouped NCCL and OSHMPI adapters; NVSHMEM runtime validation & Complete-path costs and required semantic adaptations\\
-RQ3 & Matched reduction costs, solver scaling, phase measurements, and CUDA--SYCL report & Predictive accuracy, limits of halo representation, and implementation performance retention\\
+RQ3 & Matched reduction costs, solver scaling, phase measurements, and matched CUDA--SYCL solver campaign & Predictive accuracy, limits of halo representation, and implementation performance retention\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -419,10 +419,16 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
     \item \emph{UCC:} disabled, as in \texttt{cg\_step}, whose scalar reductions it matches.
 \end{itemize}
 
-\paragraph{SYCL solver.} The SYCL port of aCG contributed by this thesis \cite{merenda_acg_sycl_2026} is compared with the CUDA solver on Bump\_2911 at 1, 4, 8, and 16 GPUs, using solver-time medians over three repeats. It is built with its own environment:
+\paragraph{SYCL solver.} The SYCL port of aCG contributed by this thesis \cite{merenda_acg_sycl_2026} is measured in a separate campaign on both matrices, with the same METIS partitions, manufactured solution, seed, and tolerance as the CUDA solver, on the same topologies from one to 32 GPUs. Each of its three variants is paired with a CUDA variant from the main solver campaign:
+\begin{itemize}
+    \item \emph{Single GPU:} paired with the CUDA single-GPU control; no inter-rank transfer on either side.
+    \item \emph{SYCL MPI:} halo exchange and scalar reductions through GPU-aware MPI; paired with the MPI variant.
+    \item \emph{SYCL oneCCL/NCCL:} scalar reductions through oneCCL with its NCCL backend, while the halo exchange stays on MPI; paired with the NCCL variant, which also moves its halo through NCCL.
+\end{itemize}
+A cell normally holds nine trials from a single allocation, so the SYCL ranges describe variation between trials rather than between allocations. Three cells deviate: Queen\_4147 has three trials for oneCCL/NCCL at two GPUs and for both variants at 16 GPUs, and ten to twelve trials from two allocations at 32 GPUs. Solver time covers the same interval as in the CUDA solver, starting before the initial residual; the single-GPU SYCL solver reports the iteration loop only. The SYCL solver also reports its time breakdown under the CUDA solver's category names. Kernel time, the sum of the SpMV, dot-product, norm, vector-update, and copy categories, is therefore comparable between the two implementations; the halo and reduction categories are not, because the two implementations organize those operations differently. The campaign uses its own environment:
 \begin{itemize}
     \item \emph{Toolchain:} DPC++ 6.3 with the CUDA backend, GCC 12.2, and CUDA 12.2, as for the SYCL microbenchmarks.
-    \item \emph{Communication libraries:} Open MPI 4.1.6 and NCCL 2.22.3 from the site modules, rather than HPC-X 2.19 and NCCL 2.18.5. The comparison therefore changes the communication libraries as well as the programming model, and its ratios are reported as supporting implementation timings rather than as an isolated measure of SYCL overhead; the CUDA runs of that report also lack a recorded convergence classification.
+    \item \emph{Communication libraries:} the same HPC-X 2.19 installation as the CUDA solver, with UCC disabled and the same 16\,KiB rendezvous threshold, but with NCCL 2.22.3 from the site modules rather than 2.18.5, and CUDA 12.2 rather than 12.4. oneCCL is built with its NCCL backend and bootstraps over the OFI TCP provider. The MPI pair therefore shares its MPI library, while the NCCL pair also changes the NCCL release.
     \item \emph{Other dependencies:} oneMath for the linear-algebra kernels, and METIS for partitioning.
 \end{itemize}
 

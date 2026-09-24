@@ -464,7 +464,7 @@ Auxiliary attempts to replace global barriers with neighbor flags or to split be
 
 These differences explain why the composite winner need not be the solver winner. The benchmark's scalar completion contract and the application's reduction primitive differ, while halo structure and overlap also change. The current evidence cannot assign the ranking reversal to any one of these factors.
 
-\subsection{Convergence and Variability}
+\subsection{Convergence and Variability}\label{sec:acg-variability}
 
 All 507 retained completed logs meet the recorded relative residual criterion, including 90 OSHMPI trials. This validates the recorded numerical outcome of those runs; it does not imply that every attempted run completed or that floating-point reduction order leaves iteration counts unchanged. Both total time and executed work are retained so that convergence differences remain visible.
 
@@ -472,24 +472,36 @@ MPI shows a separate performance-variability problem. Its halo and subsequent al
 
 Large variations also occur among trials within one allocation, as Figure~\ref{fig:m-acg-scaling} shows. Node selection alone is therefore insufficient to explain the effect. Valid solutions can coexist with timing decompositions whose overlapping event regions are unsuitable for phase attribution. The chapter consequently reports MPI allocation ranges and avoids presenting its rare fastest run as a representative scaling curve. The irregular-halo replay is intended to test whether the behavior can be reproduced outside the complete solver.
 
-\subsection{CUDA and SYCL Comparison}
+\subsection{CUDA and SYCL Comparison}\label{sec:acg-sycl}
 
-The separate comparison report gives the median solver-time ratios in Table~\ref{tab:m-sycl-control}. These correspond to approximately 17--45\% additional time for the SYCL implementation. Both sides use medians, although this report is distinct from the main fastest-trial campaign.
+All 184 trials of the SYCL campaign meet the relative residual criterion. The comparison pairs each native variant with its SYCL counterpart, CUDA MPI with SYCL MPI and CUDA NCCL with SYCL oneCCL/NCCL, and uses the median solver time on both sides (Figure~\ref{fig:m-acg-sycl-scaling}). The CUDA solver's iteration count varies by a few percent between trials of one cell, while the SYCL solver converges in the same number of iterations in every trial of a cell. That difference is small enough that the solver-time ratios agree with time-per-iteration ratios to within 2.5\% in every cell.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/results/acg-sycl-scaling.png}
+\caption{Median solver time of the SYCL solver and its paired CUDA variants, over residual-valid trials; shading spans the trial minimum and maximum. The CUDA series are the main-campaign runs of Figure~\ref{fig:m-acg-backend-median}. SYCL oneCCL/NCCL reduces through NCCL but exchanges its halo through MPI.}
+\label{fig:m-acg-sycl-scaling}
+\end{figure}
+
+Up to four GPUs the two implementations differ by an almost constant factor (Table~\ref{tab:m-acg-sycl}). On one GPU, the SYCL solver takes 1.31 times the CUDA solver time on Bump\_2911 and 1.33 times on Queen\_4147. On two and four GPUs, SYCL MPI takes 1.30 to 1.38 times as long as CUDA MPI, and SYCL oneCCL/NCCL 1.32 to 1.39 times as long as CUDA NCCL. Because the kernel ratio is of the same size, in this regime the portability cost is a kernel cost.
 
 \begin{table}[htbp]
 \centering
-\caption{Reported SYCL/CUDA median solver-time ratio for Bump\_2911. Correctness classification of the CUDA report requires reprocessing as described in Section~\ref{sec:acg-method}.}
-\label{tab:m-sycl-control}
-\begin{tabular}{rr}
-\toprule
-GPUs & SYCL/CUDA time\\
-\midrule
-1 & $1.336\times$\\
-4 & $1.400\times$\\
-8 & $1.446\times$\\
-16 & $1.170\times$\\
-\bottomrule
-\end{tabular}
+\caption{Median solver time in seconds of each native aCG variant and its SYCL counterpart, and their ratio, SYCL over CUDA; ratios above one favor CUDA. At one GPU the single-GPU solvers are compared, in the MPI columns.}
+\label{tab:m-acg-sycl}
+\footnotesize
+\input{data/main-campaign/acg-sycl-table.tex}
 \end{table}
 
-The ratio narrows at 16 GPUs, but the timing summaries alone do not establish why. Computation, host orchestration, and communication scaling all change their contribution to runtime. The communication-free composite controls independently show that a CUDA--SYCL implementation gap can exist without inter-rank transfers. Together, these observations motivate a matched implementation comparison with consistent correctness parsing and phase boundaries; they do not isolate a compiler penalty or establish cross-vendor performance portability.
+From eight GPUs upward the gap is no longer constant, because the SYCL solver stops strong-scaling. On Bump\_2911, SYCL MPI takes 12.9, 13.7, and 17.6\,s at 8, 16, and 32 GPUs, while CUDA NCCL takes 7.9, 6.3, and 6.4\,s, so the oneCCL/NCCL-to-NCCL ratio rises from 1.71 to 3.11; on Queen\_4147 it reaches 2.22 at 32 GPUs. The growth lies outside the kernels (Figure~\ref{fig:m-acg-sycl-ratio}): the SYCL kernels take 1.24 to 1.43 times as long as the CUDA NCCL solver's kernels at every GPU count from two to 32, a ratio that does not grow with scale. Kernel time is compared against NCCL only, because the CUDA MPI kernel timers absorb the waits of its slow mode. At 32 GPUs on Bump\_2911, time outside the kernels is 13.7\,s for SYCL MPI against 3.5\,s for CUDA NCCL, and the SYCL breakdown assigns 5.4\,s of it to the halo exchange, 4.2\,s to reductions, and 1.9\,s to packing halo buffers. Those categories do not share boundaries with the CUDA ones, whose halo timer records only the wait left after overlap with the interior SpMV (Section~\ref{sec:acg-method}). The comparison therefore places the growth outside the kernels but does not assign it to a library.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/results/acg-sycl-ratio.png}
+\caption{SYCL/CUDA ratio of medians against GPU count. Solid: oneCCL/NCCL solver time over NCCL; dotted: the same pair's kernel time; dashed: SYCL MPI solver time over MPI, which falls below one because of the CUDA MPI slow mode rather than because SYCL is faster. Values above one favor CUDA.}
+\label{fig:m-acg-sycl-ratio}
+\end{figure}
+
+The MPI pair behaves differently: its ratio falls below one from 8 GPUs on Bump\_2911 and from 16 on Queen\_4147, reaching 0.20 and 0.18 at 32 GPUs. This reflects the CUDA MPI slow mode of Section~\ref{sec:acg-variability}, not a faster SYCL solver: at 32 GPUs on Bump\_2911 the CUDA MPI trials range from 12.5 to 177\,s, while the nine SYCL MPI trials lie between 16.8 and 18.7\,s. The SYCL MPI build shows no slow mode in any cell although it runs on the same HPC-X installation, so the slow mode is not a property of the MPI library alone. The SYCL solver does, however, change the UCX transport list and the halo implementation together, so it does not identify which of the two the CUDA MPI slow mode depends on.
+
+The oneCCL/NCCL variant has an intermittent slow mode of its own. On Queen\_4147 at 16 GPUs, all three trials, from two allocations, take 902 to 918\,s, of which 856\,s is recorded as reduction time; at 32 GPUs, one of ten trials takes 1179\,s against about 16.7\,s for the others. In the other oneCCL/NCCL cells the slowest trial is at most 1.1\% slower than the fastest, except on Bump\_2911 at 32 GPUs, where it is 14\% slower. The slow trials converge in the same number of iterations as the fast ones, so they are a performance failure of the reduction path rather than a numerical one. The campaign records them but does not diagnose them.

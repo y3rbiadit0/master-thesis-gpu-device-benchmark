@@ -10,7 +10,17 @@ Chapter~\ref{ch:m-discussion} answers the three research questions against that 
 
 The preliminary NCCL~2.31.2 study in Appendix~\ref{app:nccl-preliminary} adds a candidate rather than a revised application result. Symmetric buffers improve the supplied small-allreduce medians relative to NCCL~2.18.5, but the advantage reverses at some intermediate sizes and does not extend to small all-to-all. This reinforces the need to record version, memory handling, and selected operation path before interpreting a library upgrade as evidence for GPU initiation.
 
-The overall conclusion is that a developer must always select configured paths for a specific application signature in order to maximize the hardware utilization efficiency. For GPU initiation, developers should first identify repeated communication that can remain inside persistent device work, then verify whether the target transport is GPU-posted or CPU-proxied. They should benchmark the matching pattern and completion boundary, retain several plausible host- and GPU-initiated stacks, and validate them with a composite or complete application whose synchronization and overlap semantics match production execution. As AI continues and will continue to need more and more resources, it will be important to characterize how the target application behaves in terms of communication to then be able to compare which library will be the best for the cluster/hardware available.
+The overall conclusion is that communication backends are selected for a specific application signature on a specific system, not in general. Developing this work produced a methodical approach for making that selection, in which each step fixes what the next one may assume:
+
+\begin{enumerate}
+    \item \emph{Compute patterns.} Characterize the application's local work per GPU and where it depends on communicated data. The device-initiated step reproduced the solver's scaling at one grid side and missed it at another only because the ratio of local work to transfer changed, so this ratio decides whether any communication benchmark is relevant at all.
+    \item \emph{Communication patterns.} Derive the operations, peer structure, payload distribution, and completion boundary that the computation imposes. The MoE routing cases show that holding operation and volume fixed while changing only the distribution is enough to reverse a ranking.
+    \item \emph{Cluster availability.} Establish what the target system provides: its intra- and inter-node communication domains, whether network requests are GPU-posted or CPU-proxied, and which library versions and configurations are installed. On the evaluated platform the proxy-assisted transport alone moved device-initiated NVSHMEM from competitive within a node to last across nodes.
+    \item \emph{Matching library.} Select candidate configured paths whose measured regime covers the resulting pattern, payload, and topology, and retain several plausible host- and GPU-initiated stacks rather than a single predicted winner.
+    \item \emph{Performance gains and losses.} Measure the candidates at an equal result state and completion boundary, first with a composite benchmark and then in the complete application whose synchronization and overlap semantics match production execution, and report losses as well as gains.
+\end{enumerate}
+
+This procedure is the generalization of the bottom-up evaluation used here. It was applied to one solver and one routed-exchange workload on one system, so it is proposed as a method for future selections rather than validated as a general one.
 
 \section{Future Work}\label{sec:priority-experiments}
 

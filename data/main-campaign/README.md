@@ -17,6 +17,8 @@ python3 -B tools/rebuild_main_evidence.py \
   --acg-root /path/to/aCG-native \
   --retain cg_step
 python3 -B tools/import_moe_evidence.py --benchmark-root /path/to/gpu-comm-benchmark
+python3 -B tools/import_acg_sycl_evidence.py \
+  --results-root /path/to/gpu-comm-benchmark/docs/analysis/data/acg-results
 uv run --no-project tools/plot_main_evidence.py
 python3 -B -m unittest discover -s tools/tests -v
 ```
@@ -140,3 +142,17 @@ Figure references use explicit project-root paths such as
 interpreting `\graphicspath` inside the style file. Sync the generated table
 files and figures together with the chapter. `tools/check_thesis.py` checks these
 paths and rejects row-only includes inside table alignments.
+
+## SYCL solver campaign
+
+`import_acg_sycl_evidence.py` imports the separate SYCL aCG campaign and pairs it
+with the native trials already in `acg-trials.csv`; it must run after the main
+import. `acg-sycl-trials.csv` holds one row per SYCL trial with the same status
+classes as the native parser. `acg-sycl-comparison.csv` holds one row per
+(pair, matrix, GPU count), with medians over residual-valid trials on both sides.
+`time_ratio` (median solver time, the reported comparison), `iteration_ratio`,
+and `compute_ratio` are SYCL over CUDA, where compute is the
+sum of the gemv, dot, nrm2, axpy, and copy categories. Most SYCL cells come from
+a single allocation, so their ranges describe trial-to-trial variation only.
+`acg-sycl-manifest.json` records the timer definitions and the SHA-256 of every
+imported log.
