@@ -121,12 +121,16 @@
       \fill[accent] ([xshift=2.0cm,yshift=0cm]current page.north west)
         rectangle ([xshift=2.18cm,yshift=0cm]current page.south west);
     \end{tikzpicture}%
+    \setlength{\parindent}{0pt}%
     \vspace*{1.5cm}\par
-    \trackedcaps{\@university}\\[2pt]
-    {\headfont\footnotesize\color{muted}\textls[180]{\MakeUppercase{\@department}}}
-    \par\vspace{0.6cm}
-    \noindent\includegraphics[height=2.8cm]{figures/results/unisa_logo.png}\par
-    \vspace{0.8cm}
+    % header row: institution on the left, logo flush right, centred vertically
+    \begin{minipage}[c]{\dimexpr\textwidth-2.6cm\relax}
+      \raggedright
+      \trackedcaps{\@university}\\[2pt]
+      {\headfont\footnotesize\color{muted}\textls[180]{\MakeUppercase{\@department}}}
+    \end{minipage}\hfill
+    $\vcenter{\hbox{\includegraphics[height=2.2cm]{figures/results/unisa_logo.png}}}$\par
+    \vspace{1.2cm}
     {\color{accent}\rule{1.4cm}{3pt}}\\[1.0cm]
     {\raggedright\headfont\bfseries\fontsize{30}{36}\selectfont\color{ink}\@title\par}
     \ifx\@subtitle\empty\else\vspace{0.5cm}{\raggedright\headfont\large\color{muted}\@subtitle\par}\fi
