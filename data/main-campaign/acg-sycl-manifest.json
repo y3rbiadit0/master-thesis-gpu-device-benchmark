@@ -18,10 +18,7 @@
       "sycl": "acg-sycl-oneccl-nccl"
     }
   },
-  "secondary_references": {
-    "archived": "acg-trials.csv (native main campaign)",
-    "v1": "acg-sycl-v1-comparison.csv (first SYCL port, frozen)"
-  },
+  "secondary_reference": "acg-trials.csv (native main campaign)",
   "status_counts": {
     "sycl": {
       "valid": 192

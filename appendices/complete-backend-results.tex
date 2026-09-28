@@ -40,11 +40,11 @@ The single-rank collective panels are implementation controls rather than networ
 
 \section{Composite Sequence}
 
-Figure~\ref{fig:app-cg-all} provides every retained \texttt{cg\_step} topology. Ratios use the CUDA MPI median at the same topology and global side as a fixed denominator; the bands do not propagate uncertainty in that denominator. The archived OSHMPI series retains its host-terminal scalar result.
+Figure~\ref{fig:app-cg-all} provides every retained multi-rank \texttt{cg\_step} topology; at \texttt{1n1g} no inter-rank communication occurs, so a ratio between stacks there does not compare communication paths. Ratios use the CUDA MPI median at the same topology and global side as a fixed denominator; the bands do not propagate uncertainty in that denominator. The archived OSHMPI series retains its host-terminal scalar result.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-step-all-topologies.png}
-\caption{Composite-sequence time relative to CUDA MPI for all six measured stacks and all topologies.}
+\caption{Composite-sequence time relative to CUDA MPI for all six measured stacks and all multi-rank topologies.}
 \label{fig:app-cg-all}
 \end{figure}
