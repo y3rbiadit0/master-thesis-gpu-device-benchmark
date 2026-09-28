@@ -1,8 +1,9 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "input_repository_revision": "986e876cd976960cddbcb78702b84cd70358f59e",
-  "policy": "median over residual-valid completed trials, as in the representative native view; ratios are SYCL over CUDA, above one favors CUDA",
-  "timer": "SYCL multi-GPU: performance_cuda_compatible solver_time; SYCL single GPU: solve_time (loop only); native: total solver time",
+  "policy": "per allocation, SYCL median over native median of the same job; per cell, median over allocations. Residual-valid trials only. Ratios are SYCL over CUDA; above one favors CUDA",
+  "timer": "SYCL solver_max_s (timing schema 3) and native total solver time: after 10 warmup iterations, barrier, initial residual and loop, maximum over ranks",
+  "correctness": "SYCL: host-recomputed ||b - Ax|| / ||b||; native: logged residual over initial residual",
   "pairs": {
     "single": {
       "cuda": "acg-cg-single",
@@ -17,744 +18,1554 @@
       "sycl": "acg-sycl-oneccl-nccl"
     }
   },
-  "native_source": "acg-trials.csv from the main campaign import",
-  "relation_to_main_campaign": "separate SYCL campaign; kept in separate files",
+  "secondary_references": {
+    "archived": "acg-trials.csv (native main campaign)",
+    "v1": "acg-sycl-v1-comparison.csv (first SYCL port, frozen)"
+  },
+  "status_counts": {
+    "sycl": {
+      "valid": 192
+    },
+    "paired_native": {
+      "valid": 192
+    }
+  },
   "sources": [
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-1-stdout.txt",
-      "sha256": "5ff313bbeba8ddb27bc85003b5b7f732577eee51aa6e8b4d3194c4a7ff647551"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-1-stdout.txt",
+      "sha256": "0fbe4c2624caa269496ea06599fc4f1caf8ea68de020d9db26d6458bdd7f58b1"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-2-stdout.txt",
-      "sha256": "bcbe6ad997626df20fa55d4e99dd55288f47d2852e74df5c8b63b18d29085a32"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-2-stdout.txt",
+      "sha256": "2bf20e6c26cd8812f5058de20db1523617afb3599f3e3f7c6556f1a153f1cd4c"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-3-stdout.txt",
-      "sha256": "3fc279a9f947d48bdc7db952ece1f8b89a1b1584a07bafb4867382e03b82172e"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-3-stdout.txt",
+      "sha256": "7cfa7940adf3eded640de7a2ef46e0bdd362697ce1e74e550e587f3d15fd5a7f"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-4-stdout.txt",
-      "sha256": "18b781783e358bea11a7d9418a5a9b565311402427eb79865cae82297cc65b99"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-1-stdout.txt",
+      "sha256": "0eeac1374c9b36fcdae52b5a80e6bdee37f33ad94dbe02bfab4e4b0371129e79"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-5-stdout.txt",
-      "sha256": "c7a7eb5faa994e09072722e1621e59846bcacd901229454373c3986d7e5c7e94"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-2-stdout.txt",
+      "sha256": "125805000b59be37c41b306bb0f155723f1edf41c23a8704bf0b1d60a98ef197"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-6-stdout.txt",
-      "sha256": "fe4d9b4e0be2e743b7d1d96bddc83e8978e0ff89d0d71728745b7bbb9e30ec15"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-3-stdout.txt",
+      "sha256": "43af15017426cfa32472d6393c79e69fe16e21e154d25b24f32fa3b33b6f892e"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-7-stdout.txt",
-      "sha256": "87f9d3929f212407b75946ff866ff4ca17b83f62b594fe0319e89cd2615b6c6c"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-1-stdout.txt",
+      "sha256": "08825587969b3316d5b4ccd70e2b2d84d4a32f2e829fb521dab33a90d3734dbd"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-8-stdout.txt",
-      "sha256": "1dd61b080c3d39ad51660b75fa632af3e7687194b62bc01838a73959076d7020"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-2-stdout.txt",
+      "sha256": "78a7f5f00e4a0fcf3309d835e547bdb6f30a1e697e63f9b174a3367d23fb4fb6"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58371381-9-stdout.txt",
-      "sha256": "33552a86f07de194b005d06b4316aaeb1a3959966135e00fce1cf302cfc71c53"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-3-stdout.txt",
+      "sha256": "03b9f9100545296a9bc617254afd983280e0a52a03b2d36e33f343983ebb1464"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-1-stdout.txt",
-      "sha256": "e9a053399af096520806c61f2ab5cb1cd5c73ace470bcff757c15deef35740d2"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-1-stdout.txt",
+      "sha256": "112d3ab57d0731e0e64c3c1b50bfc76260bb4c456196428310a274eb4c8d3c38"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-2-stdout.txt",
-      "sha256": "4ee229acf74a81e20fe5bd69c89588d973d02d6da9094e57fa12b0c416afa463"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-2-stdout.txt",
+      "sha256": "76eb748fe335f561e84b3236d86e9e2591c8020d78f9c55a5e93b60e3183ec82"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-3-stdout.txt",
-      "sha256": "05aacf4b74071a287e278804e3480125852e09502acedafa0cc3ac4b0a08dee9"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-3-stdout.txt",
+      "sha256": "7dc45a8467746e64800cc8d951f7463345b7d6b7b616dd711823cb88a6e21cc3"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-4-stdout.txt",
-      "sha256": "fe9e4943a839ce346c1a8377ade7fc4ed6392eeaa33ebf901b9a2af4eeec8036"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-1-stdout.txt",
+      "sha256": "5732312355c060535ce4ea12993a43a934ad441eda90dfa06362425bf9601459"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-5-stdout.txt",
-      "sha256": "9faae326fd949726875f0f1c88dfc35e4bd94996eff9c103bfe06968e676f4a2"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-2-stdout.txt",
+      "sha256": "699b296278fbf802b9739aa1e42d1e8be5a000724c205a82af4c21b95056de5d"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-6-stdout.txt",
-      "sha256": "0f0a543da4de4e0542cb7c8d84177608813c8a85c80a10ec5757a02a5b610935"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-3-stdout.txt",
+      "sha256": "89704738f5909958a75c6ea7c6878a0a744065108594aab7c48e3fe47ddf62b7"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-7-stdout.txt",
-      "sha256": "f549565d9ab169fa7ce884ad1aa121fcb27b2f3005d3d209454609e85f2d0d48"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-1-stdout.txt",
+      "sha256": "53379ff04d4618bd01ef0aa3146da016ec26b59cf0d87bf631a7da3bdd905b95"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-8-stdout.txt",
-      "sha256": "847aed860e759d7a1a058699367503a4a9b3f01381af8ba82f30345a4c21469b"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-2-stdout.txt",
+      "sha256": "7fb592cc501531d2a2b9c55ae0fa023059a0c2076b6f36fcdda1fb5e1b7421cc"
     },
     {
-      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58371387-9-stdout.txt",
-      "sha256": "df21cd328b12b7b34dcf48fe5e57fc2f59e079622899b011887136082259d6c8"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-3-stdout.txt",
+      "sha256": "2faa87f543b31267364cd09f0fb6e4a6747690b375cedeac272daa0c8e1edff8"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-1-stdout.txt",
-      "sha256": "2e3039ccafc58c3519b56287b1b84e2cae28796f92a7cae3ecc4839e0251ac60"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-1-stdout.txt",
+      "sha256": "207c155e811b25849c5dce331c563e97536e1ea30bbe8edaf12cc51dbdf16781"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-2-stdout.txt",
-      "sha256": "0d872b5bc9a08cdaa5c7e77e406f5ea04b2a922adf78d8860abae5a5e7a10952"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-2-stdout.txt",
+      "sha256": "7cd3258e3303b3d92940ae96b1cceff1954af8c28ead5616feb33d87ee886cd2"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-3-stdout.txt",
-      "sha256": "274fa0e58ac19b7d241ed9b1fdaf7878997159aff6f68d6c234f45f383796a07"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-3-stdout.txt",
+      "sha256": "e2fb1b14466e267fe00ebbb7b6228b9ad91eae08fb693a0fb25a228dcb80f60e"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-4-stdout.txt",
-      "sha256": "38b68a3fdfa7f2078809daea0c22f0f1da23d96855ee31ca1d347f6da6e63e52"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-1-stdout.txt",
+      "sha256": "605eea1333b66fb3109965d30030666ab7ae5856702e447b6e0e1100103c9fbf"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-5-stdout.txt",
-      "sha256": "b9d760fb28357c9d97d9d5cb23a5cb1dfbe2abaddd329982306695c463bfee3e"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-2-stdout.txt",
+      "sha256": "f1ea08d72361d1635e3aee2c17bc4e79a643c019c3795a89357fed3d36f19c08"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-6-stdout.txt",
-      "sha256": "f2a152c2bf8b343eeaa380d9070810173d7c457ed4139a1a0abc65126e5c093b"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-3-stdout.txt",
+      "sha256": "5680bd4619fc3b503687e707c25fe7dabcdd8bc6310f196b5ed724fd86c06504"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-7-stdout.txt",
-      "sha256": "26619c2ecaa357ac8dd22a4e2074256ec657ce62319aaaae4c9cfbae458cd2f7"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-1-stdout.txt",
+      "sha256": "fb24f09c89c92be7df0ee49f08e3dc0e380a1ca756b0771e92c9ed349d1f9978"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-8-stdout.txt",
-      "sha256": "663e5996bb04936413b3d3af0d4b81edde8c3c53bf578dc5b31c24f8a166fde4"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-2-stdout.txt",
+      "sha256": "07208dc02b02b46c11d6a667cbafb01191ce956226e3f6815d498b20c8c95e1e"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-9-stdout.txt",
-      "sha256": "46ff70cc917db9ccf40df2478e6143d41143e2c3faa98a09622c32a8831b801a"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-3-stdout.txt",
+      "sha256": "c6e589cf5a74534d2da8881a79e08c87a7597c76c310c9067c3cde4a268b397f"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-1-stdout.txt",
-      "sha256": "2b4f5561e033b62aa55d5d96cbc475b25567dcf7a3d418257742bcc12524cddd"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-1-stdout.txt",
+      "sha256": "0ac80d8dd4179208798a8f23a3d6447075d4ff7e121e6735925d493b7b9f44ef"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-2-stdout.txt",
-      "sha256": "728bc84d3ae85799fd9763088120b807bd094f9b8731de0f537a32409adbc6b9"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-2-stdout.txt",
+      "sha256": "04b5514d909bfa4f5a7122aba902f1cbea137ef292b21995ccd40d0334cf6aea"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-3-stdout.txt",
-      "sha256": "99879d4eae9e7fdb2914661bf6a24b98a0db07c55fd0585d612a20f61c39bb62"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-3-stdout.txt",
+      "sha256": "d6ce34c60442e4e62a0d89e06da292578fa4b0ce094def09c9a1b07ea090f3e1"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-4-stdout.txt",
-      "sha256": "81aa031464e6676a29f27c331d8bef0c6732612cfe99232402c0c6be0a9dc4d1"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-1-stdout.txt",
+      "sha256": "d00d78caea1960e7bbc711e7df6ae389a8d2748030dbef1fae3ae292f07d3ce1"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-5-stdout.txt",
-      "sha256": "7b57e597c76806c33eed64077741455b37da0e5b9ac0986b4f16bdcf10e2b339"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-2-stdout.txt",
+      "sha256": "ede9e3bd9421764da808d666b5edcba2a7d2c000c03937cd3e2e6a41b05f6531"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-6-stdout.txt",
-      "sha256": "7ae0398de861e6190b3740a63b68c19eeb665a6468a06b2b918b752d629c8c08"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-3-stdout.txt",
+      "sha256": "c580f9a58410c97c021b4c8f5bcc0102a5103ddadf4d44c68bfc124173fad9b5"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-7-stdout.txt",
-      "sha256": "f5abe1e924ff1831a9e40b3d971a41319790a9a6dfef3c8547ce3e958a89ada1"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-1-stdout.txt",
+      "sha256": "f1dd412b101456d0b8839e4228e57ad52d26b6082075e08f9c74645f94a9f5c6"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-8-stdout.txt",
-      "sha256": "2d059e12f860bb087d89f7727955b51f7c95db5478a010922e47218153bfb0e3"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-2-stdout.txt",
+      "sha256": "e9e696aeb8c6df5be4b9b4966c0faaf37544617cbcd00c4dac7028bca7748f5b"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-9-stdout.txt",
-      "sha256": "9a1085d1fba1b91d9388ff40baf1aa385a0fa308fb710138caf867bf4d1ea00f"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-3-stdout.txt",
+      "sha256": "1dc27addf743c11ea4fb5d9d455ee1587635f65297ad2ece44933f526d6adb36"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-1-stdout.txt",
-      "sha256": "bb5b07e700b335e85ae6ca7bb1ab486d82ce00fe4a5dca53757a1f7e8dd868b6"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-1-stdout.txt",
+      "sha256": "6110cd0ea72f09c3a4c8b0278d26defbdc35b4f15f50f2a83cb8bb5ec35564fa"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-2-stdout.txt",
-      "sha256": "47ef36af8ad602b57b17238c20ba722ee4daaea79daba32ba71083997faf6d75"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-2-stdout.txt",
+      "sha256": "15c1071b3aa643f168ae53bc77941bc44f156ed2cb9e57a84cebe235e80adfe0"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-3-stdout.txt",
-      "sha256": "0d914b3c6c36aca901e6184e617f17256fb0e5ddc65d98bc5920e48eb111a557"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-3-stdout.txt",
+      "sha256": "7e0aecfb179661102ea6ca1d17f3daad7c9bb6445073ba40a28f207aac97681e"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-4-stdout.txt",
-      "sha256": "7fbc4ad138265dd2eeadbbfa5f793b9716f072943d337796b56ebc533f6a3a10"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-1-stdout.txt",
+      "sha256": "dd5b32a0e409661fc2bdb1257ed5f14ebd1941e03d627338f6bc12cd7a3649db"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-5-stdout.txt",
-      "sha256": "3ba3e5bc1e4b2a885e04de21a1d5324d0a92ee68ac4ddf418af9fe75b8a1ba6d"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-2-stdout.txt",
+      "sha256": "25e0a87f949fe5c2689e5ee7f64e4a73e82651be6d16700a136f8e4e143a3b2b"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-6-stdout.txt",
-      "sha256": "4c1bbf0b0cfc5aa83afcacec3c5fe834399668192bc23ddb4efefe47e38f674e"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-3-stdout.txt",
+      "sha256": "8ef6b4f3c18fa38d53425c40e830834521e56d0b8065922e4cfd9f5b0fd94d4d"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-7-stdout.txt",
-      "sha256": "7afe76bd3fe05dec1c3f3638db198efafd3b4b980f98b14a0913616a37304ec0"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-1-stdout.txt",
+      "sha256": "b09ced7bbef3bf1ddc8e892c2d48150c50970175acf78483477a1aac1c026a76"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-8-stdout.txt",
-      "sha256": "056f2a824d3019f367f79423c3cbd3ec38a149c11d7544461d67489f00cacb93"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-2-stdout.txt",
+      "sha256": "6440c99494c36b8ea173e7caf9ea016153492d16e1e321e027bf70576f2c898d"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-9-stdout.txt",
-      "sha256": "2ba8fb263ce748901f00165f04800bd17c6c5f9ab6780cda34ee5c72e081403d"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-3-stdout.txt",
+      "sha256": "38215c439393dd093fecc30ff89847de8607311bee395700a33e7da4f5b98d06"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-1-stdout.txt",
-      "sha256": "a7b97ffa657efc05f5325b7ba95d9198133fe9fc34f394744a986be2fe2789b6"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-1-stdout.txt",
+      "sha256": "f7748810c5d6ba7b8c6227f0cee039558fecfa1302c7fb72a1f5f62fe8f27411"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-2-stdout.txt",
-      "sha256": "b7edf51951660c98d0bd621cbf326ef80211dd9d002ac133305ed64202c70970"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-2-stdout.txt",
+      "sha256": "fc8afcda7e4a61f36b01a8e6d768e364127ef0bf9cd35c46f08f69f2a30bb0d0"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-3-stdout.txt",
-      "sha256": "f1b386dd8406850971be5b6f90203f62c85880a32061358b63afdecf92a3dc89"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-3-stdout.txt",
+      "sha256": "1f59f4b693f6cf23636e99660ebb5e635a2e1b63c88cf614636127017636b546"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-4-stdout.txt",
-      "sha256": "886720b1e1a060e987d9682782419ec5a2ab90e73fe15a2dfb36c2be09d8a8b8"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-1-stdout.txt",
+      "sha256": "bf9ab067f23a6ec1d38425d27fef56ee0c85a9584d7dd42b3f3a18ac323b3d6a"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-5-stdout.txt",
-      "sha256": "03e41b1b827e5e2ac51ce1c29fab57932f93942db99981409b2c4ce65893f0a1"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-2-stdout.txt",
+      "sha256": "7cdc9368a77d9892456dd3da1905b2820fa33f950bb4be5f344b69106d9b5dc3"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-6-stdout.txt",
-      "sha256": "2054e7d72c952f248941b5aa945f0bf6f4c0798e317d5de8e86b6a0b4c8038f7"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-3-stdout.txt",
+      "sha256": "45f26733ac8df16a16bfab1d989c06a547572d946e142277728c99fca49153b4"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-7-stdout.txt",
-      "sha256": "26cbe64b9caeaac8736187c63d258a3fe6e824a34738e331edf66c779cb87931"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-1-stdout.txt",
+      "sha256": "7c98cbf809d4df8bafcd52d9da899f8f4fee31585846bfd2c0ff06643a2a751e"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-8-stdout.txt",
-      "sha256": "cef13031b310f4ba959eda50239c796f7d06e0a59aef396ab5fa82faa05ce329"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-2-stdout.txt",
+      "sha256": "942556217aa5e7c4f73eb6954b67ba9adbb362a959315da3bd5dba251ae745ea"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-9-stdout.txt",
-      "sha256": "ff0f5663dd116ad5ae1409ebdf0c4cb3b3c362c2a887ad864247fcaee92de036"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-3-stdout.txt",
+      "sha256": "eafd365f12e83c9cc813aec5942c850bcd690687112fb88f3b030ec28dea0228"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-1-stdout.txt",
-      "sha256": "8ff7fbdd3ae814a0fbb9681212a10d4a6b2e45cefe15e8cd57df028716810fe5"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-1-stdout.txt",
+      "sha256": "211550c9f30d921950fce7a5de90c074041c18ed94a4adabd34924850bc67653"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-2-stdout.txt",
-      "sha256": "67e3e2b8da6fd92ebe48431ffc2ffc8a45a0fec19ff4927e4d97f63271b5366c"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-2-stdout.txt",
+      "sha256": "9eef4180a671d0711d9b487347b6398c91337c16819be0f0388d5e8032d6b1c5"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-3-stdout.txt",
-      "sha256": "b1c65d2b3661a5b39022ef67a2c3bc4138f36300027a14cbe68bba3f8ee55322"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-3-stdout.txt",
+      "sha256": "b67175b845463e51529fca29ddaae4ff0308a8c2f66bf8bbe77fd822824e0024"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-4-stdout.txt",
-      "sha256": "514d4518be848f11a54dcca4aef28c28917b53576da390fcb5e0a20b178188a8"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-1-stdout.txt",
+      "sha256": "e32c737296e18acde13446ae1d87226232f87832873736b0adda075a62894f1a"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-5-stdout.txt",
-      "sha256": "c49c3ea824cc695d81bbbc142d98ff38aae2f0247e26dbca411539cbd67bacf7"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-2-stdout.txt",
+      "sha256": "579b66a81258e45dfe2d876346777a1ed3ab2c3628c125729eca033327602d41"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-6-stdout.txt",
-      "sha256": "36ceee0c8915ff13b48e0d967b94935591cdfb10077c3f08dd6c5fb66c49b0a5"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-3-stdout.txt",
+      "sha256": "184861112fe6070c3d4929183b67d3b405c0899b6f99238d5e33391aa6ef10a1"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-7-stdout.txt",
-      "sha256": "ae786281508be7af769f8b973ecf55187384107a928371d79c22e071b5cc5054"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-1-stdout.txt",
+      "sha256": "18504b5843587f71442824bb29f33de2fca776414ca9e2619cb46da85b165106"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-8-stdout.txt",
-      "sha256": "6c91c1abe815f0b23d67963d965c1ab4cf1b9d14dab6f3b997392901e6037410"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-2-stdout.txt",
+      "sha256": "787982822a8a7ed6db7472783897119c11c5bf35becfea968ccdec18a7915121"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-9-stdout.txt",
-      "sha256": "aab2b3637b3f10e434e62bfd82a4f5e50385f8d3da74a8d76a450a69ba4dd169"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-3-stdout.txt",
+      "sha256": "3edd01d9cecce52bcfe3dab75bc02e958468591d7a227ec31a3eae5d3753aeb1"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-1-stdout.txt",
-      "sha256": "8627e0bbc23db07f6cb8e7e3647216e6563c70bfa7d09ddb1d44c7990d7301cd"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-1-stdout.txt",
+      "sha256": "1c938fbfc119a61df032baa7a96bd87bf25a96cb12454155d043d122f1bae826"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-2-stdout.txt",
-      "sha256": "fc12f142fc4654a715212d92f77bd447b32847291fe0ebfa3f566e82a9c1aa1b"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-2-stdout.txt",
+      "sha256": "7094628c775e87ee1e83a1798c0d860dd4813d029e84c5426bd08f0b51b9a255"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-3-stdout.txt",
-      "sha256": "d2b9a64273548aa27625d80a4b1da313a521a0f7ca126a7f777752fe87ae2c29"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-3-stdout.txt",
+      "sha256": "cdbd41a1441a29cd4700f62850c5bcc18d94b33e9840cd61be0d7d0289248079"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-4-stdout.txt",
-      "sha256": "a22edbb04db066d7ba6e77566017907b582ca54147cf659187231b63d7fbbc4b"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-1-stdout.txt",
+      "sha256": "b39723f6bad8fc848cf01374e2780526ff2b4df7c9fe7cd6aa1a204805a60c14"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-5-stdout.txt",
-      "sha256": "667cc7801cadefab32d9617d9763da749d5dd27cc726de7d62295a2cfce23c6b"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-2-stdout.txt",
+      "sha256": "0767aa6b271fcc0285be2c9390adb650cb6096c585fb43bbea88f1aa35f7b45e"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-6-stdout.txt",
-      "sha256": "28338451588043796a80395014d1ed519949ac303d547aab49553ca3a5464b81"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-3-stdout.txt",
+      "sha256": "faeb04b44feed9a36b4dcc064e947d52c7dee94a4ff823e24430b1542546af17"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-7-stdout.txt",
-      "sha256": "efcac888be4a35f2824aebce6ab405b2ad91573589e0e5d771ae6f195969fda2"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-1-stdout.txt",
+      "sha256": "f8b137cebf7aad485621db9e1374234808c596b453f129146f371dd699a9b61b"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-8-stdout.txt",
-      "sha256": "c55214f120933941091b7a38fc4c7cc76eaf5250003d24df54d7b6cdaa0a50f5"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-2-stdout.txt",
+      "sha256": "7721eadcb155ccf8dc814f27c27e91d80f12df346ab8ca52b97784ddaef1f41b"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-9-stdout.txt",
-      "sha256": "04c4aabb53fd22a1a287c60714571cf4abab9b84d41d19c5347c5bbf18d47d2e"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-3-stdout.txt",
+      "sha256": "b6f30408c28edc4832ec0e0c46cf04a5c7125e2ad13e23ddeea7fbee69d1ef48"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-1-stdout.txt",
-      "sha256": "76f4645485de239318466ea9eac7e15340ec7f7321ff159cd52ba91857432cde"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-1-stdout.txt",
+      "sha256": "66135b4525e028ea850aa020daa0f7eaf95c65710c88ef9ca932f603bb0a5086"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-2-stdout.txt",
-      "sha256": "9ff3162143d647a06722aae68ad5426695e02074e64fa7a20e57ce65f921a53e"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-2-stdout.txt",
+      "sha256": "76b0a435da44fb5ecb600e9a2a389fe140ed64fa17cd30d411ec5510651b7ba0"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-3-stdout.txt",
-      "sha256": "ebddcd6a70ed1a5d3beca8b9bd2ebdb1b592121ed71677316c6f57b15ca6800a"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-3-stdout.txt",
+      "sha256": "23634da849c1b4114c41410636add72ebd9f4549f024cb32b22289486a8b43e3"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-4-stdout.txt",
-      "sha256": "accd84c3d8fe034ba1000b2cf259718d21dfdaaf5a66f5f02aa80f032743926d"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-1-stdout.txt",
+      "sha256": "618392ecccee4786cce1681ac8d50254abd41d68d0a1f44b2150364cfa51c718"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-5-stdout.txt",
-      "sha256": "1bc0df55e2532d8893e57e82133bc48b8d4441b455196122b4e0369a42cddc71"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-2-stdout.txt",
+      "sha256": "c131f9d2d2fcef7becc8f72210ec451c5e68c89cf97b42ff8152f1d405962868"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-6-stdout.txt",
-      "sha256": "ccc56246e96977afabdaac3ee75bdbdeaa3538c6843d269db2fe4daef4682d34"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-3-stdout.txt",
+      "sha256": "0a5e5b9a182889c2caee1202f2e4e2583c21f1d576b51b6411d61a031c39c225"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-7-stdout.txt",
-      "sha256": "933b21f56cd9900bf078cdc4e511e361b7dba7824d196ddd762cd60c14cb3dae"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-1-stdout.txt",
+      "sha256": "cee96c05705fda803b0ec17ae25a734e10f0e53587fbb5f146d8dcd5f535539b"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-8-stdout.txt",
-      "sha256": "b068ef046b56c52716a9758893058edc030746d2bc6b307cc8748b9c57446c98"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-2-stdout.txt",
+      "sha256": "61ccd9da1d9d899bf96597905c6fa7df0bbcf66a16c8aecf95f4a36827459635"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-9-stdout.txt",
-      "sha256": "937acfb3138346c4f854b5a1c960e58f65b75cff7fc5b35080701b8b363b7e55"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-3-stdout.txt",
+      "sha256": "d35ba8b3efd966c0dc87788c887c6c20131bd1af06b7c0905a457cce646da274"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-1-stdout.txt",
-      "sha256": "a3f0191468aaf3d4f166285093350ac2231f34419e5e33154d923659a07168d5"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-1-stdout.txt",
+      "sha256": "03930f4665da5360cb3b0f3960b955199de9e76fcc00627b2eb530f34dd60191"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-2-stdout.txt",
-      "sha256": "b870f0f8ff5f91f0f21e0dda359b3ce6e7de9f7187934ce7fb83e5f5b21581aa"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-2-stdout.txt",
+      "sha256": "35f88adaf55b29534cdcd271383c69e58d430459eebd51585168aaa411e0261b"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-3-stdout.txt",
-      "sha256": "3d8c6332ee224ac558e1b3c14edee430f22886df332f9f260969e9a1d13f4e41"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-3-stdout.txt",
+      "sha256": "2b3e6a3efc1e1f8e89cea93e0782c1f06caf5e84dc97c98fba6106267740037e"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-4-stdout.txt",
-      "sha256": "d1a6020bc0b87cb2959f4e852eed3b109060b764ef3c548f4c2cfda9a05494ba"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-1-stdout.txt",
+      "sha256": "ab22d8529db00038fa7dcd2bd807442a1a905995f8890285124023bfd4e015b5"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-5-stdout.txt",
-      "sha256": "c2705e760beab79f5e489e6c1d08bdd62bb35a7a54c9536140ec2a6d0d706423"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-2-stdout.txt",
+      "sha256": "d3af902b23fcf2c9917b85fe4811198c5254ab494f97b7489c5f34b758ba4046"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-6-stdout.txt",
-      "sha256": "c9369a1f48c941f576b5dac9b30e17b7b78317a25305b85fdc537b3ae1d92ffc"
+      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-3-stdout.txt",
+      "sha256": "d6fd413aedc244782159842e28c44ca95124c4e87e7be53fe557d107af6cac94"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-7-stdout.txt",
-      "sha256": "3bbac0194333d6140a7c7eaba1e3507301bcf333dce38ef67c9a8500de883bf3"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-1-stdout.txt",
+      "sha256": "2cf5f36b1cfd373584f641fb3410fd51b528752389a6106f2c80884f9d8f1eae"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-8-stdout.txt",
-      "sha256": "53bf47ab59621444698b39961d68a9ec7e3e284e446d1aaa9b62894c6bf3c231"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-2-stdout.txt",
+      "sha256": "75ae034f99f264404469454b9d059e6316af0bedec4ddc649ccefc7a21c53605"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-9-stdout.txt",
-      "sha256": "f17a8cc37052002f1d7641da6fd37858834d25f8a95f593cd40a358e7fa1246b"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-3-stdout.txt",
+      "sha256": "873e8c1ba687fe96116e62210523959b95215da2b8a5ee6fed7ef4474907b798"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58399809-1-stdout.txt",
-      "sha256": "57006fb142003b5a58f564ef041775dd452f83569ef4f4aa0198f3b341b58465"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-1-stdout.txt",
+      "sha256": "363d695aa376a0ed19b48770a63983885ee5a0d7d10009ef6923702374cdbb33"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58399809-2-stdout.txt",
-      "sha256": "f578d5b531d2c3c51caaedf2e16fa9b1976684721917acb912e26bdcf8a3f2ca"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-2-stdout.txt",
+      "sha256": "e474a9c496e6810a8a9cd99367255598599ee19b514a93f6d2caf65092702a0d"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58399809-3-stdout.txt",
-      "sha256": "cf4d435b5dbc0bc5cc29957082cb565f3dcb09daaa78148a0cfb6933b1710e23"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-3-stdout.txt",
+      "sha256": "b52c6fb379c607a4b694c8e5ef1821bb5d886ab81c31090376b1fe2f50c610df"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-1-stdout.txt",
-      "sha256": "abe44a591433053b159067ca414d78739961d2d15da549873355e28a2d7a663f"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-1-stdout.txt",
+      "sha256": "7b152f7e9a69254dc66322a6d4fac7ffad575b0ef4b299f1c95b0ffa7e8cf6e7"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-2-stdout.txt",
-      "sha256": "779c14c361bbaff3a19e993f2cd500a3c92a4e4ab7c32f48a42615783f853f2d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-2-stdout.txt",
+      "sha256": "461df3bf9d93bf7a554b1549c5897b2aea96b36fb173db661bfa3594190f3101"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-3-stdout.txt",
-      "sha256": "11a19f550b0e58d2b97a0f92e3e5127859db7f1099165fa6a685dd115c37fe27"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-3-stdout.txt",
+      "sha256": "fe8ae15c6d1be14262d0c4324df2b1a5aa3f7b0a5df69a279e4acd58ec044a6c"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-4-stdout.txt",
-      "sha256": "f75a76d53faf8ae7bd25f8fe33c0cf9c666b5fa43da17d898c9181b202dc1034"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-1-stdout.txt",
+      "sha256": "f2dde7c43fd671979f226bd743e4db3ab0f1b6d09088f388c8d6971bbf2a28e6"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-5-stdout.txt",
-      "sha256": "734d98a696c5f4aee98b8149b8ecb51b2d44d0348ffab247fdbf64fda9011cc2"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-2-stdout.txt",
+      "sha256": "0d3cafa2ec4f5977b85b53bd24cf252f30b28f85db956030ad60b355779e41cf"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-6-stdout.txt",
-      "sha256": "3d957e9dd96d292675c7f323c875ce7f29d00e314287563f4666c52400f174dc"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-3-stdout.txt",
+      "sha256": "0d158f061beb893f7b6c2aff0aa165552f59079197d9a5adbb0432eecb338fb2"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-7-stdout.txt",
-      "sha256": "9b01516ec17c6667118a208c478ecc99929d0364fa8b2305602fe13d4abc1112"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-1-stdout.txt",
+      "sha256": "0e664fc6968062aff4aceb973f71ddab1587580136c5bf420fa9ee9ad2bd13b5"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-8-stdout.txt",
-      "sha256": "c672b97bb56cf7087b6fba9457c16da182e5c613189ef2e53b4bc1f3533b8b37"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-2-stdout.txt",
+      "sha256": "cbc3e77093d00ba756d73990dcbe10aa4354e6ecaedbd7fdd95980ee21818445"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-9-stdout.txt",
-      "sha256": "054d4ee6435c9da2d63de2eddd28cde3d1d99ef12d5bf86c8457a0eea8b79eba"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-3-stdout.txt",
+      "sha256": "0e4fa49457e7d72d0d7a59ac2d2d9dc9a1c98431cc4e86665bf5e722ab972458"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58403604-1-stdout.txt",
-      "sha256": "4309207f15940b43090de2316319d534e97d218f8ae90e90a20ec7607cbd7369"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-1-stdout.txt",
+      "sha256": "f217634212da4aa555cc0ae8c42180cece08054f185e6c638bf3b5e6df9565fb"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58403604-2-stdout.txt",
-      "sha256": "bfc78addde492c84a8ecdf0eac3b4dcb21d97347027a839e3cf7b1ded9f1831e"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-2-stdout.txt",
+      "sha256": "116c88f88ee27bd2761055e4ae6ec44baf18a2233653e84c8773bd2dd87b4899"
     },
     {
-      "path": "sycl/acg-sycl-mpi/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58403604-3-stdout.txt",
-      "sha256": "76730a3fc894bd1186029ab7ab5bc45135d242bbc7ed091be91d1f6141ae020d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-3-stdout.txt",
+      "sha256": "ac2e8af79955c4ef4187d5d51b4ad567e278e1a42edd5ea9a02940a03802d924"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-1-stdout.txt",
-      "sha256": "63fd66188de2ef0ca3532c28aeb5e6ceeaac81d3ea76d08ca0455c84502540b9"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-1-stdout.txt",
+      "sha256": "1527f134698f28afffbb26559a9fa52c9962c0e0be129d19d02b35b7e743d810"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-2-stdout.txt",
-      "sha256": "41bcad812039443157f0202357004daf525c987064a006bd2949a772e2c99f6e"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-2-stdout.txt",
+      "sha256": "8a6b4c72dfc912b4e634fe8986114cfb0f1889cd478fb557e169ab254ab0c338"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-3-stdout.txt",
-      "sha256": "3d5f2a5129355cce8866bf911c0064bef47610ff78416289ef4aca1d689af6b8"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-3-stdout.txt",
+      "sha256": "7c0ec23fce0c658add5bbd8cbc140d280b3615f3d62485c71ba9686ead99937d"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-4-stdout.txt",
-      "sha256": "4fce935d858ad887bfa1b027b016579bc36d8541941b518e0b36502f55b62509"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-1-stdout.txt",
+      "sha256": "31807592bf8eea99647c5ea17d16556758400a47c27e3bbf127adb31ea059e71"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-5-stdout.txt",
-      "sha256": "ccd2b684b4bfeabd9018d03ec2e076833d940049f30b1a4259335ea5a569d528"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-2-stdout.txt",
+      "sha256": "9c8ee8697b83c5ee787d9716ddeea2f911b390ada611d7df91d6f7e030a060c6"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-6-stdout.txt",
-      "sha256": "1d94fe0077ef20f7e5466ae863e0aa31a01cfa8167dddb586291f03ca8545283"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-3-stdout.txt",
+      "sha256": "904dbe84cd480dcdc5bc05bdde3b378f3f3231cc4d172883e530e92035143747"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-7-stdout.txt",
-      "sha256": "23835d490a0f9ecb70f0a8760fde2319275dcbdf5c76e43cdc6ae5f540ec1a99"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-1-stdout.txt",
+      "sha256": "311651fa2735726a99615ce27b579435e43585effe6be7952e14c1906138d04f"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-8-stdout.txt",
-      "sha256": "bf29b332ef123a75eef0a40d340decbf5c18626693e0edb2fb8d54563656da59"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-2-stdout.txt",
+      "sha256": "9963b817a79121fc0b8fb003f158fae6f8eec8d59336bef8f2e442e2e313de77"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58371382-9-stdout.txt",
-      "sha256": "43577695d85d238bd23740197e7b97d5dc907899c48b9d764b5a2fbc4762051c"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-3-stdout.txt",
+      "sha256": "11ce2e297cc641bf79aa365a989b7a678020483e9c1e467041b3cffcbd41476d"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-1-stdout.txt",
-      "sha256": "d0e71efae64d56f8133d706ac86a264337594432b9b85a20fc3569b06f6b0358"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-1-stdout.txt",
+      "sha256": "7076b1ac6f6c4d860ba95b824df0ec9051eb28ff999a36fb3a2b93d207a3e56f"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-2-stdout.txt",
-      "sha256": "5d792f6b82b86495c9990030dd30e237e7bb762983f5cc8b4adc1170ff487cd6"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-2-stdout.txt",
+      "sha256": "65b35d5f857f9bf14de5ac839634764b744e7be8d6f53925a96fcac86be655f0"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-3-stdout.txt",
-      "sha256": "da8b1876511bd11ee422ec7003196c90743176be91a59f9931ce250fbbe1128b"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-3-stdout.txt",
+      "sha256": "0b28c8634672001b3072de85c01a010bb9bd29a877185982981fe09c274482d9"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-4-stdout.txt",
-      "sha256": "1af795b133b4648745deeb56c02ffd7e1c6b97142bef3cfb06904c4b6cdc474f"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-1-stdout.txt",
+      "sha256": "9203ee6a0ee5ce0af2e326044856746e811da0e3c56ca85db99a71e94dff6b30"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-5-stdout.txt",
-      "sha256": "c6400fd92e6c866853404e8b06b7f51c230ce925d5f0e07349f09bb33ebae60d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-2-stdout.txt",
+      "sha256": "6e411a0c7e14eec90998329b27634edb7b41c166065a18ecbde580ec1271cf6c"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-6-stdout.txt",
-      "sha256": "2c71661343e9eb75b2957628d4bd5ae6331153a51c8940fd12180e637a730950"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-3-stdout.txt",
+      "sha256": "b14afc9799eaad74ad86fd5fbc4c43599c1b28cb36ff11d4cac0262ee01e579e"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-7-stdout.txt",
-      "sha256": "9d95b00ba373e745573bac49d8a00145bc58bf3b287fd0cb56d81597305e4b3c"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-1-stdout.txt",
+      "sha256": "7e5d76c81591b9294f3a7b26c7ad4768a0d01fe783e8b5ebadb4c89b1cad942c"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-8-stdout.txt",
-      "sha256": "7ade3440d89f4eccd0b8fc3f75c5b6e6ce241406fb9057e1d11f66b56075a73d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-2-stdout.txt",
+      "sha256": "7bf0417f7961f49be7b66997f303d5c562a52f82018fa45f08fc49f3624d8ae9"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58371383-9-stdout.txt",
-      "sha256": "f4cc98580a7f4ccbcb1d5e8a5a226d691047adf3589f48acb2c7e3dd7a5cf373"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-3-stdout.txt",
+      "sha256": "54160514fa028215de8dad33056f0126edd0360050f08b4a0d6f73f61c20ecba"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-1-stdout.txt",
-      "sha256": "7ed8a41d778add9ce489217d6879ec76ac45b758dea66cc00477d95b7d46cb61"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-1-stdout.txt",
+      "sha256": "33b8559934f339490374a00ce63f4b1ec8c677c4b78f80fcda74d2648c41643e"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-2-stdout.txt",
-      "sha256": "5a747f7ae3baf8923bcdb849491f3adcf183d9328ecbe610234e52b5dd028522"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-2-stdout.txt",
+      "sha256": "373c0f7654376392fbd1afe220fdbe6652666f470ca112c7bb613dee321e42de"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-3-stdout.txt",
-      "sha256": "1be640d26789bba07fcc4c0e8ea1a4dd81723335e13e64a22afd76f447f81067"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-3-stdout.txt",
+      "sha256": "14edcb95098d7f5e4e2ac31f1a362c77d1cc04d560eb03e8c28a2dbaa8b65fae"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-4-stdout.txt",
-      "sha256": "76cfe4a15f36bc56bcd763cf41bdd7961dbab909213e085947513a5ae96b1b69"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-1-stdout.txt",
+      "sha256": "a029e3be8226ee3c632f183a8f59102b01eea9f80ab51f9e68fed5bfb6007bf8"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-5-stdout.txt",
-      "sha256": "c6c5180d03a303cd7c20505e1196d32c218739c805ef573c7353f9364c28325e"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-2-stdout.txt",
+      "sha256": "acc3e386e3f8a60ee17a50b480e782221b1befcff2e752258a6565696baed655"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-6-stdout.txt",
-      "sha256": "af0f79c904aa16155c9f3822aac38376008eeddff66654cc8c66e47218428bed"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-3-stdout.txt",
+      "sha256": "479582176319f0ff233372d788bc7d086e4f49f1d414ba8768793f69bf22b6c6"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-7-stdout.txt",
-      "sha256": "3da64e250a5566334a0100a7613fb24aea2da8725ef131cf219e25c909defe78"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-1-stdout.txt",
+      "sha256": "b98ab709731ef63bb35d88012c7c47ad3cb0e9e876df3a7d21333bca57027250"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-8-stdout.txt",
-      "sha256": "c788c82acee308ce5ac05ee357de274060619aed384710ef79d84c9fd452c6c3"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-2-stdout.txt",
+      "sha256": "fc1f8eecc73d09948e96ad163308f6de2350a00748d0bf7f93b6dc5408d9fd29"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58371384-9-stdout.txt",
-      "sha256": "e3da165477a175017ee4fdccbbccb95d5eab6a08984c6cf793cdb63a0457f48c"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-3-stdout.txt",
+      "sha256": "2cbc7c1ee2d319e816af9e5dba669caf999b79f9b1ed9e81470fa5177dc98165"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-1-stdout.txt",
-      "sha256": "7b5d016bc405bb5567e24c8edc9174d10c066a6a2ab09720392f98223ad4a1ee"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-1-stdout.txt",
+      "sha256": "bbf1ffbaf58d1f7f4e888a9b8e70dd3a755cab5d0c74978e6378596b81060a6c"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-2-stdout.txt",
-      "sha256": "e8b390e005f13264114bcea85627f4d7ac096ecb7fb1cb7ec3fa3fa5e5ef2403"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-2-stdout.txt",
+      "sha256": "b5c52527dcb05ae1aa095510371ada2b66a497c95b1f907fe33276c1fe83738c"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-3-stdout.txt",
-      "sha256": "b1636b1edbe64a8a24ec624c50b6a4ce0a93ba70b3e7274d8aee7d369a72d3f0"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-3-stdout.txt",
+      "sha256": "3c1e58254280fdcabb6b4e404415361aee74f725b7140b60c9ceb1a38ea58850"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-4-stdout.txt",
-      "sha256": "11bc36f80b29906e1251c1e9d902c966cc00ba3a1d35f1dd80c3947622feab33"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-1-stdout.txt",
+      "sha256": "1c6d8b9513ea7cf2a71c495061543e2e8f634f7025c8c66ed6d6d68b702a0959"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-5-stdout.txt",
-      "sha256": "5066b9bcb92a5c6d1e4f0969ab73ee1c626559ea8202419ddf5d58f132284d9d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-2-stdout.txt",
+      "sha256": "6f3bece0dd55ae721233c7a3924581d7de359c78153a0d6a9ec3432c5c095389"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-6-stdout.txt",
-      "sha256": "245517ef258bfb738c36467fbdf9d38bad84fae8d5cdcbcdf26c82e509321e3c"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-3-stdout.txt",
+      "sha256": "f5ec8aa528ed14138c7b0a197097b8a08f80bb3b615138938ea61b350a60b96b"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-7-stdout.txt",
-      "sha256": "6cc17f20c29feb87a6d335079ffd293649723d1b5db2199f59bc278298e25e29"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-1-stdout.txt",
+      "sha256": "994d901f997af7809cae2cf245da34c38d96d9f6b8dfe90de3c60ebab6e819e9"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-8-stdout.txt",
-      "sha256": "750912dbb9c8da70f09cf93c0bd068b83c023cf836eb03c51a3228ca0a542930"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-2-stdout.txt",
+      "sha256": "4094d084126daac5c42b7ed68a35670756bd8d5ba30a0bcfffde863cab1a92e4"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58371385-9-stdout.txt",
-      "sha256": "63ab829c647e21220fac069cd4c937c757c10529dc68b6b641f54220c68889d0"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-3-stdout.txt",
+      "sha256": "50a0904a98929e04818c1ed4369163fc447dd5c096bbcc60f027fab732ef5ce2"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-1-stdout.txt",
-      "sha256": "f53d081eaeb07be03b3516cb74e7f0e6e95edb00e599b2095e4281d47bc58e4d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-1-stdout.txt",
+      "sha256": "dfc61c54717caf33e7e87a5943813ebfc59649be4eff79009ff03a691680b05f"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-2-stdout.txt",
-      "sha256": "860b1021718a01eb489a4e80519a5458bd225d06c039e736a8239d5a7ac573ea"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-2-stdout.txt",
+      "sha256": "ee8e5a52fef36d79edb302b7b02a537d397d5ddb371bad44d327b0192a645579"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-3-stdout.txt",
-      "sha256": "0cd6722741ebc70b4c922d1b980e53ef2fd08d52470df23ce9279405109b844d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-3-stdout.txt",
+      "sha256": "813b4aacb932da18e334200f973e6f49ddef120f8fe35556e60e67a5ee1e3a63"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-4-stdout.txt",
-      "sha256": "ec9c01e5fc746dd2fb479fd1d945a389c26ecf93376a0c3a4f75eb2fe2badc5f"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-1-stdout.txt",
+      "sha256": "64b843f8ad385c5457463206eb7d062c14b16fd598bd972763e5edab6c7c91c4"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-5-stdout.txt",
-      "sha256": "7c26a9dd4dd97206308483643d4d5075e660f59e32d4c9ec89740adff64c87fd"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-2-stdout.txt",
+      "sha256": "5cb2387874081c054f44895089e87a2a5c327dcbd0ea2b285a807d728dd5ef6b"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-6-stdout.txt",
-      "sha256": "04da588c1f773b01e56703fc00e5a3ea862181bbbfa5078c94b2cca97fa3639b"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-3-stdout.txt",
+      "sha256": "af7f3e95d25b3a31e389e080c38dec3340a5664e9a7d38ba9cd3da4975d06478"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-7-stdout.txt",
-      "sha256": "04d5fb288a5318f3c5f404e64504f5a115db49a241e2487fdda853c6183c933b"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-1-stdout.txt",
+      "sha256": "55525943adf39a596305197fe03265aa069476c130445e78f46f959c75d05297"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-8-stdout.txt",
-      "sha256": "8d47c56426c442d9fa5c244db5902fa5be5491c89ffe27c97fcd3dd35e46746f"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-2-stdout.txt",
+      "sha256": "b5858f6e5cc055a6176bc9f2952355e5a4b0fcb28e578d9de79176d362bf10c8"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58371386-9-stdout.txt",
-      "sha256": "cd320bb1a0b6630eb029b86bb8faca174af93205363974ae18740e60414d418d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-3-stdout.txt",
+      "sha256": "80aa69dc895ae787feab26f87228f94c70e140c4230c20fe44a5322588e36fb2"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-1-stdout.txt",
-      "sha256": "ef14c76fd5db8be6087bebeeeabb15de9f00ab53f89644a0a0382cd2aee21548"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-1-stdout.txt",
+      "sha256": "2014f988a158416525eb71429d4219eecd36e3beffdd16d217bd4f68d751bfe5"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-2-stdout.txt",
-      "sha256": "0bff63ba0e8d72c14f1d5e88d162e81ce04ff567edfb5cd41e5eab80a58da8c7"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-2-stdout.txt",
+      "sha256": "4d38224e4e110fd30842bbbc9d2a1a984f019b7ee336bd27960d310b74f3a9ea"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58371389-3-stdout.txt",
-      "sha256": "c846adc3712d3ac8aa1b221abc14a61a670cdec63f7f25af967ea2a977525705"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-3-stdout.txt",
+      "sha256": "bd9b4a4d5ce2171048a0cecf759234bbd3c1c26295a7f8b6cbc9250da02c381a"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-1-stdout.txt",
-      "sha256": "64202ae9218972dd402a2e66eb7ee7eef4c4f2ceee063e7fdbec1954470e8869"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-1-stdout.txt",
+      "sha256": "05cd1ec6094ff6172c42ab6ef1af158c87244480cfa05c51ad116a3a53f6ae18"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-2-stdout.txt",
-      "sha256": "baf0d84704a741fe5c744fc3510c26d99e2f08203057652254ad1aa6f522e50d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-2-stdout.txt",
+      "sha256": "138dc0f1862280091d5c7db8b220e6d4c33b0cf31597da077f4e97b2a72c4909"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-3-stdout.txt",
-      "sha256": "b103b4d0acd2b2afde7595d863e69bf097c94fde9eb9dbdfbae7ccbe22dd4b28"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-3-stdout.txt",
+      "sha256": "d7aead5472e783ecbdf100f120ca499aabec9a0f7da59cbcfcf64b774d772919"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-4-stdout.txt",
-      "sha256": "5284bf2cc06e163979aee0d795668bf596bde61d52420ad65d1d53bec5d99b4b"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-1-stdout.txt",
+      "sha256": "174aa4aac472ec48cf72de01033978d95db2c1bb8c5b6a94f6bc2c2516c01977"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-5-stdout.txt",
-      "sha256": "b0235b85b6266cf88b99434eff40c3914eddda9b85880f4ea319ead0311b0e28"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-2-stdout.txt",
+      "sha256": "1cf04ee186fdd94bce2a38635b3f2c830cbae430f99404be1d77a77db994c7f9"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-6-stdout.txt",
-      "sha256": "ada2b3fa5aa34dbf28ccff9c6b552ce99d58277739360f6e14cb1a4099dff160"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-3-stdout.txt",
+      "sha256": "c58d4d1a876493c2a87638d10983afe0e66e5e500e3eecb7a237148342d92889"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-7-stdout.txt",
-      "sha256": "e05c55021f8ac3f95c92e71595742dad3afd7312ac6e2db427b44663273c7729"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-1-stdout.txt",
+      "sha256": "8a658805a8b3feff49c16e976f2d0c3687c20e71a0a8913ade30d3cc55c6967c"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-8-stdout.txt",
-      "sha256": "fc0284c2c6d7f8f764d32a84a53e0c8c1b2cdd96cc8c9b55fe4a08ef9a689d6e"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-2-stdout.txt",
+      "sha256": "4d53223c2715034c647237618d184c4cc0a71795e9314c5897531d20b6e14c0a"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58371390-9-stdout.txt",
-      "sha256": "07d9ae21cced8ebdd62b23b72226aa5e30aabbf348f47de4a3754cf795599e8d"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-3-stdout.txt",
+      "sha256": "c40f42a77cabdca85541c911b4de191c6447a119da6c12ff7aeb6e6a38c0d468"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-1-stdout.txt",
-      "sha256": "9ea53959581574a826c7c9ebacfe620b0ce8e2369afd9913ddb9e1e79d093d7c"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-1-stdout.txt",
+      "sha256": "d6fb88aac27613c5a1b72c67f4bc8bd86f68924dfb71d117e8e406522970fa34"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-2-stdout.txt",
-      "sha256": "5cbf0997f8f237455053e5e0e38989e4699a3ac83e10c01ca7cea262533c942c"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-2-stdout.txt",
+      "sha256": "28505a5e7169057b8c3c987ad8914caba4d417b50544263c8c30c6058d99f4ab"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-3-stdout.txt",
-      "sha256": "c12151804e81179a9f5b3f6a3c212116dababb45873828cfc644d760bb812518"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-3-stdout.txt",
+      "sha256": "e41ac74011bfc3f913051428b2db1cc451abe345d5839cacc4738850444d52ac"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-4-stdout.txt",
-      "sha256": "1a7e0edbfe90e3623ac29ceb55984e21a377f4cce4947269f88a1d5a83a3f3c3"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-1-stdout.txt",
+      "sha256": "0101f615d8457630acfb68410c69e6bcb8e666efe518aedf1024ef0660a5cb24"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-5-stdout.txt",
-      "sha256": "777549747e0157d5c020d6961ef4399af82f06e159f2aa08307767a16e6bed6e"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-2-stdout.txt",
+      "sha256": "50b94d76042d46a6045a2cb32dd8d2c76fe4a65ab879b9f7e930f96c708fda8b"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-6-stdout.txt",
-      "sha256": "7450bbe88f91ab8cdfe119093c057a1b1d31cb414e9d1a30d105fd55752596e6"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-3-stdout.txt",
+      "sha256": "77ebe3b92ea68d8bb3a53c757aae7e6789c21536ee89489af6cd2f9b62e7773d"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-7-stdout.txt",
-      "sha256": "367d5175e336214b44549e7fc76746cfa9dbcc9742bc3b68108ccf5640bd39c9"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-1-stdout.txt",
+      "sha256": "4457030e7c3b2418b4fc67601e4806c4a89a5be21ad84a734b3c07e29b618d02"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-8-stdout.txt",
-      "sha256": "b097b96a0c890efa4a919b7d9644ccda64c40df5843a0eb6946e810c9536ab7e"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-2-stdout.txt",
+      "sha256": "d083dd355b53c8369c5c3386573e9a1d58ab20737e6f2a5ca5a0db7eb3386bcb"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58371391-9-stdout.txt",
-      "sha256": "14b4de36a97b179f7c2a52326ba88acaf874e50826bb416b389e034dcebe29fc"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-3-stdout.txt",
+      "sha256": "b8f5a5dbd842f36abbc86507804228ad95a96795b797eca1195c92f318cfa292"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58399809-1-stdout.txt",
-      "sha256": "5a3d86bda748a9c39d9e1493b8ccc9468adc4aa3b61fd7f7ef141d44275f9005"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-1-stdout.txt",
+      "sha256": "9a939fb42d5c07289e9f444c3443ad908ce41bfeabfc8c1cbf72d82324cc1032"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58407728-1-stdout.txt",
-      "sha256": "465c839baece1afa5a1f62530bc8dd48a482213f2a941b87bde00ac9128995a1"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-2-stdout.txt",
+      "sha256": "e60b9359582f9cfde6305704cfe498bb112916913016ddced264a7ba8d47f07b"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58407728-2-stdout.txt",
-      "sha256": "a8f5cf407a4d8ae468499b883c2c84905121b8f91e6e382b94f9c28a14b96990"
+      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-3-stdout.txt",
+      "sha256": "2bc421eec4d4f5775de0a71ff21d93500a113beeb57502e095bc0a04692c4026"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-1-stdout.txt",
-      "sha256": "d834f9153cfa947d7bde5850fe4c6b68ca2947b874b634e2f4e352cd637d9351"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855160-1-stdout.txt",
+      "sha256": "84546625f77ec636f41a1ea98ac987757088b4fbb3f95c9077deaa754b6d40a6"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-2-stdout.txt",
-      "sha256": "59174fa461c80a704b400fcf41f02ddb5b45a75b55fb57a0db09f1cd5a7b2f31"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855160-2-stdout.txt",
+      "sha256": "1295623c89e9dcc0877242f858e6e68bab0772105bd73928dbfa5c1e9b1d1374"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-3-stdout.txt",
-      "sha256": "0faffea64148e2697b1a6e91be40c4d08358d9fbe0d6b91edcd9f3ee912076ee"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855160-3-stdout.txt",
+      "sha256": "c6429e1576f0fb482c483ab54aec9ef93bdbcb1cef7c5e37730d97446d1c4acb"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-4-stdout.txt",
-      "sha256": "762fc2427c2a059e84f8034e0d79dabdea571c3d96a9fc45c57be468d04fb577"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855161-1-stdout.txt",
+      "sha256": "34314490eae97817e4231c387368062e5daf4ca57076be93626c73e454e14c06"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-5-stdout.txt",
-      "sha256": "6751c702df9676677130885260337f9a708f3d9345c52834f1557191e8dffe1e"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855161-2-stdout.txt",
+      "sha256": "83472b4da3791790c852d504df24c4cb0baa83e67c123634f83a9453cd20f47a"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-6-stdout.txt",
-      "sha256": "5940e5f1cf364ef75932616316ff4e7f3485df987c9b56203ddfa346b404d2a5"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855161-3-stdout.txt",
+      "sha256": "8ccdd51296ee90ec21a7693d12f18fdf7687079d93cb18b2e61a4952d16dcc52"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-7-stdout.txt",
-      "sha256": "56379b65bef5f12ef34eb84cf645caece81cc41fb1ff630d31639597729af41a"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855162-1-stdout.txt",
+      "sha256": "0df6399c4691a880dc1d481f93b8404b33f3f9afee47f3cddd2745778b87a129"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-8-stdout.txt",
-      "sha256": "152d1ffb695e64aa3d97cc56a44a33f4749a1a3eca2c0e4c3f02bd09234ff950"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855162-2-stdout.txt",
+      "sha256": "16bd37ef66a444e45fcc77bea5452c71e15c231beff2eacdac5f6c5b03d67a82"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58399792-9-stdout.txt",
-      "sha256": "d20338146d8f62ca3909d0211e217fdae54112760063f1084a82c69b672d386d"
+      "path": "sycl/acg-sycl-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855162-3-stdout.txt",
+      "sha256": "e97e3660477c2ef9e82e4b832dde44196b0a61564834eb6952814d028ef640cf"
     },
     {
-      "path": "sycl/acg-sycl-oneccl-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58403604-1-stdout.txt",
-      "sha256": "9b385de6f2b87204f2c2477347d82e34bacc28c01e4a04b2745119133b561329"
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856246-1-stdout.txt",
+      "sha256": "35ed165d76ff3999bbe6f09740683c8f5ca77bd59357a405cffee354bdef3cb8"
+    },
+    {
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856246-2-stdout.txt",
+      "sha256": "398eaea5c68dd76bfa76769190c42d6107278272e12cb0335821f2e67a6bd308"
+    },
+    {
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856246-3-stdout.txt",
+      "sha256": "ea5541be045e58b21c17e5b3ed7e3462e20b9c43c1f93fb34d7510a882bf6149"
+    },
+    {
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856247-1-stdout.txt",
+      "sha256": "317a29591cc08a7c4b38e09708293c374d09e450b188bf5d04596dca28077408"
+    },
+    {
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856247-2-stdout.txt",
+      "sha256": "b0bd9ac6ae3c562b8ef3e0528eb8b567e53f7250c4a90070edc590c7ef6606d1"
+    },
+    {
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856247-3-stdout.txt",
+      "sha256": "8be8f44756f6d82f47e04edb0831d9967be2602720b79d3f8fc6817dd6cf97d6"
+    },
+    {
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856248-1-stdout.txt",
+      "sha256": "376b34b5860db580bfd6ceb9d19a32a3451cde43298525341924cc5c3fdf9f40"
+    },
+    {
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856248-2-stdout.txt",
+      "sha256": "0d64ec8e7a09082ba9f4c8464970d89147970f4fac96a03d122b6af658f8f708"
+    },
+    {
+      "path": "sycl/acg-sycl-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856248-3-stdout.txt",
+      "sha256": "c390040f1fba5f756f0b6aa56b47e0856b5b6435b426d10391a46ffd0de1479c"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-1-stderr.txt",
+      "sha256": "55a93e92599d2e25b425d6d205869de7aeccd040578c8d66ac0a712f904357aa"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-2-stderr.txt",
+      "sha256": "2082f3a05ca17b4d3118032b2c18eedddebb100e12b14e88071476a82f8b3c36"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-3-stderr.txt",
+      "sha256": "ed70df83ad0a1fd78ad42a8a03c83dded4153b71270915b413467b306a3df35c"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-1-stderr.txt",
+      "sha256": "7e1616da086005e8e65a77349dec88f5944f73e3e73261a8bfc591ee450adafd"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-2-stderr.txt",
+      "sha256": "ccb50c59517306d578174724c9ec17cb3b1af964007a89431c5b09f89feab417"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-3-stderr.txt",
+      "sha256": "d749694ed267a733515a9488f6abb02f33e176fa5256bca8b4d0c87fc588d147"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-1-stderr.txt",
+      "sha256": "410309908b5258153420318c29e3a0e31b9c79e19e93429d23ef164dc60dedfa"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-2-stderr.txt",
+      "sha256": "2ad23bbf83e7dc97d71453234f388a97647114fe2ea3ea7eff77d7cc7ac01739"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-3-stderr.txt",
+      "sha256": "5de8c2eafc61ddeef4f1d7247a153813fb50b1afea59b40ee31364e654e3ad2a"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-1-stderr.txt",
+      "sha256": "3a5bb516947e50de773a64e9d75ad44e83c97aa83525ddddcd8c99f1cb437384"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-2-stderr.txt",
+      "sha256": "fe1dc39dce5dd393ad9b36105f7bb23946801c4e735f66ce3dd269bb092fbb90"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-3-stderr.txt",
+      "sha256": "7aa7a49f9b69c30f35397b1d05cc2a950621b03893414dcd5fdd00545aa492c4"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-1-stderr.txt",
+      "sha256": "fb7fc18837fcdfe530e191e38afca9855183de90c22f870c0df8440971c20186"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-2-stderr.txt",
+      "sha256": "73c6be1276e5d7d725f4855129c1d3002ebb61c30e6b7901e0111195a5deb7e1"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-3-stderr.txt",
+      "sha256": "d3063acb6af0b2f9eda70b70766876081996ed51d4708ac5c930e8ad96f602f9"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-1-stderr.txt",
+      "sha256": "561c666cb48880fb755e285c68f4a8a707993eb4c4819eaf81473f0a877b71aa"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-2-stderr.txt",
+      "sha256": "482054b557eb3f5ebf19dfa4b925d37c6b68023f2bde62a3f5be9814436316f7"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-3-stderr.txt",
+      "sha256": "7fd1275a388fab8d27468049288fe17aa90a6daebee5ac141a0e51c6fec0da49"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-1-stderr.txt",
+      "sha256": "fd51213c4ed342afd2f1d495e6a89d64cf7c0fe88df58bf9371c40c3f0a12a8e"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-2-stderr.txt",
+      "sha256": "a36016f1d4de8dfc19633e1f675f4ad8a66d126bf12880af2d749c185b71414c"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-3-stderr.txt",
+      "sha256": "77d680ba62b067c428eba535b64dbcd18079a408139fe008f6276c8261991760"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-1-stderr.txt",
+      "sha256": "a4a13b1e7e9ebd08a9a4d96418b5c3918d34a37f5b18ca0a426ab69884df03ea"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-2-stderr.txt",
+      "sha256": "3f58fd38ac1edff084a50de29e4c06bda548ad6b5c886cedcf47de65cf655951"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-3-stderr.txt",
+      "sha256": "4b1173105c601eb043c3cc57e7c3d3d52d887a42a37bdc1b3a7c0a9b605f5fbb"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-1-stderr.txt",
+      "sha256": "412e8334c8991c46c0ee57946a208718235d52860f14080483cf87f416629047"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-2-stderr.txt",
+      "sha256": "fa73e36b1b5d189c3886869e9da2ba88eb97636beada8008405b6821804a6020"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-3-stderr.txt",
+      "sha256": "0a86d7673ebce53e23bbf6bc306439b58625960c2731f597a5118548ec36990d"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-1-stderr.txt",
+      "sha256": "3b6845197dcf9b4fbda482c576e5e10c49efc2698b443d47baedd66ce3677ea4"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-2-stderr.txt",
+      "sha256": "50a25d9049dd964d93233b6bb68852e41b15189d7502507574d0ef80c8c3d606"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-3-stderr.txt",
+      "sha256": "68a32f7cbc24f39279ed2d25bdb6b9f2d4222606a5a0c37fbba4187acf55d938"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-1-stderr.txt",
+      "sha256": "9be982f88241aa691788208902b408e11fca449b91ab6157c19ec9a849d1af97"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-2-stderr.txt",
+      "sha256": "04fed1505d9855000d894e90c45b2e24589fcca59295535d81d856e56b6c5058"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-3-stderr.txt",
+      "sha256": "153e82d0d3961ce4ef9638fc34686d5f86f9d0e8e48349c21d6d99ac3fdba455"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-1-stderr.txt",
+      "sha256": "dfa108587a7fbdf612e0343734a4481cafa241d8bb26f88069bd7af19dd595e8"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-2-stderr.txt",
+      "sha256": "1600f7c760ab12d2eeb6b92568c69c4f063c03c522d6648dabbc42842ac75048"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-3-stderr.txt",
+      "sha256": "dfd883b45a8296ef120169d458ce26f4711561af6d9470dfa58bbb6f86d999ea"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-1-stderr.txt",
+      "sha256": "67cc8bcb8c30ea7df74352f21c900d7b49cb96fa90e664534e1105b2f7a31dcb"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-2-stderr.txt",
+      "sha256": "5e7c946010ef01bf813fd89551ee5fd95d2e0289a26f4b0d74fbe28ec832fd82"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-3-stderr.txt",
+      "sha256": "9b6e91df33a587cebe9a465a1104cf7b4a8eab0cfcb2e5ec94e1afa4da56e029"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-1-stderr.txt",
+      "sha256": "db64828ec84106c98614a4670a447152fb1fc91dc0c75a131b14c05476b1d61c"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-2-stderr.txt",
+      "sha256": "ac94ec2fbf0b3607e7395dd60a602f2772f213e9175b2a1e7aae7a4fd1b9ae5c"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-3-stderr.txt",
+      "sha256": "612d69dcb531e5688b986a8b76206967911f04c33bebf6d29f336fcc1d6c5444"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-1-stderr.txt",
+      "sha256": "112c90af03794d576fd840beb3f5b8747ef65182ad60b44615b60a728090dd31"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-2-stderr.txt",
+      "sha256": "8868370d8b58fb1c17bd7e52ba12c5297f540167f92bf83aff5f61699f34528c"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-3-stderr.txt",
+      "sha256": "c370b89f5efd76cddece3c06bb678381afe46b7e4fae5dc8b6059e9e4e0fa266"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-1-stderr.txt",
+      "sha256": "da7f18b13471819f0bb6452c0c49c4a550ad068f31897fa30025ae3558041413"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-2-stderr.txt",
+      "sha256": "28d04c370da50eddfee6b8d2c723dbab80d92d08c5b260a54c8791cf6f6c06f6"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-3-stderr.txt",
+      "sha256": "26d51043ee105f1f947d7036b44822d1a051585ff0c0b07fb77872c4f0ae553e"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-1-stderr.txt",
+      "sha256": "51729d00aa29dd3053e30482d6ea6418d1ab1da9e27041df3d4516109e4e1cbc"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-2-stderr.txt",
+      "sha256": "b52668055a48fc139a8152e249b5b0e645a5f81a8a38fa59778fe71107915674"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-3-stderr.txt",
+      "sha256": "12ce9c997d5939f302d9d941d85d26f9bf1d82c6afd390b9b09d67f3fa041adf"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-1-stderr.txt",
+      "sha256": "a56bae511748e667964a77870bd91c492c9b658f2ab469a6c57bbfac218af699"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-2-stderr.txt",
+      "sha256": "78d79326f034448ed713454cdf04d54e06f0643c1b7ddf1dd854c476391ac3e3"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-3-stderr.txt",
+      "sha256": "c0e4fb494698365d509eb540d661e4c83f311cc4e01ab1f7488869faf6f09ac1"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-1-stderr.txt",
+      "sha256": "1b6e6449baf3f69e83941c5b10d07fa8b35279388a003741f42b119818c18008"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-2-stderr.txt",
+      "sha256": "631a22aa3f347ff7b46a2310042fa8964399ed5f11ca174665514f5eceb3647b"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-3-stderr.txt",
+      "sha256": "d275bc26a21219188e934fd604af9120c6c07c1a2e2f674b515067c59128f6b3"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-1-stderr.txt",
+      "sha256": "e962059cb4da90fe0611ce67e55f69525fd82e3ab83ea5a4a76370bffa72e654"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-2-stderr.txt",
+      "sha256": "eb383dbea7648e326305db4fc4ed13c832f9568290cfd195bddf36f386e88e46"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-3-stderr.txt",
+      "sha256": "1dcb8c4a752b6a99934b3fa04041a22c2144201cd1ecc61f43a34ef89c085c29"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-1-stderr.txt",
+      "sha256": "abc168c29c644c0574c8d68b0149742112666373527ad026770d0d7e6d29b7d6"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-2-stderr.txt",
+      "sha256": "d6a6826fac82cd768f6ae69ba878ea2facdc57f85885ff5bda5c7e8ff22d278e"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-3-stderr.txt",
+      "sha256": "bd73ee6c1bae8e37502012720e899997b4e37e4ff2a1cde71ecbbca2ff7e4330"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-1-stderr.txt",
+      "sha256": "1790be3f5f0a514cea332bd8bebeeb8db435f314d855d25aa0d8ecfea39ef7e7"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-2-stderr.txt",
+      "sha256": "7184b05f69d74be41a837189e21d8359111e536fce04d56e37e5bdf02bee690d"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-3-stderr.txt",
+      "sha256": "6eb9e018cabacab983006784b26e71c89cc5ef926409afbb9cb4a12c334099dc"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-1-stderr.txt",
+      "sha256": "09b979c1005d923a823eac32946b21cca2ea527f5d6a26800f54ac17abb2d943"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-2-stderr.txt",
+      "sha256": "d3ae5a4d43ba31be1c8d69f4b83f4dc06be1f5fc8b15b9d79f717cc390c67705"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-3-stderr.txt",
+      "sha256": "1e4dfcae4ec4e799299113df70f9049f93cf6d7f46be88bdebfad0792cba8247"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-1-stderr.txt",
+      "sha256": "2e33623c677f5f93281ac574c97efaace87016449b446d92a3ab10e5df7df8f5"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-2-stderr.txt",
+      "sha256": "a89ac92c6583579578b0c5a98323274820514928774c7b74c920935f4e778802"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-3-stderr.txt",
+      "sha256": "21e66ca5a500ed589e531f76fd9479a7e363d3d3278ffffcaa3d6ae6d832d50b"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-1-stderr.txt",
+      "sha256": "bf7127714568d53e86812b61cbc1c0c12e46bf04bfc87901ab18bb9510aca587"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-2-stderr.txt",
+      "sha256": "e5cf9fb406eb8edafb2b46c86919cdc47015e5fcbad6194b123838fe2f832261"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-3-stderr.txt",
+      "sha256": "80c696b87a066c959f2d790b54fa59b454fdaf126bbdb5c2306a84290e33419b"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-1-stderr.txt",
+      "sha256": "4c53e7f6e89e448069fcf2ad42df263996e94a1e81b7fadbdc71b6962cad01ea"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-2-stderr.txt",
+      "sha256": "b7dde1146f897baf5235e67c19ffdd80b8ce7073fb7e0dfddd7b693d6f27cba7"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-3-stderr.txt",
+      "sha256": "2a0885f25b51958c7a99a5010d3d89fcfa0c67014b353674b5fbf7b94f55d582"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-1-stderr.txt",
+      "sha256": "b7086d8d529ad5c514bc75ce0f3c28b59387805aad8a0f3cac3da75d4b0003c6"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-2-stderr.txt",
+      "sha256": "21ded8c0f89700ae96e79b3b8fe72e8a5c0be34f244883bc966f5aac14a07757"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-3-stderr.txt",
+      "sha256": "494f2f605ff79ee73eff7538de8b387f2a24f4f53b550613071d7a53aab3dc01"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-1-stderr.txt",
+      "sha256": "363d99880b8f42d256265b493bd3351ab00b401825919ce111f4f5f8a53ccaa6"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-2-stderr.txt",
+      "sha256": "02303b52b75ab59eb30785c23cb0832847403ac6d368ee4bfdf614e1b64bf351"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-3-stderr.txt",
+      "sha256": "f5c6f7d3f3439d1cf3a8121395df6076bbe14a3c7ebda1a0794edb510a1d6e61"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-1-stderr.txt",
+      "sha256": "f9036ec789f0953d628033726ad69c6dadb6f3683ac2760e4999f36981e23926"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-2-stderr.txt",
+      "sha256": "7b46f14b6f8a60518ede4334d27eb8a12012feba790f00923d182adc961b7393"
+    },
+    {
+      "path": "backups-sycl/acg-cg-nccl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-3-stderr.txt",
+      "sha256": "a6f4badb0eda1c7643949a1f69a19642cadcf80981b7d0f4b9145d89f19a90f8"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855160-1-stderr.txt",
+      "sha256": "d39a7bd2c0033554c42b9de40dc90e41f647d329ba2fdf195b70518f2c6ff787"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855160-2-stderr.txt",
+      "sha256": "a4268a6f6560dfef889907d47441c369726cc3890be414c256147c96382d5638"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855160-3-stderr.txt",
+      "sha256": "eff50b3ff1ed5d4949f4c311e1f395f1768549d41c8aef83cb8a1e11e3b7b80d"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855161-1-stderr.txt",
+      "sha256": "dedca592e5eeda47c53e11f87375add847b405e04efe832729f4cc36d5f8cb35"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855161-2-stderr.txt",
+      "sha256": "13c5d2f0717eaad472f9d45ef4612b3de4aac204a4fb87fa5672446c07a3eb4a"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855161-3-stderr.txt",
+      "sha256": "83938e78735faad78fb27a9fde499e9ddacddaf236d857f15aaec80019018809"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855162-1-stderr.txt",
+      "sha256": "8b87fac9303f78273274383aa8b148dcd32a5d3da46ed15113774fb3cb5672a8"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855162-2-stderr.txt",
+      "sha256": "de94efacc1d1831c704165c6368f985b531ce067148fc91f185af3ae55f86349"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0001-procs-58855162-3-stderr.txt",
+      "sha256": "9ce34cd24ba890aa46c943d1c67530edc49d1f3d0bb1a2aa23702ac36806dc6d"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856246-1-stderr.txt",
+      "sha256": "52d11dfe043523db4dd62d7b4019cc75114d46f0264ead1bcfe453b1b5757ada"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856246-2-stderr.txt",
+      "sha256": "f21fcb2d839fd7a9a3445a4c9ed7c907f7273ea234f91192226daa2a3add0b6d"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856246-3-stderr.txt",
+      "sha256": "d3efa9068db0a08db8a21af5ffa5bf8bd9ec0ad5b7025bb6fb00ead1e712d256"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856247-1-stderr.txt",
+      "sha256": "2c182477caec80eb3ce41a2c597b2498f12fdb38eadb77f0d2e5f85ed14bb94b"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856247-2-stderr.txt",
+      "sha256": "181e54abc46a5145f169235cc6feb5ae10256605e957de290bb7c7cc3616db43"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856247-3-stderr.txt",
+      "sha256": "df80f777bd61e0f77d935d19eb7d24c4697a363d9cc7bcbbed5c4c6cd6b72e2c"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856248-1-stderr.txt",
+      "sha256": "9e30f44cb5a5685cbc49c31b713c3370a50b6fe2aa22dfbaf9470c766f8de16d"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856248-2-stderr.txt",
+      "sha256": "f2fef68a337063abdb4350caaa018fa0de867232e686d6d9367b596a7347bb55"
+    },
+    {
+      "path": "backups-sycl/acg-cg-single/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0001-procs-58856248-3-stderr.txt",
+      "sha256": "c94ffd9d4b1b157314b8d6455768c06f9adb8f8098c44f431c0a51c5bf4229e8"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-1-stderr.txt",
+      "sha256": "3a2a13403ba22c68b71d4284535011ee2c80102f8a6a06c8a241f02bded47919"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-2-stderr.txt",
+      "sha256": "5f1743dcd192ed98438dd688e825b3d5ec8184f9f0e0ccf582d47a57d86d3bf1"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855163-3-stderr.txt",
+      "sha256": "706d2765143d0b73d41b899a873f2841c99521c67686709cc478bc631fc1a7b7"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-1-stderr.txt",
+      "sha256": "c9a2e48b686a033704e9e83bc4a38b6406499249ac5341f71d8403f18106250d"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-2-stderr.txt",
+      "sha256": "bdd3ce34550b8088b0acb0242769304ccb1a26d156f654cb0eaa74c95ed89f1c"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855164-3-stderr.txt",
+      "sha256": "f5168046f46509a2f482e298d12198301477d3ab3ab1a9915c58bce542039a66"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-1-stderr.txt",
+      "sha256": "d5468fdfa8f6f7fb906adfb7b52eeb499298bd344a5bfc767faf5069a368dc00"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-2-stderr.txt",
+      "sha256": "4d97a068f0107e47a877b6ab225600929b8a3ad8908c3f8b23addbeebc0f83c4"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0002-procs-58855165-3-stderr.txt",
+      "sha256": "21156a72269cfc49f7eba85b3668fd6eccfd39007fafe28ed96e1ffef0761194"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-1-stderr.txt",
+      "sha256": "4729db0c82b1efa5e73b8beaea598a021a3c16203551fd357102506116e0fdd0"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-2-stderr.txt",
+      "sha256": "2ab33f189936c621ed71267ff5025e5b555ddbd4e6c2750828a6b644d985f9d8"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855166-3-stderr.txt",
+      "sha256": "faef572126fda738e61d6291abc0b381f3fecfefe8c20c09273d89c00fa488dc"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-1-stderr.txt",
+      "sha256": "acbb528a5662f8fb03307306d1e993096ed33d1a519562d5abdafcd72d629bbb"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-2-stderr.txt",
+      "sha256": "9ac9b0ca00a8b603f216e6a36ccad24ba4dfe5469204cdfcc9514bf9ba9ca5f8"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855168-3-stderr.txt",
+      "sha256": "372eb78b887ccaac8cd8cba442544b0ac89da10daacf8d45cef7d3296dbbfc57"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-1-stderr.txt",
+      "sha256": "f7d1e5cd74f7dfe9fe34c78a3b1519a88ed051594f8691b637178de5e3987db3"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-2-stderr.txt",
+      "sha256": "6ca7ec0353494302d9fa08723b42a2cb0676a987c4509b6d2cb5e9254007b84c"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-001-nodes-0004-procs-58855169-3-stderr.txt",
+      "sha256": "30534b876a60a5476e9441b6b852289314dc4e5f387500b5ee23bafad3619d1f"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-1-stderr.txt",
+      "sha256": "a1dab33d11b63a634f4ac44267c76365e5862b3a121054004587196d2a51358b"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-2-stderr.txt",
+      "sha256": "69beaa5e732188b59f0e1979a928093ebfd29d77f0b50e332f79857a14f5f233"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855170-3-stderr.txt",
+      "sha256": "a7265c46ebec81d6a5c79af19ad3b8d22ca455c3b49d1f3660477fa93d339062"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-1-stderr.txt",
+      "sha256": "21cf4c3e0c88098685c46630cd398e8f8a2289ab9a84c1bae8d8d45779273395"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-2-stderr.txt",
+      "sha256": "726041a86c75826f7ba1a2a9b9546b60aeeda0ae55f402fce25d69091a86f3bb"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-002-nodes-0008-procs-58855173-3-stderr.txt",
+      "sha256": "a9d4f751677d063189934b263f1e002121e5781e599919ebfdf33d45634906a2"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-1-stderr.txt",
+      "sha256": "1b87fc537cac8b3015cc0864d3c57a134097a069cfd9e1c375d4d464d6026066"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-2-stderr.txt",
+      "sha256": "d66bf040a4eaeb5d409d8d0b2f5113d85c56a630cb989486459cd560d22038a7"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855174-3-stderr.txt",
+      "sha256": "8ef6ea881d62fd0e0a9e150a5be1d392122998fbfd1241e42c86ce304bd1438b"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-1-stderr.txt",
+      "sha256": "70fe33ed585221e5977d673fe112f59839e328a864fd57a9f9ebba47ba344953"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-2-stderr.txt",
+      "sha256": "e1460c712fe72c09ffbb4f05d543ffb6d6403a2da90cceec1cb012e1d89297f4"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855175-3-stderr.txt",
+      "sha256": "11f43761b1e00f42439cc5024c5d3b2dbd8a19c2a633c56d64d3466d9510de8d"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-1-stderr.txt",
+      "sha256": "6d5679a6790f7c9ac34e1dc5203825f7abb05acbb5fa8bed2ca266d660dda766"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-2-stderr.txt",
+      "sha256": "69776692460a5accb918b2225ab6734cfcfa24109e1d0c31f7c23dba8f5eecb7"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-004-nodes-0016-procs-58855176-3-stderr.txt",
+      "sha256": "ada7861bf671642e296dd6d2afc5c216a4c5e7b91702c3f6ccd4aa3a5d064e98"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-1-stderr.txt",
+      "sha256": "9a2bf2e848035a3e01d5f4a1a21d30810ffa5e5706fc4e161039246222cdfd30"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-2-stderr.txt",
+      "sha256": "35778d24ba20cabe2d980a480f17dc0b3ed66fbcaac3283b2b9c41a1a966cd6c"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855177-3-stderr.txt",
+      "sha256": "b6b8f5b071fba6d747222fd8504d42371e3bc532f296431641531ff311c0c9ac"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-1-stderr.txt",
+      "sha256": "09f13878cf7f3ecbeac4688774cc112fc12dcfb0337ae739619bee3cddeca847"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-2-stderr.txt",
+      "sha256": "6b33463626407b21f0ae34c6c859e8da985d15f7c8c44f8f17cecf934e2bf569"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855178-3-stderr.txt",
+      "sha256": "cb78ade010a72e13a07897f0e8b765d681ad6ad0fcf0ed8e982e581cd6ffe765"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-1-stderr.txt",
+      "sha256": "f6dab61137ea06682f57577cb04e4e9563ed17582517cdd715b9c9f6ee8adcb1"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-2-stderr.txt",
+      "sha256": "d08da1cb1d39f1f740aabad27e425b2799ad47f3f3fe2fe86a6857c1775c2c68"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Bump_2911/Bump_2911-rtol-1e-6-008-nodes-0032-procs-58855179-3-stderr.txt",
+      "sha256": "bca04c7ddbfd50b9eea70be8040e919b6b12e5a921a0da77029488bee640b553"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-1-stderr.txt",
+      "sha256": "bd152d4f5910b5aeee33f54f3561471bae4cadaa4a9e650669913ab4888fc0ff"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-2-stderr.txt",
+      "sha256": "9252cfdf5216c93f23dc33af130cb4397de3605cb53ad98d123b47518ce65830"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856249-3-stderr.txt",
+      "sha256": "41650531133da9902f15c1e3f404a9eebe53e7e01200b1299613e27a4772ec07"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-1-stderr.txt",
+      "sha256": "f7d72484ac84269fe593783fc3be3224c6632f80c061cc87354b901f90fb8a39"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-2-stderr.txt",
+      "sha256": "309dfaa68c281da4c7a178e4362762a611769e79ec6a90339d237c49ed597248"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856250-3-stderr.txt",
+      "sha256": "8d195d4ff6c4d93f5683950a32d6154764186ba5cee63298fb5634f2761ffbaa"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-1-stderr.txt",
+      "sha256": "7926970e540a45c5029d3bb6a6a6ee385c7ac003f9b00bedf0fdb643678042e9"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-2-stderr.txt",
+      "sha256": "d9b427b610cd98c45f6884605a9cd4a399a033932ec76f73260cff5aed4e98c1"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0002-procs-58856251-3-stderr.txt",
+      "sha256": "2e7bd31291bfe5f5e75af9081eb87decddcbc48149f3c8e642233075447eb541"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-1-stderr.txt",
+      "sha256": "bbcf6a659bcea7594cc4465659386e2e6ba0053b7f83f835418d33eedcc51625"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-2-stderr.txt",
+      "sha256": "81ea33fddee6e33e8299e8defcd8c84924b6cd3e1d30d1f082a4bff63481d52b"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856252-3-stderr.txt",
+      "sha256": "8f4fc74b694cda0bb649955c3b752cb254687b794a10bb09cb0d92eab9b70080"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-1-stderr.txt",
+      "sha256": "34a76c5c39774253e13645a8793a2268e471a504472770cad460827a31a75e33"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-2-stderr.txt",
+      "sha256": "69850cc9634fb4cbd867d922fedf5847282a9275e8c85ae06ebc726af6175252"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856253-3-stderr.txt",
+      "sha256": "807f4d400f5a8b024957f04b47f0b2255d56ab062b8a0fe51504ba7ad2845490"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-1-stderr.txt",
+      "sha256": "7cabec2294a3035211c9fc78e7bae7eb046e03227af1d7c8cae1b5f8c28ae6f2"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-2-stderr.txt",
+      "sha256": "4ad5011b4577b84aefa23579a0c67dc32953ee205182249b6a3d6b68681ddb0b"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-001-nodes-0004-procs-58856254-3-stderr.txt",
+      "sha256": "ee2dd1bfe62394e31d552fa309eabf4ef931e5e455c5833d6688bc2ec7824680"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-1-stderr.txt",
+      "sha256": "16e213178dd2cd1c917e771266d141c5181028bde40fcb4b3a54eb6fa530502d"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-2-stderr.txt",
+      "sha256": "08f58947c151574fe273b4acd2fa6f31f4c276922a56a6e4f1e13a436fb9ebe1"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856255-3-stderr.txt",
+      "sha256": "cf08a91dd5874be59a1b4ec6dc4c9bf3c897b82c8e023044f7f17ddf7a894b0c"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-1-stderr.txt",
+      "sha256": "a316e3177c4e4c34854ae0903c359e9e901fcf93ab62f5c153aff5d50ff126b8"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-2-stderr.txt",
+      "sha256": "13ad1e115c92a2fd058191ded298b0a77d3fcf74840b29c1ab48cd61e88dd31a"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856256-3-stderr.txt",
+      "sha256": "9626cdee9be052e612073a4140d4057aa8f5a8c6fe01c6e02f1b2dbec429154c"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-1-stderr.txt",
+      "sha256": "c3bb5c8ad8675ea003c29c221c66da09a243e5b1dbf86bdfe0b821270379715a"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-2-stderr.txt",
+      "sha256": "f485877b4aebad5211e907b00bcb3dd233dae7443b5efffee00d60a01ea3b7aa"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-002-nodes-0008-procs-58856257-3-stderr.txt",
+      "sha256": "3aa3bfb63515c3cac9417d01a8cdd9a09f5fc70ab3dff5b6bfcaeda1d4765988"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-1-stderr.txt",
+      "sha256": "74f75c037c8995f7b5aab35f960f986742d999ff1d860575812bdf40e5287a1c"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-2-stderr.txt",
+      "sha256": "1ec735a427e88651a4e878757f6281359d934b75d25410bb868c5b2ee9770a16"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856258-3-stderr.txt",
+      "sha256": "fddb052267fcc52e92f49b076f26222ac0fc8a3194e21276c84d86648e9dcaad"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-1-stderr.txt",
+      "sha256": "b9c3c969af638fce5b939be8745505c71bdf894abdd9a55169a8e135549cc244"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-2-stderr.txt",
+      "sha256": "df44de7ade51180739b89580fffd4d9d93de30ed523e6e3df252fb791fb12f01"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856259-3-stderr.txt",
+      "sha256": "f31129362459f7e46cc3190da4f7304dd67c9a4b939ccbbd8225da5520170743"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-1-stderr.txt",
+      "sha256": "dd9123a2a953c0923959ac7640353010363fb41af8c33cc0f9d5cea82ff2a123"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-2-stderr.txt",
+      "sha256": "39cd13f7b57c6cdfc4153496a31532468821b8772c146213299f6ad69c4b25e2"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-004-nodes-0016-procs-58856260-3-stderr.txt",
+      "sha256": "1cccd608d5924c107261cfa7fe7d7b051d2fa4f12acfcdb6b54a5f9225fae448"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-1-stderr.txt",
+      "sha256": "77e3aec709b2dd31ccde24fbff82476039e7b763cc0985ea1a168e5fa9a34d39"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-2-stderr.txt",
+      "sha256": "b0ddf0772408d3816e4aea033f7b4d02dc04effe834a9ebd98de066715d90781"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856261-3-stderr.txt",
+      "sha256": "0644a4807ef46625cce6ceaf8f97e109d44cd83603fbd8d8a2f5b385c6ab28ec"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-1-stderr.txt",
+      "sha256": "fe2afd2c43e6764519969850fa734b8bc9ca2bbd16f29623f93ab4891f4da396"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-2-stderr.txt",
+      "sha256": "0fafbdfe7274b40aafa5c2184c323be003c27165488a90caadf22ddec9c02ff0"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856262-3-stderr.txt",
+      "sha256": "fb6a4187755a5d61d7d030297677fc36f5bf43229740ef5a9725d94924754919"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-1-stderr.txt",
+      "sha256": "0ab8316cf10712bd7ae5a1afc4335e87e42ff7dc8fb2ef6b87951cc02c23facb"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-2-stderr.txt",
+      "sha256": "679d8c9407767030b77b01b9949b99f2b71e5f9202eb3143b29a72c9ba1d6a5d"
+    },
+    {
+      "path": "backups-sycl/suitesparse/Queen_4147/Queen_4147-rtol-1e-6-008-nodes-0032-procs-58856263-3-stderr.txt",
+      "sha256": "95d2fe16e991dc304fcfc0e1b4997c6d24817c76362a18a0c1738c4e0a68035f"
     }
   ]
 }
