@@ -196,14 +196,14 @@ Pattern & Cells & SYCL/CUDA median & SYCL/CUDA max & oneCCL/NCCL median\\
 \texttt{alltoall} & 119 & $1.01$ & $1.06$ & $1.02$\\
 \texttt{moe} & 21 & $1.00$ & $1.08$ & $1.02$\\
 \midrule
-\texttt{cg\_step} & 35 & $1.28$ & $1.51$ & $1.57$\\
+\texttt{cg\_step} & 30 & $1.34$ & $1.51$ & $1.57$\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 For the five patterns that time communication alone, SYCL costs about 1\% at the median and stays within 8\% in all but one case. \texttt{pingpong} is the exception, where the largest messages reach $1.84\times$; small messages there sit in the MPI startup regime, which both stacks share, while the large-message endpoints diverge. On this evidence, expressing a GPU-aware MPI exchange through SYCL rather than CUDA is close to free, which is the expected result: the payload path, transport, and completion boundary are identical, and only the host-side submission and the buffer's allocator change.
 
-The composite step is the one pattern with a clear gap, at $1.28\times$ median, and it is also the only pattern that includes computation. Its single-GPU control, where no inter-rank transfer occurs at all, separates the two contributions: at side 512 the step costs 116.9\,$\mu$s under SYCL MPI against 79.0\,$\mu$s under CUDA MPI, a $1.48\times$ ratio with communication removed entirely. The portability cost measured here therefore belongs to kernels and host orchestration, not to the communication path, and the same conclusion constrains the solver-level CUDA--SYCL ratios of Section~\ref{sec:acg-results}.
+The composite step is the one pattern with a clear gap, at $1.34\times$ median over its multi-rank cells, and it is also the only pattern that includes computation. Since the same exchange costs about 1\% more through SYCL in the communication-only patterns, the gap points to the step's kernels and host orchestration rather than to the communication path; the solver comparison of Section~\ref{sec:acg-sycl} tests how much of such a gap is a property of SYCL.
 
 The oneCCL/NCCL column behaves differently, because it adds an adapter to the compute-interface change. It is within 2\% of direct NCCL for the three collective patterns, but reaches $1.32\times$ for the isolated halo and $1.10\times$ for ping-pong, the two cases where submission cost is exposed rather than amortized. A common interface is therefore inexpensive where the operation is large enough to hide its submission, and visible where it is not.
 
@@ -267,7 +267,7 @@ No stack wins all three routing cases, so this pattern has no single answer. NCC
 
 \subsection{Step Time}
 
-The composite archive covers seven topologies, five global grid sides, and six backends, with nine successful trials per cell. It preserves a halo--stencil--reduction sequence but not the complete CG recurrence: the two reduced scalars are terminal outputs and do not gate a dependent GPU update. Table~\ref{tab:m-cg-step} reports the lowest allocation-median estimate under that contract. OSHMPI leads 25 of the 30 multi-rank cells, including all multi-node topologies; NCCL leads the remaining five intra-node cells. The single-GPU NCCL-labeled implementation leads its controls, where the result reflects local execution and synchronization rather than network performance.
+The composite comparison covers the six multi-rank topologies, five global grid sides, and six backends, with nine successful trials per cell; single-GPU runs are not compared, since they involve no inter-rank communication. It preserves a halo--stencil--reduction sequence but not the complete CG recurrence: the two reduced scalars are terminal outputs and do not gate a dependent GPU update. Table~\ref{tab:m-cg-step} reports the lowest allocation-median estimate under that contract. OSHMPI leads 25 of the 30 cells, including all multi-node topologies; NCCL leads the remaining five intra-node cells.
 
 \begin{table}[htbp]
 \centering
@@ -277,12 +277,12 @@ The composite archive covers seven topologies, five global grid sides, and six b
 \input{data/main-campaign/cg-winner-table.tex}
 \end{table}
 
-Figure~\ref{fig:m-cg-relative} shows why the margin matters. The direct CUDA paths approach one another as single-GPU work grows. At larger rank counts, communication and orchestration remain visible, and NVSHMEM exhibits substantial allocation variation. Some intra-node NCCL and OSHMPI estimates are close enough that assigning a categorical winner overstates the evidence.
+Figure~\ref{fig:m-cg-relative} shows why the margin matters. The direct CUDA paths approach one another as the local work per GPU grows. At larger rank counts, communication and orchestration remain visible, and NVSHMEM exhibits substantial allocation variation. Some intra-node NCCL and OSHMPI estimates are close enough that assigning a categorical winner overstates the evidence.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-step-relative.png}
-\caption{Composite-step time relative to CUDA MPI at the same global grid side and topology. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack. Only multi-rank topologies are shown: at \texttt{1n1g} no inter-rank communication occurs, and the single-GPU controls are reported in Table~\ref{tab:m-cg-step}.}
+\caption{Composite-step time relative to CUDA MPI at the same global grid side and topology. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack. Only multi-rank topologies are shown: at \texttt{1n1g} no inter-rank communication occurs.}
 \label{fig:m-cg-relative}
 \end{figure}
 
@@ -292,9 +292,9 @@ The OSHMPI result also needs an execution-contract qualification: its archived s
 
 The device-initiated implementation of \texttt{cg\_step} issues the halo exchange and both scalar reductions from inside the kernel, so it is the benchmark-level counterpart of the monolithic device solver. It was measured over every topology and seven grid sides from 256 to 16\,384, with three allocations of three trials per cell, except at \texttt{8n4g}, where the smallest and largest sides are missing. It reports no phase timers, so it appears in step time only and not in the phase breakdown below.
 
-Its result depends on both axes at once. Against its own host counterpart it is consistently better once communication crosses the fabric: at \texttt{8n4g} it takes 0.63 of host NVSHMEM's step time at side 512 and 0.52 at side 8192. Against the best host stack of each cell, however, it leads only where the problem is small and the GPU count low, at 0.67 of the fastest host time on \texttt{1n1g} and 0.82 on \texttt{1n4g} at side 512. It falls behind from eight GPUs upward at that side, at 1.12 to 1.25, and behind everywhere at side 8192, where its single-GPU step costs 1.95 times the fastest host stack. Device initiation therefore helps this step where per-GPU work is small enough for launch and synchronization costs to dominate, and does not compensate for a slower local execution once the stencil and dot products grow.
+Its result depends on both axes at once. Against its own host counterpart it is consistently better once communication crosses the fabric: at \texttt{8n4g} it takes 0.63 of host NVSHMEM's step time at side 512 and 0.52 at side 8192. Against the best host stack of each cell, however, it leads only where the problem is small and the GPU count low, at 0.69 of the fastest host time on \texttt{1n2g} and 0.82 on \texttt{1n4g} at side 512. It falls behind from eight GPUs upward at that side, at 1.12 to 1.25, and behind everywhere at side 8192, where its \texttt{1n2g} step costs 1.84 times the fastest host stack. Device initiation therefore helps this step where per-GPU work is small enough for launch and synchronization costs to dominate, and does not compensate for a slower local execution once the stencil and dot products grow.
 
-Figure~\ref{fig:m-cg-device-step} shows both regimes directly. At side 512 the device implementation starts as the fastest path by a wide margin on one GPU and then rises fastest of all, crossing the MPI and OSHMPI curves at eight GPUs: with only 512 columns to divide, adding GPUs removes local work but adds a halo exchange and two reductions that the kernel must complete before the next step. At side 8192 the ordering is reversed and stable: every host implementation is faster at every GPU count, but the device curve descends in parallel with them, which is the strong-scaling behavior the next comparison uses.
+Figure~\ref{fig:m-cg-device-step} shows both regimes directly. At side 512 the device implementation starts as the fastest path by a wide margin on two GPUs and then rises fastest of all, crossing the MPI and OSHMPI curves at eight GPUs: with only 512 columns to divide, adding GPUs removes local work but adds a halo exchange and two reductions that the kernel must complete before the next step. At side 8192 the ordering is reversed and stable: every host implementation is faster at every GPU count, but the device curve descends in parallel with them, which is the strong-scaling behavior the next comparison uses.
 
 \begin{figure}[!htbp]
 \centering
@@ -344,10 +344,8 @@ At this scalar payload, a host-staged reduction can be cheaper than the device/U
 
 Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The cross-level comparison below therefore uses the composite step's one-double reductions.
 
-CUDA--SYCL differences remain visible in the single-GPU controls, where inter-rank communication is absent. Earlier redundant queue waits were removed before the retained composite sweep, but the remaining gap cannot be assigned entirely to submission overhead or kernel arithmetic from two endpoint timings. The single-GPU result establishes a complete-implementation cost that must be considered alongside communication.
-
 \begin{keypoint}[Composite-step takeaway]
-OSHMPI has the lowest estimate in 25 of the 30 multi-rank cells, including every multi-node one, but under a contract the solver does not share: its reduction result stays in host memory. NCCL leads the remaining five intra-node cells and is the strongest path whose contract is complete. NVSHMEM is slower here and shows the widest allocation spread, so its ordering against the others is not decisive. MPI is the reference the other stacks are measured against, and its halo uses two serialized \texttt{MPI\_Sendrecv} calls rather than the grouped exchange of the halo benchmark. The SYCL stacks carry a measurable cost even at one GPU, where no inter-rank communication occurs.
+OSHMPI has the lowest estimate in 25 of the 30 multi-rank cells, including every multi-node one, but under a contract the solver does not share: its reduction result stays in host memory. NCCL leads the remaining five intra-node cells and is the strongest path whose contract is complete. NVSHMEM is slower here and shows the widest allocation spread, so its ordering against the others is not decisive. MPI is the reference the other stacks are measured against, and its halo uses two serialized \texttt{MPI\_Sendrecv} calls rather than the grouped exchange of the halo benchmark. The SYCL stacks carry a measurable cost in every cell, 1.34 times CUDA MPI at the median for SYCL MPI.
 \end{keypoint}
 
 \section{aCG Solver}\label{sec:acg-results}
@@ -474,7 +472,16 @@ Large variations also occur among trials within one allocation, as Figure~\ref{f
 
 \subsection{CUDA and SYCL Comparison}\label{sec:acg-sycl}
 
-The SYCL solver and the native CUDA solver were run in the same allocations, interleaved round by round (Section~\ref{sec:acg-environment}), so each comparison below shares nodes, fabric neighbors, MPI installation, and transport settings. All 192 retained trials on each side meet the relative residual criterion; on the SYCL side the residual is recomputed on the host from the original matrix after every solve. One \texttt{2n4g} allocation on Bump\_2911 failed for every run of both solvers with the same UCX error and is excluded, which leaves two allocations in that cell and three in every other. The reported comparison is the SYCL-to-native ratio of the two medians within an allocation, summarized by its median over allocations (Table~\ref{tab:m-acg-sycl}). The time-per-iteration ratios agree with it to within 2\% in every cell except Queen\_4147 on one GPU, where the SYCL solver runs 2.3\% more iterations.
+The native solver and its SYCL implementation answer the portability part of RQ3: how much of the native solver's performance a portable programming model retains on the same hardware. Solver-level ratios between two campaigns fold allocation and fabric state into the answer, so the two solvers were measured together, in the same allocations, and each SYCL variant is compared only with its native counterpart from the same job. The outcomes are:
+\begin{itemize}
+    \item \emph{Scaling up.} Within one node, from one to four GPUs, the SYCL solver takes 0.87--1.02 of the native solver time on both matrices and with both reduction paths, so no portability cost is measurable there.
+    \item \emph{Scaling out with MPI.} The SYCL solver keeps strong-scaling to 32 GPUs, from 8.0 to 5.6\,s on Bump\_2911 and from 14.7 to 6.6\,s on Queen\_4147 between 8 and 32 GPUs, while native MPI enters its slow mode on the same MPI installation, settings, and nodes.
+    \item \emph{Scaling out with NCCL.} In the same allocations the two NCCL-based solvers are at parity, at 0.74--1.03; against the main campaign's faster native NCCL runs, SYCL oneCCL/NCCL takes 1.19--2.19 times as long at 8--32 GPUs, a gap located in its host-synchronous reductions.
+    \item \emph{Cause of parity.} Both implementations share the data layout and per-iteration synchronization structure, so expressing the solver in SYCL costs nothing measurable once those are matched.
+    \item \emph{Validity.} All 192 trials on each side meet the residual criterion, the SYCL residual being recomputed on the host from the original matrix.
+\end{itemize}
+
+The SYCL solver and the native CUDA solver were run in the same allocations, interleaved round by round (Section~\ref{sec:acg-environment}), so each comparison below shares nodes, fabric neighbors, MPI installation, and transport settings. One \texttt{2n4g} allocation on Bump\_2911 failed for every run of both solvers with the same UCX error and is excluded, which leaves two allocations in that cell and three in every other. The reported comparison is the SYCL-to-native ratio of the two medians within an allocation, summarized by its median over allocations (Table~\ref{tab:m-acg-sycl}). The time-per-iteration ratios agree with it to within 2\% in every cell except Queen\_4147 on one GPU, where the SYCL solver runs 2.3\% more iterations.
 
 \begin{figure}[htbp]
 \centering
@@ -507,5 +514,5 @@ The NCCL pair stays within 0.74--1.03 across nodes (Figure~\ref{fig:m-acg-sycl-r
 The two implementations share the per-iteration structure that sets the time within a node. Both solve the same distributed problem from the same partition, and both split each rank's rows into an interior block, multiplied by cuSPARSE with 32-bit indices, and a halo block for the ghost columns. Both pack every outgoing halo value in one kernel, post the exchange, and let it progress while the interior SpMV runs. Both keep the CG scalars in device memory, form $\alpha$ and $\beta$ inside the vector-update kernels, and copy one small result to the host per iteration for the convergence test, behind which the search-direction update runs. The SYCL solver expresses this with DPC++ and oneMath on one in-order queue, and the host waits only where it must: before MPI reads device data, in the halo and reduction completions, and for that per-iteration copy. Three differences remain. The native NCCL variant exchanges its halo through NCCL, while both SYCL variants use MPI. Native aCG orders its halo exchange on a separate CUDA stream with events, while the SYCL solver uses one in-order queue. And the oneCCL/NCCL reductions complete on the host, which the native NCCL reductions do not. The first two have no measurable cost within a node; the third is the scale-out gap above.
 
 \begin{keypoint}[CUDA--SYCL takeaway]
-The SYCL solver retains the native solver's performance within a node, at 0.87 to 1.02 of its solver time, and with MPI it keeps scaling to 32 GPUs on the same MPI installation where native MPI enters its slow mode. With the same data layout and synchronization structure, expressing the solver in SYCL costs nothing measurable. What remains is in the oneCCL/NCCL reduction, which completes on the host and costs 1.19 to 2.19 times the main-campaign native NCCL time across nodes; in the same allocations the two NCCL-based solvers are at parity.
+Scaling up, within a node, the SYCL solver matches the native one, at 0.87--1.02 of its solver time. Scaling out, SYCL MPI keeps strong-scaling to 32 GPUs where native MPI does not, and SYCL oneCCL/NCCL matches native NCCL in the same allocations but takes 1.19--2.19 times the main campaign's native NCCL time, because its reductions complete on the host.
 \end{keypoint}
