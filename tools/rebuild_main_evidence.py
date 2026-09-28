@@ -1,0 +1,450 @@
+"""Reconcile archived measurements; export auditable thesis data without new runs.
+
+Uses only the Python standard library. Run with --help for input repositories.
+The current source revision is provenance for the import, NOT a measured revision.
+"""
+
+import argparse
+import csv
+import hashlib
+import io
+import json
+import math
+import re
+import statistics as stats
+import subprocess
+from collections import Counter, defaultdict
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+TOPOLOGIES = ("1n1g", "1n2g", "1n4g", "2n1g", "2n4g", "4n4g", "8n4g")
+SIDES = (512, 1024, 2048, 4096, 8192)
+NAMES = {"cuda_mpi": "MPI", "cuda_nccl": "NCCL", "cuda_nvshmem": "NVSHMEM",
+         "oshmpi": "OSHMPI", "sycl_mpi": "SYCL MPI", "sycl_oneccl": "oneCCL/NCCL",
+         "sycl_oneccl_oshmpi": "oneCCL/OSHMPI"}
+ACG_LABELS = {"acg-cg-mpi", "acg-cg-nccl", "acg-cg-nvshmem", "acg-cg-oshmpi",
+              "acg-cg-single", "acg-device-nvshmem"}
+FLOAT = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+LOG_NAME = re.compile(r"-(\d+)-nodes-(\d+)-procs-(\d+)-(\d+)-stderr\.txt$")
+
+
+def job_summary(runs):
+    """Give each allocation equal weight, regardless of its trial count."""
+    jobs = defaultdict(list)
+    for run in runs:
+        value = float(run["mean"])
+        if not math.isfinite(value) or value <= 0:
+            raise ValueError("Nonpositive/nonfinite trial latency")
+        jobs[str(run["job"])].append(value)
+    means = [stats.mean(values) for values in jobs.values()]
+    if not means:
+        raise ValueError("Missing trial-level records")
+    return {"median_us": stats.median(means), "job_min_us": min(means),
+            "job_max_us": max(means), "n_jobs": len(means), "n_trials": len(runs)}
+
+
+def number(text, pattern):
+    match = re.search(pattern + r"\s*(" + FLOAT + r")", text, re.M)
+    return float(match.group(1)) if match else None
+
+
+def parse_solver(text):
+    """Keep unknown correctness distinct from explicit or measured failure."""
+    time = number(text, r"^\s*total solver time:")
+    iterations = number(text, r"^\s*total iterations:")
+    residual = number(text, r"^\s*residual 2-norm:")
+    initial = number(text, r"^\s*initial residual 2-norm:")
+    tolerance = number(text, r"^\s*tolerance for relative residual:")
+    absolute = number(text, r"^\s*tolerance for residual:")
+    exit_status = number(text, r"^\s*Exit status:")
+    ratio = residual / initial if initial and residual is not None else None
+    if "not converged" in text.lower() or (exit_status is not None and exit_status != 0):
+        status = "failed"
+    elif (time is None or iterations is None or not math.isfinite(time)
+          or not math.isfinite(iterations) or time <= 0 or iterations <= 0):
+        status = "incomplete"
+    elif ratio is None or tolerance is None:
+        status = "unknown_correctness"
+    elif ratio <= tolerance or (absolute is not None and residual <= absolute):
+        status = "valid"
+    else:
+        status = "residual_failed"
+    matrix = re.search(r"reading matrix:.*?([\d,]+) rows,\s+([\d,]+) nonzeros", text)
+    rows, stored_nnz = (int(x.replace(",", "")) for x in matrix.groups()) if matrix else (0, 0)
+    full_nnz = 2 * stored_nnz - rows
+    flops = ((iterations + 1) * 2 * full_nnz + (5 * iterations + 1) * 2 * rows
+             if iterations and rows else None)
+    allreduce = re.search(r"^\s*allreduce:\s*(" + FLOAT + r") seconds/proc (\d+) times/proc", text, re.M)
+    record = {"status": status, "solver_s": time, "iterations": iterations,
+              "relative_residual": ratio, "tolerance": tolerance,
+              "error_norm": number(text, r"^error 2-norm:"),
+              "rows": rows, "full_nnz": full_nnz,
+              "gflops_total": flops / time / 1e9 if flops and time else None,
+              "iteration_us": time / iterations * 1e6 if time and iterations else None,
+              "allreduce_us": float(allreduce[1]) / int(allreduce[2]) * 1e6 if allreduce and int(allreduce[2]) else None,
+              "allreduce_calls": int(allreduce[2]) if allreduce else None}
+    for phase in ("gemv", "dot", "nrm2", "axpy", "copy", "allreduce", "haloexchange", "other"):
+        record[phase + "_s"] = number(text, r"^\s*" + phase + ":")
+    return record
+
+
+def write_csv(path, rows):
+    if not rows:
+        raise ValueError(f"No rows for {path}")
+    with path.open("w", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def render_table(columns, headings, rows, generator="tools/rebuild_main_evidence.py"):
+    """Include a complete alignment, so LaTeX file hooks run outside tabular."""
+    rows = list(rows)
+    if len(headings) != len(columns) or any(not row.endswith(r"\\") for row in rows):
+        raise ValueError("Table header or row terminator is invalid")
+    return "\n".join([
+        f"% Generated by {generator}; include outside tabular.",
+        r"\begin{tabular}{" + columns + "}", r"\toprule",
+        " & ".join(headings) + r"\\", r"\midrule", *rows,
+        r"\bottomrule", r"\end{tabular}", "",
+    ])
+
+
+def write_table(path, columns, headings, rows, generator="tools/rebuild_main_evidence.py"):
+    path.write_text(render_table(columns, headings, rows, generator))
+
+
+def parse_comm_matrix(text, ranks):
+    """Convert aCG's directed element-count matrix to zero-based replay edges."""
+    lines = [line for line in text.splitlines() if line.strip() and not line.startswith("%")]
+    shape = tuple(map(int, lines[0].split()))
+    if shape != (ranks, ranks, len(lines) - 1):
+        raise ValueError("Communication-matrix dimensions/entry count disagree")
+    edges = []
+    for line in lines[1:]:
+        src, dst, count = map(int, line.split())
+        if not (1 <= src <= ranks and 1 <= dst <= ranks and count >= 0):
+            raise ValueError("Invalid communication-matrix entry")
+        edges.append({"src_rank": src - 1, "dst_rank": dst - 1, "elements": count, "bytes": 8 * count})
+    return edges
+
+
+PATTERNS = ("pingpong", "halo_1d", "allreduce", "alltoall", "cg_step")
+
+
+def check_snapshot(bench, retained=()):
+    """Reject an input snapshot that would narrow the archive, before writing it.
+
+    The benchmark repository re-exports these files in place, so an import can
+    quietly replace a wide sweep with a narrow re-run. Both checks below are
+    failures actually seen in imported snapshots.
+    """
+    labels = {x["benchmark"] for x in bench}
+    if not labels <= set(PATTERNS):
+        raise SystemExit(
+            f"Unexpected benchmark labels in the snapshot: {sorted(labels - set(PATTERNS))}.\n"
+            "One known cause is the exporter writing 'step' instead of 'cg_step' for a\n"
+            "sycl_oneccl_oshmpi record. Fix the export rather than importing a phantom pattern.")
+    sides = tuple(sorted({int(x["n"]) for x in bench if x["benchmark"] == "cg_step"}))
+    if "cg_step" not in retained and set(sides) < set(SIDES):
+        # The winner table, the relative-time figures, and the "25 of 30 cells"
+        # claim all need the complete side set.
+        raise SystemExit(
+            f"cg_step snapshot covers sides {sides}, but the archive needs {SIDES}.\n"
+            "Re-run the sweep before importing:\n"
+            f"  GPU_BENCH_N=8192 GPU_BENCH_MSG_SIZES={','.join(map(str, SIDES))} \\\n"
+            "  GPU_BENCH_REPEATS=5 cluster/harness/launch.sh --all cg_step\n"
+            "Nothing was written; data/main-campaign/ is unchanged.")
+
+
+def revision(root):
+    return subprocess.check_output(["git", "-C", str(root), "rev-parse", "HEAD"], text=True).strip()
+
+
+def resolve(directory, *names):
+    """Accept the exported snapshot under any of its known names.
+
+    The benchmark repository renames these files in place (`points.json` became
+    `all-reducepoints.json`), so a missing name is reported with what is present
+    rather than as a bare FileNotFoundError.
+    """
+    for name in names:
+        candidate = directory / name
+        if candidate.is_file():
+            return candidate
+    available = sorted(x.name for x in directory.glob("*.json")) if directory.is_dir() else []
+    raise FileNotFoundError(f"None of {names} under {directory}; found {available}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--benchmark-root", type=Path, required=True)
+    parser.add_argument("--acg-root", type=Path, required=True)
+    parser.add_argument("--output", type=Path, default=ROOT / "data/main-campaign")
+    parser.add_argument("--retain", nargs="*", default=[], choices=PATTERNS, metavar="PATTERN",
+                        help="Keep these patterns from the existing archive instead of re-importing "
+                             "them. Use when the benchmark repository has replaced an exported "
+                             "snapshot with a narrower re-run.")
+    args = parser.parse_args()
+    out = args.output
+    out.mkdir(parents=True, exist_ok=True)
+    sources = []
+
+    def load(path, repository):
+        raw = path.read_bytes()
+        base = args.benchmark_root if repository == "benchmark" else args.acg_root
+        sources.append({"repository": repository, "path": str(path.relative_to(base)),
+                        "sha256": hashlib.sha256(raw).hexdigest()})
+        return raw.decode("utf-8", errors="replace")
+
+    bench, jobs = [], []
+    base = args.benchmark_root / "docs/analysis/data"
+    retain = set(args.retain)
+    files = [resolve(base / "1. microbenchmarks" / name, "points.json", f"{name}points.json",
+                     "all-reducepoints.json" if name == "allreduce" else "points.json")
+             for name in ("pingpong", "halo_1d", "allreduce", "alltoall") if name not in retain]
+    if "cg_step" not in retain:
+        files.append(resolve(base / "2. application_benchmark/cg_step", "cg-points.json"))
+    for path in files:
+        for point in json.loads(load(path, "benchmark"))["points"]:
+            if not point.get("valid") or point.get("metric") != "usec":
+                continue
+            identity = {key: point.get(key, "") for key in ("benchmark", "topology", "case", "backend", "n", "bytes")}
+            row = {**identity, **job_summary(point["runs"]), "stored_mean_us": point["value_mean"]}
+            for phase in ("pack", "halo", "compute", "reduce", "total"):
+                # Newer exports carry an explicit null rather than omitting the key.
+                row["phase_" + phase + "_us"] = (point.get("phases") or {}).get(phase, "")
+            bench.append(row)
+            by_job = defaultdict(list)
+            for run in point["runs"]:
+                by_job[str(run["job"])].append(run["mean"])
+            jobs.extend({**identity, "job": job, "trial_count": len(values), "mean_us": stats.mean(values)}
+                        for job, values in sorted(by_job.items()))
+    check_snapshot(bench, retain)
+    # Carry retained patterns over verbatim, with their original provenance, so a
+    # mixed-snapshot archive stays auditable instead of implicit.
+    retained_sources = []
+    if retain:
+        previous = json.loads((out / "manifest.json").read_text())
+        retained_sources = [{**entry, "retained_from_previous_import": True}
+                            for entry in previous["sources"]
+                            if any(pattern in entry["path"] for pattern in retain)]
+        for name, rows in (("benchmark-summary.csv", bench), ("benchmark-jobs.csv", jobs)):
+            with (out / name).open(newline="") as stream:
+                kept = [row for row in csv.DictReader(stream) if row["benchmark"] in retain]
+            if not kept:
+                raise SystemExit(f"--retain {sorted(retain)}: no such rows in {name}")
+            # CSV reads back as text; restore the types the downstream tables expect.
+            for row in kept:
+                for key, value in row.items():
+                    if key in ("n", "bytes", "n_jobs", "n_trials", "trial_count"):
+                        row[key] = int(value)
+                    elif key.endswith("_us") and value != "":
+                        row[key] = float(value)
+            rows.extend(kept)
+        bench.sort(key=lambda x: (x["benchmark"], x["topology"], x["backend"], int(x["n"])))
+    write_csv(out / "benchmark-summary.csv", bench)
+    write_csv(out / "benchmark-jobs.csv", jobs)
+
+    controls = {}
+    for mode in ("on", "off"):
+        text = load(base / f"3. ucc_comparison/ucc-{mode}.csv", "benchmark")
+        controls[mode] = {(r["benchmark"], r["topology"], r["backend"], int(r["n"])): r
+                          for r in csv.DictReader(io.StringIO(text)) if r["valid"] == "PASS"}
+    ucc = []
+    for key in sorted(controls["on"].keys() & controls["off"].keys()):
+        on, off = (float(controls[mode][key]["value_mean"]) for mode in ("on", "off"))
+        ucc.append({"benchmark": key[0], "topology": key[1], "backend": key[2],
+                    "bytes": key[3] * 4, "on_us": on, "off_us": off, "off_over_on": off / on})
+    write_csv(out / "ucc-paired.csv", ucc)
+    # Auxiliary controls survive as analysis notes, not reconstructed raw trials.
+    for name in ("resume.md", "acg-correlation.md"):
+        load(args.benchmark_root / "docs/analysis" / name, "benchmark")
+
+    trials = []
+    for label in sorted(ACG_LABELS):
+        for path in sorted((args.acg_root / "acg-results" / label).glob("suitesparse/*/*-stderr.txt")):
+            match = LOG_NAME.search(path.name)
+            if not match:
+                raise ValueError(f"Unrecognized result filename: {path}")
+            nodes, ranks, job, trial = map(int, match.groups())
+            trials.append({"matrix": path.parent.name, "backend": label, "nodes": nodes,
+                           "ranks": ranks, "job": job, "trial": trial,
+                           "source": str(path.relative_to(args.acg_root)),
+                           **parse_solver(load(path, "acg"))})
+    write_csv(out / "acg-trials.csv", trials)
+    grouped = defaultdict(list)
+    for row in trials:
+        if row["status"] == "valid":
+            grouped[(row["matrix"], row["backend"], row["ranks"])].append(row)
+    solver = []
+    for key, values in sorted(grouped.items()):
+        best = min(values, key=lambda row: row["solver_s"])
+        solver.append({"matrix": key[0], "backend": key[1], "ranks": key[2],
+                       "best_solver_s": best["solver_s"], "median_solver_s": stats.median(x["solver_s"] for x in values),
+                       "max_solver_s": max(x["solver_s"] for x in values), "best_iterations": best["iterations"],
+                       "best_iteration_us": best["iteration_us"], "gflops_per_gpu": best["gflops_total"] / key[2],
+                       "best_allreduce_us": best["allreduce_us"], "n_trials": len(values),
+                       "n_jobs": len({x["job"] for x in values}), "best_source": best["source"]})
+    write_csv(out / "acg-summary.csv", solver)
+
+    replay, signatures = [], []
+    for row in solver:
+        if row["backend"] != "acg-cg-oshmpi":
+            continue
+        stderr_path = args.acg_root / row["best_source"]
+        stdout_path = stderr_path.with_name(stderr_path.name.replace("-stderr.txt", "-stdout.txt"))
+        edges = parse_comm_matrix(load(stdout_path, "acg"), row["ranks"])
+        sends = Counter()
+        neighbors = Counter()
+        for edge in edges:
+            sends[edge["src_rank"]] += edge["bytes"]
+            neighbors[edge["src_rank"]] += edge["elements"] > 0
+            replay.append({"matrix": row["matrix"], "ranks": row["ranks"], **edge})
+        # Confirm the element-to-byte conversion against independent stderr totals.
+        text = stderr_path.read_text()
+        for rank, count in re.findall(r"rank\s+(\d+) sends \d+ B (\d+) B/it", text):
+            if sends[int(rank)] != int(count):
+                raise ValueError(f"Halo byte count mismatch in {stderr_path}")
+        signatures.append({"matrix": row["matrix"], "ranks": row["ranks"],
+                           "mean_neighbors": sum(neighbors.values()) / row["ranks"],
+                           "max_neighbors": max(neighbors.values()),
+                           "mean_send_kib": sum(sends.values()) / row["ranks"] / 1024})
+    write_csv(out / "halo-replay.csv", replay)
+    write_csv(out / "halo-signatures.csv", signatures)
+    write_table(out / "halo-signature-table.tex", "lrrrr",
+        ["Matrix", "GPUs", "Mean neighbors", "Max neighbors", "Send KiB/rank"], (
+        f"{r['matrix'].split('_')[0]} & {r['ranks']} & {r['mean_neighbors']:.1f} & {r['max_neighbors']} & {r['mean_send_kib']:.1f}" + r"\\"
+        for r in signatures if r["ranks"] in (4, 16, 32)))
+
+    cg = [x for x in bench if x["benchmark"] == "cg_step"]
+    winners = []
+    for topology in TOPOLOGIES:
+        for side in SIDES:
+            cell = sorted((x for x in cg if x["topology"] == topology and x["n"] == side),
+                          key=lambda x: x["median_us"])
+            first, second = cell[:2]
+            winners.append({"topology": topology, "side": side, "backend": first["backend"],
+                            "median_us": first["median_us"], "runner_up": second["backend"],
+                            "runner_up_ratio": second["median_us"] / first["median_us"]})
+    write_csv(out / "cg-winners.csv", winners)
+    write_table(out / "cg-winner-table.tex", "lccccc",
+        ["Topology", *map(str, SIDES)], (
+        r"\texttt{" + topology + "} & " + " & ".join(
+            NAMES[next(x["backend"] for x in winners if x["topology"] == topology and x["side"] == side)]
+            for side in SIDES) + r"\\" for topology in TOPOLOGIES if topology != "1n1g"))
+
+    phase_rows = []
+    for row in cg:
+        if row["topology"] != "4n4g" or row["n"] != 512:
+            continue
+        values = [row[f"phase_{phase}_us"] for phase in ("pack", "halo", "compute", "reduce", "total")]
+        # Use the stored unsplit mean here, matching the mean-based phase summary.
+        step = row["stored_mean_us"]
+        gap = values[-1] - step
+        phase_rows.append(NAMES[row["backend"]] + " & " + " & ".join(f"{x:.1f}" for x in values + [step, gap]) + r"\\")
+    write_table(out / "cg-phase-table.tex", "lrrrrrrr",
+                ["Backend", "Pack", "Halo", "Compute", "Reduce", "Sum", "Step", "Gap"], phase_rows)
+
+    ping_rows = []
+    for backend in ("cuda_mpi", "sycl_mpi", "oshmpi", "cuda_nvshmem", "cuda_nccl", "sycl_oneccl"):
+        cells = [next(x for x in bench if x["benchmark"] == "pingpong" and x["topology"] == "2n1g"
+                      and x["backend"] == backend and x["bytes"] == size) for size in (4, 16 * 1024**2)]
+        ping_rows.append(NAMES[backend] + " & " + " & ".join(f"{x['median_us']:.3f}" for x in cells) + r"\\")
+    write_table(out / "pingpong-table.tex", "lrr", ["Stack", r"4\,B", r"16\,MiB"], ping_rows)
+    adapter_rows = []
+    for pattern, topology, size, direct, adapted in (
+        ("pingpong", "2n1g", 4, "cuda_nccl", "sycl_oneccl"),
+        ("allreduce", "1n4g", 4, "oshmpi", "sycl_oneccl_oshmpi"),
+        ("allreduce", "1n4g", 16 * 1024**2, "oshmpi", "sycl_oneccl_oshmpi"),
+        ("alltoall", "8n4g", 32 * 256 * 1024, "cuda_nccl", "sycl_oneccl"),
+    ):
+        def cell(backend):
+            return next(x for x in bench if (x["benchmark"], x["topology"], x["bytes"], x["backend"])
+                        == (pattern, topology, size, backend))
+        native, common = cell(direct), cell(adapted)
+        adapter_rows.append({"pattern": pattern, "topology": topology, "bytes_per_rank": size,
+                             "direct": direct, "adapted": adapted, "direct_us": native["median_us"],
+                             "adapted_us": common["median_us"], "adapted_over_direct": common["median_us"] / native["median_us"]})
+    write_csv(out / "adapter-comparison.csv", adapter_rows)
+    for pattern, backends, topologies, case in (
+        ("halo_1d", ("cuda_mpi", "cuda_nvshmem", "oshmpi"), TOPOLOGIES[-3:], "steady"),
+        ("allreduce", ("cuda_nccl", "cuda_nvshmem", "cuda_mpi"), ("1n4g", *TOPOLOGIES[-3:]), ""),
+        ("alltoall", ("cuda_mpi", "cuda_nccl", "cuda_nvshmem", "sycl_oneccl"), TOPOLOGIES[-3:], ""),
+    ):
+        rows = []
+        for topology in topologies:
+            nodes, gpus = map(int, re.fullmatch(r"(\d+)n(\d+)g", topology).groups())
+            factor = 2 * (nodes * gpus - 1) / (nodes * gpus) if pattern == "allreduce" else 1
+            values = []
+            for backend in backends:
+                selected = [x for x in bench if (x["benchmark"], x["topology"], x["backend"], x["case"])
+                            == (pattern, topology, backend, case)]
+                if pattern == "alltoall":
+                    selected = [max(selected, key=lambda x: x["n"])]
+                values.append(max(x["bytes"] / x["median_us"] / 1000 * factor for x in selected))
+            rows.append(r"\texttt{" + topology + "} & " + " & ".join(f"{x:.1f}" for x in values) + r"\\")
+        headings = ["Topology"] + [("CUDA " if backend.startswith("cuda_") else "") + NAMES[backend]
+                                    for backend in backends]
+        write_table(out / f"{pattern}-bandwidth-table.tex", "l" + "r" * len(backends), headings, rows)
+
+    # MPI reductions are taken from the OSHMPI-halo application to avoid folding
+    # the MPI-halo variability into a purported isolated collective comparison.
+    pairs = {"cuda_mpi": "acg-cg-oshmpi", "cuda_nccl": "acg-cg-nccl"}
+    predictions = []
+    for row in solver:
+        if row["ranks"] < 2:
+            continue
+        for backend, application in pairs.items():
+            if row["backend"] != application:
+                continue
+            topology = "1n2g" if row["ranks"] == 2 else f"{max(1, row['ranks']//4)}n4g"
+            step = next(x for x in cg if x["backend"] == backend and x["topology"] == topology and x["n"] == 512)
+            predicted = step["phase_reduce_us"] / 2
+            observed = row["best_allreduce_us"]
+            predictions.append({"matrix": row["matrix"], "backend": backend, "ranks": row["ranks"],
+                                "predicted_us": predicted, "observed_us": observed,
+                                "absolute_relative_error": abs(predicted / observed - 1)})
+    write_csv(out / "reduction-predictions.csv", predictions)
+    errors = {(matrix, backend): stats.mean(x["absolute_relative_error"] for x in predictions
+                                           if x["matrix"] == matrix and x["backend"] == backend) * 100
+              for matrix in ("Bump_2911", "Queen_4147") for backend in pairs}
+    write_table(out / "reduction-error-table.tex", "lrr",
+        ["Reduction path", r"Bump\_2911", r"Queen\_4147"], (
+        f"{NAMES[backend]} & {errors[('Bump_2911', backend)]:.1f}\\% & {errors[('Queen_4147', backend)]:.1f}\\%" + r"\\"
+        for backend in pairs))
+
+    oshmpi_rows = []
+    for matrix in ("Bump_2911", "Queen_4147"):
+        for ranks in (2, 4, 8, 16, 32):
+            get = lambda backend: next(x for x in solver if x["matrix"] == matrix and x["ranks"] == ranks and x["backend"] == backend)
+            osh, nccl, nv = (get(x) for x in ("acg-cg-oshmpi", "acg-cg-nccl", "acg-cg-nvshmem"))
+            oshmpi_rows.append(f"{matrix.split('_')[0]} & {ranks} & {osh['best_solver_s']:.3f} & {osh['gflops_per_gpu']:.2f} & "
+                               f"${(osh['gflops_per_gpu']/nccl['gflops_per_gpu']-1)*100:+.1f}\\%$ & "
+                               f"${(osh['gflops_per_gpu']/nv['gflops_per_gpu']-1)*100:+.1f}\\%$" + r"\\")
+    write_table(out / "acg-oshmpi-table.tex", "llrrrr",
+                ["Matrix", "GPUs", "Time (s)", "GFLOP/s/GPU", "vs NCCL", "vs host NVSHMEM"], oshmpi_rows)
+    manifest = {"schema_version": 1,
+                "input_repository_revisions": {"benchmark": revision(args.benchmark_root), "acg": revision(args.acg_root)},
+                "measured_source_revision": None,
+                "benchmark_policy": "median of within-allocation trial means; range over allocation means",
+                "phase_policy": "stored phase means; per-allocation phase samples unavailable",
+                "solver_policy": "fastest residual-valid completed trial per matrix/backend/rank count; retain all trials",
+                "excluded_directory": "acg-cg-oshmpi-backup-mpi (backup, not an independent campaign)",
+                "retained_patterns": sorted(retain),
+                "sources": sources + retained_sources}
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    summary = {"benchmark_cells": dict(Counter(x["benchmark"] for x in bench)),
+               "allocations_per_cell": {pattern: dict(Counter(x["n_jobs"] for x in bench if x["benchmark"] == pattern))
+                                        for pattern in ("pingpong", "halo_1d", "allreduce", "alltoall", "cg_step")},
+               "ucc_matched_cells": len(ucc),
+               "solver_status": dict(Counter(x["status"] for x in trials)),
+               "solver_by_backend": dict(Counter(x["backend"] for x in trials)),
+               "multi_rank_cg_winners": dict(Counter(x["backend"] for x in winners if x["topology"] != "1n1g")),
+               "reduction_mape_percent": {f"{matrix}/{backend}": round(error, 4) for (matrix, backend), error in errors.items()}}
+    (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    print(json.dumps(summary, indent=2))
+
+
+if __name__ == "__main__":
+    main()
