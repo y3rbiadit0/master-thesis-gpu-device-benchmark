@@ -145,14 +145,15 @@ paths and rejects row-only includes inside table alignments.
 
 ## SYCL solver campaign
 
-`import_acg_sycl_evidence.py` imports the separate SYCL aCG campaign and pairs it
-with the native trials already in `acg-trials.csv`; it must run after the main
-import. `acg-sycl-trials.csv` holds one row per SYCL trial with the same status
-classes as the native parser. `acg-sycl-comparison.csv` holds one row per
-(pair, matrix, GPU count), with medians over residual-valid trials on both sides.
-`time_ratio` (median solver time, the reported comparison), `iteration_ratio`,
-and `compute_ratio` are SYCL over CUDA, where compute is the
-sum of the gemv, dot, nrm2, axpy, and copy categories. Most SYCL cells come from
-a single allocation, so their ranges describe trial-to-trial variation only.
-`acg-sycl-manifest.json` records the timer definitions and the SHA-256 of every
-imported log.
+`import_acg_sycl_evidence.py` imports the SYCL aCG campaign, whose jobs run the
+SYCL solver and the native solver interleaved in the same allocations; it reads
+`acg-trials.csv`, so it must run after the main import. `acg-sycl-trials.csv`
+and `acg-sycl-native-trials.csv` hold one row per SYCL and native trial of that
+campaign, with the same status classes as the native parser (SYCL validity uses
+its host-recomputed residual). `acg-sycl-comparison.csv` holds one row per
+(pair, matrix, GPU count): medians on both sides, and `paired_ratio`, the median
+over allocations of the per-allocation ratio of medians, SYCL over CUDA -- the
+reported comparison. `archived_ratio` relates the same SYCL medians to the main
+campaign. `acg-sycl-table.tex` is generated from these. `acg-sycl-manifest.json`
+records the timer definition, status counts, and the SHA-256 of every imported
+log. `tools/plot_acg_sycl.py` renders the two SYCL figures.
