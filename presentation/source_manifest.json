@@ -1,0 +1,226 @@
+{
+  "template": "thesis_style.pptx",
+  "template_sha256": "426a93a0af97da79db0e2bb9dafbb891ddbe8199347fad95990cfa26bb69b940",
+  "main_slides": 14,
+  "backup_slides": 6,
+  "target_seconds": 840,
+  "evidence_sha256": {
+    "data/main-campaign/halo_1d-bandwidth-table.tex": "c292e493e81d179690f4b59765b4ae00d3a03e3d3251edc9f5f1a27bd7b93d07",
+    "data/main-campaign/moe-table.tex": "ac2455a36f48692d930e1e5fa506222afdf506c98ae796af501920dd21b233f9",
+    "data/main-campaign/adapter-comparison.csv": "65c7f87af2e243dc3c6917b59fe093a9a8ec6a60483b249ec9e683e8d98a02ee",
+    "data/main-campaign/acg-summary.csv": "ffbaba880832655bed4b825b050069aae58f597fce3aff7396e17812ddaa93d8",
+    "data/main-campaign/acg-sycl-table.tex": "d40c696d5ccfb2445fc13adead5a8e1520b8c4d899602b990233be514e747edc",
+    "data/main-campaign/reduction-error-table.tex": "7a89ca73f044d957ba35e2947e9352776ddacd2266685a739d1178d4044a1964",
+    "data/main-campaign/cg-device-correlation-table.tex": "e6357502b557ddf69e112b8afd9d4b16b040dd2f7f8820d69930ce3b89556c87",
+    "appendices/nccl-preliminary.tex": "b4aeeb3acc9c0186cd53852ef35d02cf247fd01308ce451d52f17722299b4e7b",
+    "main.tex": "d11cf747f6c1f2ff6bac0f77a0693b4230ba2334e96f5e62f5e686bbde50dc36",
+    "chapters/01-introduction.tex": "b6cce04a1095283c51a936edfa67f330100ceec5646bbf7c65e44c8a81aedbc1",
+    "chapters/04-methodology.tex": "2e1f6ccff1f698ece0fda26decc120f64b4987aac462143838f47980a5c81e7d",
+    "chapters/06-discussion.tex": "a314f1ae7f536538c49c6a8c8d83a1aa49453ee1b222fa6b2af74fe232055e15",
+    "chapters/07-conclusion.tex": "b873ff4c30556a0303d55b3194e29093a2cbb73a1773cdd42edce1a38d278eaf",
+    "references.bib": "17325a9c9847cd4654c9650b904c623768fd3fc37a35597bbaaa5c4d7e929917"
+  },
+  "charts": [
+    {
+      "slide": 9,
+      "title": "Steady halo \u00b7 16 MiB aggregate \u00b7 effective GB/s \u2191",
+      "categories": [
+        "2n4g",
+        "4n4g",
+        "8n4g"
+      ],
+      "series": [
+        {
+          "name": "CUDA MPI",
+          "values": [
+            34.4,
+            36.5,
+            35.7
+          ]
+        },
+        {
+          "name": "Device NVSHMEM",
+          "values": [
+            41.1,
+            40.9,
+            40.6
+          ]
+        },
+        {
+          "name": "OSHMPI",
+          "values": [
+            24.5,
+            24.4,
+            24.4
+          ]
+        }
+      ]
+    },
+    {
+      "slide": 10,
+      "title": "Dispatch + combine time / MPI \u00b7 8n4g \u00b7 32 MiB useful volume per rank \u00b7 lower is better",
+      "categories": [
+        "Uniform",
+        "Locality-biased",
+        "Hotspot 80%"
+      ],
+      "series": [
+        {
+          "name": "MPI",
+          "values": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "name": "NCCL",
+          "values": [
+            0.5004117937736782,
+            1.5545274289491078,
+            1.1642470906312448
+          ]
+        },
+        {
+          "name": "NVSHMEM",
+          "values": [
+            0.8318234228298468,
+            0.7177792465300727,
+            1.8222346303044552
+          ]
+        },
+        {
+          "name": "OSHMPI",
+          "values": [
+            1.7048262230275077,
+            1.6926635822868472,
+            1.8421887857058892
+          ]
+        }
+      ]
+    },
+    {
+      "slide": 12,
+      "title": "Bump_2911 \u00b7 solver time (s) \u2193",
+      "categories": [
+        "1n2g",
+        "1n4g",
+        "2n4g",
+        "4n4g",
+        "8n4g"
+      ],
+      "series": [
+        {
+          "name": "NCCL",
+          "values": [
+            21.068109,
+            11.966338,
+            7.825346,
+            6.015579,
+            6.001323
+          ]
+        },
+        {
+          "name": "Device NVSHMEM",
+          "values": [
+            24.176462,
+            13.280447,
+            8.955209,
+            6.77065,
+            6.320421
+          ]
+        },
+        {
+          "name": "OSHMPI",
+          "values": [
+            22.176521,
+            12.715619,
+            9.185323,
+            8.197612,
+            8.003543
+          ]
+        }
+      ]
+    },
+    {
+      "slide": 12,
+      "title": "Queen_4147 \u00b7 solver time (s) \u2193",
+      "categories": [
+        "1n2g",
+        "1n4g",
+        "2n4g",
+        "4n4g",
+        "8n4g"
+      ],
+      "series": [
+        {
+          "name": "NCCL",
+          "values": [
+            47.526483,
+            25.048083,
+            15.008961,
+            9.591972,
+            7.24921
+          ]
+        },
+        {
+          "name": "Device NVSHMEM",
+          "values": [
+            52.51311,
+            28.551494,
+            16.820274,
+            10.816626,
+            8.794917
+          ]
+        },
+        {
+          "name": "OSHMPI",
+          "values": [
+            48.310523,
+            26.165186,
+            15.902366,
+            11.665915,
+            9.603186
+          ]
+        }
+      ]
+    },
+    {
+      "slide": 18,
+      "title": "Allreduce latency (\u00b5s)",
+      "categories": [
+        "8 B",
+        "32 KiB",
+        "256 KiB"
+      ],
+      "series": [
+        {
+          "name": "2.18.5 ordinary",
+          "values": [
+            12.4,
+            18.4,
+            19.2
+          ]
+        },
+        {
+          "name": "2.31.2 ordinary",
+          "values": [
+            12.6,
+            18.5,
+            19.3
+          ]
+        },
+        {
+          "name": "2.31.2 symmetric",
+          "values": [
+            7.5,
+            10.6,
+            22.7
+          ]
+        }
+      ]
+    }
+  ],
+  "external_context_checked": "2026-10-06",
+  "note": "Charts use retained evidence. External context is not a new campaign measurement."
+}
