@@ -17,7 +17,7 @@ The first comparison asks whether device-side invocation improves a dependency-o
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/pingpong-regimes.png}
-\caption{\texttt{pingpong} latency for all six measured stacks within one node and across two nodes. Points are medians of five allocation means; shading spans those means. Latency is half the round-trip time.}
+\caption[\texttt{pingpong} latency within one node and across two nodes]{\texttt{pingpong} latency for all six measured stacks within one node and across two nodes. Points are medians of five allocation means; shading spans those means. Latency is half the round-trip time.}
 \label{fig:m-pingpong-regimes}
 \end{figure}
 
@@ -44,7 +44,7 @@ A repeated neighbor exchange offers a different opportunity from ping-pong. The 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/halo-regimes.png}
-\caption{Isolated and steady-state halo latency for all six measured stacks. Steady-state values amortize a batch of 100 exchanges. Points and shading show allocation medians and ranges; payload counts two sends and two receives.}
+\caption[Isolated and steady-state halo latency]{Isolated and steady-state halo latency for all six measured stacks. Steady-state values amortize a batch of 100 exchanges. Points and shading show allocation medians and ranges; payload counts two sends and two receives.}
 \label{fig:m-halo-regimes}
 \end{figure}
 
@@ -72,7 +72,7 @@ The agreement does not survive scale in this campaign. From \texttt{4n4g} onward
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/allreduce-backends.png}
-\caption{\texttt{allreduce} latency for all seven measured stacks at representative topologies. Points are medians of allocation means and shading spans those means. The input payload is per rank; the single-rank control is discussed separately.}
+\caption[\texttt{allreduce} latency at representative topologies]{\texttt{allreduce} latency for all seven measured stacks at representative topologies. Points are medians of allocation means and shading spans those means. The input payload is per rank; the single-rank control is discussed separately.}
 \label{fig:m-allreduce-backends}
 \end{figure}
 
@@ -100,7 +100,7 @@ The trade-off runs the other way at small payloads, which is why the policy is a
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/ucc-ab-allreduce.png}
-\caption{Paired UCC \texttt{allreduce} control for CUDA MPI. Top: the measured cost of each configuration, so the divergence at large payloads is visible in absolute terms. Bottom: the resulting speedup, shaded green where UCC is faster and red where it is slower. Values are matched summary means; the SYCL MPI series tracks these curves closely and is omitted for legibility.}
+\caption[Effect of UCC on CUDA MPI \texttt{allreduce}]{Paired UCC \texttt{allreduce} control for CUDA MPI. Top: the measured cost of each configuration, so the divergence at large payloads is visible in absolute terms. Bottom: the resulting speedup, shaded green where UCC is faster and red where it is slower. Values are matched summary means; the SYCL MPI series tracks these curves closely and is omitted for legibility.}
 \label{fig:m-ucc-allreduce}
 \end{figure}
 
@@ -115,7 +115,7 @@ The single-rank \texttt{allreduce} control is anomalously slow for large buffers
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/alltoall-backends.png}
-\caption{\texttt{alltoall} latency for all seven measured stacks at representative topologies. The horizontal axis is payload per peer; points are medians of allocation means and shading spans those means.}
+\caption[\texttt{alltoall} latency at representative topologies]{\texttt{alltoall} latency for all seven measured stacks at representative topologies. The horizontal axis is payload per peer; points are medians of allocation means and shading spans those means.}
 \label{fig:m-alltoall-backends}
 \end{figure}
 
@@ -143,7 +143,7 @@ Figure~\ref{fig:m-ucc-alltoall} isolates what makes the MPI default collapse at 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/ucc-ab-alltoall.png}
-\caption{Paired UCC \texttt{alltoall} control for CUDA MPI, against bytes per peer. Top: measured cost of each configuration; the flat non-UCC plateau below 512\,B per peer at \texttt{8n4g} is the modified-Bruck default. Bottom: the resulting speedup. The benefit is concentrated at small payloads and reverses at the largest ones, the opposite of the allreduce profile in Figure~\ref{fig:m-ucc-allreduce}.}
+\caption[Effect of UCC on CUDA MPI \texttt{alltoall}]{Paired UCC \texttt{alltoall} control for CUDA MPI, against bytes per peer. Top: measured cost of each configuration; the flat non-UCC plateau below 512\,B per peer at \texttt{8n4g} is the modified-Bruck default. Bottom: the resulting speedup. The benefit is concentrated at small payloads and reverses at the largest ones, the opposite of the allreduce profile in Figure~\ref{fig:m-ucc-allreduce}.}
 \label{fig:m-ucc-alltoall}
 \end{figure}
 
@@ -222,7 +222,7 @@ Figure~\ref{fig:m-moe-scaling} reproduces the interconnect boundary identified i
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/moe-routing-scaling.png}
-\caption{\texttt{moe} dispatch-and-combine latency for the six measured stacks at every topology, under the three routing cases. Points are medians of five allocation means and shading spans those means. The dotted line separates intra-node NVLink topologies from those crossing InfiniBand. At \texttt{1n1g} all three cases degenerate to a local copy.}
+\caption[\texttt{moe} latency by topology and routing case]{\texttt{moe} dispatch-and-combine latency for the six measured stacks at every topology, under the three routing cases. Points are medians of five allocation means and shading spans those means. The dotted line separates intra-node NVLink topologies from those crossing InfiniBand. At \texttt{1n1g} all three cases degenerate to a local copy.}
 \label{fig:m-moe-scaling}
 \end{figure}
 
@@ -243,7 +243,7 @@ Figure~\ref{fig:m-moe-sensitivity} is the central \texttt{moe} result. No stack 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.78\textwidth]{figures/results/moe-routing-sensitivity.png}
-\caption{\texttt{moe} latency at \texttt{8n4g} relative to CUDA MPI at the same topology and routing case. Bars below one favor the compared stack. No stack is below one in all three cases.}
+\caption[\texttt{moe} latency at \texttt{8n4g} relative to CUDA MPI]{\texttt{moe} latency at \texttt{8n4g} relative to CUDA MPI at the same topology and routing case. Bars below one favor the compared stack. No stack is below one in all three cases.}
 \label{fig:m-moe-sensitivity}
 \end{figure}
 
@@ -282,7 +282,7 @@ Figure~\ref{fig:m-cg-relative} shows why the margin matters. The direct CUDA pat
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-step-relative.png}
-\caption{Composite-step time relative to CUDA MPI at the same global grid side and topology. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack. Only multi-rank topologies are shown: at \texttt{1n1g} no inter-rank communication occurs.}
+\caption[\texttt{cg\_step} time relative to CUDA MPI]{Composite-step time relative to CUDA MPI at the same global grid side and topology. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack. Only multi-rank topologies are shown: at \texttt{1n1g} no inter-rank communication occurs.}
 \label{fig:m-cg-relative}
 \end{figure}
 
@@ -299,7 +299,7 @@ Figure~\ref{fig:m-cg-device-step} shows both regimes directly. At side 512 the d
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-device-step.png}
-\caption{Step time of the device-initiated \texttt{cg\_step} against the host implementations at the smallest and a large grid side. All series come from the same later snapshot, in which the host implementations were measured with one allocation and therefore carry no range; the shaded band is the allocation range of the device implementation.}
+\caption[Device-initiated versus host-initiated \texttt{cg\_step}]{Step time of the device-initiated \texttt{cg\_step} against the host implementations at the smallest and a large grid side. All series come from the same later snapshot, in which the host implementations were measured with one allocation and therefore carry no range; the shaded band is the allocation range of the device implementation.}
 \label{fig:m-cg-device-step}
 \end{figure}
 
@@ -357,7 +357,7 @@ Figure~\ref{fig:m-acg-backend-median} first presents every native multi-GPU path
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-backend-median.png}
-\caption{Median solver time over retained residual-valid completed trials for all native aCG paths. The device-NVSHMEM series changes solver organization as well as invocation. MPI's large-scale medians expose the slow mode that a fastest-trial curve would hide.}
+\caption[Median aCG solver time of the native paths]{Median solver time over retained residual-valid completed trials for all native aCG paths. The device-NVSHMEM series changes solver organization as well as invocation. MPI's large-scale medians expose the slow mode that a fastest-trial curve would hide.}
 \label{fig:m-acg-backend-median}
 \end{figure}
 
@@ -374,7 +374,7 @@ Figure~\ref{fig:m-acg-scaling} separates the stable scaling trends from MPI vari
 \begin{figure}[!hbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-campaign-summary.png}
-\caption{aCG scaling and variability. Left: analytical throughput of fastest-valid trials normalized to the one-GPU reference. Right: MPI solver time by allocation, with median markers and trial minimum--maximum ranges. The dashed device-NVSHMEM series changes solver organization as well as initiation.}
+\caption[aCG scaling and variability]{aCG scaling and variability. Left: analytical throughput of fastest-valid trials normalized to the one-GPU reference. Right: MPI solver time by allocation, with median markers and trial minimum--maximum ranges. The dashed device-NVSHMEM series changes solver organization as well as initiation.}
 \label{fig:m-acg-scaling}
 \end{figure}
 
@@ -413,7 +413,7 @@ The mean discrepancies range from 7.8\% to 11.1\% (Table~\ref{tab:m-acg-reductio
 \begin{figure}[!hbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-reduction-prediction.png}
-\caption{One-double composite estimate versus aCG measurement. Point labels give GPU count. The dashed line is exact agreement; no model is fitted to these points. MPI observations come from the OSHMPI-halo solver.}
+\caption[Composite estimate versus aCG measurement]{One-double composite estimate versus aCG measurement. Point labels give GPU count. The dashed line is exact agreement; no model is fitted to these points. MPI observations come from the OSHMPI-halo solver.}
 \label{fig:m-acg-reduction-prediction}
 \end{figure}
 
@@ -429,7 +429,7 @@ Figure~\ref{fig:m-cg-device-scaling} shows that the agreement depends entirely o
 \begin{figure}[!hbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-device-scaling.png}
-\caption{Strong scaling of the device-initiated \texttt{cg\_step} at three grid sides against the device-NVSHMEM solver, each normalized to its own two-GPU value. Lower is better; a series that rises does not scale.}
+\caption[Strong scaling of the device-initiated \texttt{cg\_step} and the device-NVSHMEM solver]{Strong scaling of the device-initiated \texttt{cg\_step} at three grid sides against the device-NVSHMEM solver, each normalized to its own two-GPU value. Lower is better; a series that rises does not scale.}
 \label{fig:m-cg-device-scaling}
 \end{figure}
 
@@ -486,7 +486,7 @@ The SYCL solver and the native CUDA solver were run in the same allocations, int
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-sycl-scaling.png}
-\caption{Strong scaling of the native and SYCL solvers from the same allocations, as speedup over the native single-GPU median solver time. Left: scaling up within one node. Right: scaling out with four GPUs per node. Lines are medians, shading spans the trial minimum and maximum; the dotted gray series is native NCCL from the main campaign, shown for reference. SYCL oneCCL/NCCL reduces through NCCL but exchanges its halo through MPI.}
+\caption[Strong scaling of the native and SYCL aCG solvers]{Strong scaling of the native and SYCL solvers from the same allocations, as speedup over the native single-GPU median solver time. Left: scaling up within one node. Right: scaling out with four GPUs per node. Lines are medians, shading spans the trial minimum and maximum; the dotted gray series is native NCCL from the main campaign, shown for reference. SYCL oneCCL/NCCL reduces through NCCL but exchanges its halo through MPI.}
 \label{fig:m-acg-sycl-scaling}
 \end{figure}
 
@@ -501,7 +501,7 @@ The SYCL solver and the native CUDA solver were run in the same allocations, int
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-sycl-ratio.png}
-\caption{SYCL-to-native solver-time ratio against GPU count. Points are single allocations, each the ratio of the SYCL and native medians of that job; lines are medians over allocations. The shaded region spans more than one node. Values above one favor CUDA; the SYCL MPI ratios below one across nodes reflect the native MPI slow mode, not a faster SYCL solver.}
+\caption[SYCL-to-native aCG solver-time ratio]{SYCL-to-native solver-time ratio against GPU count. Points are single allocations, each the ratio of the SYCL and native medians of that job; lines are medians over allocations. The shaded region spans more than one node. Values above one favor CUDA; the SYCL MPI ratios below one across nodes reflect the native MPI slow mode, not a faster SYCL solver.}
 \label{fig:m-acg-sycl-ratio}
 \end{figure}
 

@@ -9,14 +9,14 @@ Figures~\ref{fig:app-halo-isolated} and~\ref{fig:app-halo-steady} separate the s
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/halo-isolated-all-topologies.png}
-\caption{Isolated halo latency for all six measured stacks and all six non-single-rank topologies.}
+\caption[Isolated halo latency, all stacks and topologies]{Isolated halo latency for all six measured stacks and all six non-single-rank topologies.}
 \label{fig:app-halo-isolated}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/halo-steady-all-topologies.png}
-\caption{Steady-state halo latency for all six measured stacks and all six non-single-rank topologies. Values are amortized over batches of 100 exchanges.}
+\caption[Steady-state halo latency, all stacks and topologies]{Steady-state halo latency for all six measured stacks and all six non-single-rank topologies. Values are amortized over batches of 100 exchanges.}
 \label{fig:app-halo-steady}
 \end{figure}
 
@@ -27,14 +27,14 @@ The single-rank collective panels are implementation controls rather than networ
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/allreduce-all-topologies.png}
-\caption{Allreduce latency for all seven measured stacks and all topologies.}
+\caption[Allreduce latency, all stacks and topologies]{Allreduce latency for all seven measured stacks and all topologies.}
 \label{fig:app-allreduce-all}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/alltoall-all-topologies.png}
-\caption{All-to-all latency against bytes per peer for all seven measured stacks and all topologies.}
+\caption[All-to-all latency, all stacks and topologies]{All-to-all latency against bytes per peer for all seven measured stacks and all topologies.}
 \label{fig:app-alltoall-all}
 \end{figure}
 
@@ -45,6 +45,6 @@ Figure~\ref{fig:app-cg-all} provides every retained multi-rank \texttt{cg\_step}
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-step-all-topologies.png}
-\caption{Composite-sequence time relative to CUDA MPI for all six measured stacks and all multi-rank topologies.}
+\caption[Composite-sequence time relative to CUDA MPI, all stacks and topologies]{Composite-sequence time relative to CUDA MPI for all six measured stacks and all multi-rank topologies.}
 \label{fig:app-cg-all}
 \end{figure}
