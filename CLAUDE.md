@@ -17,7 +17,7 @@ for emphasis, and use them sparingly.
 | File, benchmark, and executable names | Monospace | `\texttt{cg\_step}`, `\texttt{matrix.sh}` |
 | Topology labels | Monospace | `\texttt{1n4g}`, `\texttt{8n4g}` |
 | Figure and table references | Normal text | `Figure~\ref{...}`, `Table~\ref{...}` |
-| Captions | Normal text; never bold by hand | template controls styling |
+| Captions | Normal text; never bold by hand; always a short list title | `\caption[Peak halo bandwidth]{...}` |
 | Acronyms | `\ac{KEY}` at first prose use, plain text after | `\ac{HPC}` renders High Performance Computing (HPC) |
 | Repositories and external resources | Cited, never a URL in the text | `\cite{merenda_acg_sycl_2026}` |
 | Quotations | Normal text in quotation marks | ``...'' |
@@ -54,7 +54,7 @@ Defined in Chapter 3 and used consistently:
 ## Tooling
 
 - `python3 -B tools/check_thesis.py` checks labels, citations, references, inputs, figure
-  paths, table cell counts, and acronyms. Run it after editing any `.tex` file.
+  paths, table cell counts, caption short titles, and acronyms. Run it after editing any `.tex` file.
 - Acronyms are listed in `backmatter/acronyms.tex` (printed at the end of the thesis). The
   abstract and the body (after `\acresetall`) each expand an acronym once, at its first prose
   use; headings and captions stay plain. Product names that are not acronyms belong in

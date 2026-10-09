@@ -25,7 +25,7 @@ Within a node, NVSHMEM becomes competitive over an intermediate message range, w
 
 \begin{table}[htbp]
 \centering
-\caption{Inter-node \texttt{pingpong} latency on \texttt{2n1g}, including SYCL paths. Values are allocation-based medians in \,$\mu$s.}
+\caption[Inter-node \texttt{pingpong} latency on \texttt{2n1g}]{Inter-node \texttt{pingpong} latency on \texttt{2n1g}, including SYCL paths. Values are allocation-based medians in \,$\mu$s.}
 \label{tab:m-pingpong-inter}
 \footnotesize
 \input{data/main-campaign/pingpong-table.tex}
@@ -52,7 +52,7 @@ MPI supplies the low-startup reference for isolated exchanges. Batching makes OS
 
 \begin{table}[htbp]
 \centering
-\caption{Peak steady-state halo bandwidth computed from allocation-median latency, in GB/s. The numerator is aggregate logical halo volume, not one NIC's traffic.}
+\caption[Peak steady-state halo bandwidth]{Peak steady-state halo bandwidth computed from allocation-median latency, in GB/s. The numerator is aggregate logical halo volume, not one NIC's traffic.}
 \label{tab:m-halo-bandwidth}
 \input{data/main-campaign/halo_1d-bandwidth-table.tex}
 \end{table}
@@ -78,7 +78,7 @@ The agreement does not survive scale in this campaign. From \texttt{4n4g} onward
 
 \begin{table}[htbp]
 \centering
-\caption{Peak \texttt{allreduce} bus bandwidth in GB/s, recomputed as input bytes divided by allocation-median latency and multiplied by $2(P-1)/P$.}
+\caption[Peak \texttt{allreduce} bus bandwidth]{Peak \texttt{allreduce} bus bandwidth in GB/s, recomputed as input bytes divided by allocation-median latency and multiplied by $2(P-1)/P$.}
 \label{tab:m-allreduce-bandwidth}
 \input{data/main-campaign/allreduce-bandwidth-table.tex}
 \end{table}
@@ -123,7 +123,7 @@ At large payloads, NCCL-based paths regain the advantage. Table~\ref{tab:m-allto
 
 \begin{table}[htbp]
 \centering
-\caption{\texttt{alltoall} aggregate bandwidth at 256\,KiB per peer, in GB/s. The numerator includes each rank's self block.}
+\caption[\texttt{alltoall} aggregate bandwidth at 256\,KiB per peer]{\texttt{alltoall} aggregate bandwidth at 256\,KiB per peer, in GB/s. The numerator includes each rank's self block.}
 \label{tab:m-alltoall-bandwidth}
 \footnotesize
 \input{data/main-campaign/alltoall-bandwidth-table.tex}
@@ -151,7 +151,7 @@ Open MPI's tuned collective component allows its algorithm choice to be overridd
 
 \begin{table}[htbp]
 \centering
-\caption{Open MPI all-to-all with each algorithm forced explicitly, at 16 ranks with UCC disabled, in \,$\mu$s. Each column is a separate run with \texttt{coll\_tuned\_alltoall\_algorithm} set to that algorithm; the last column lets Open MPI choose. Values are retained from the configuration-analysis record.}
+\caption[Open MPI all-to-all with forced algorithms]{Open MPI all-to-all with each algorithm forced explicitly, at 16 ranks with UCC disabled, in \,$\mu$s. Each column is a separate run with \texttt{coll\_tuned\_alltoall\_algorithm} set to that algorithm; the last column lets Open MPI choose. Values are retained from the configuration-analysis record.}
 \label{tab:m-alltoall-forced}
 \scriptsize
 \begin{tabular}{rrrrrr}
@@ -182,7 +182,7 @@ Two of the seven stacks compile the same benchmark source through SYCL instead o
 
 \begin{table}[htbp]
 \centering
-\caption{SYCL relative to CUDA over all measured cells of each pattern, as median and maximum of the per-cell ratio. Values above one favor CUDA.}
+\caption[SYCL relative to CUDA by pattern]{SYCL relative to CUDA over all measured cells of each pattern, as median and maximum of the per-cell ratio. Values above one favor CUDA.}
 \label{tab:m-sycl-portability}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYrrr}
@@ -230,7 +230,7 @@ Table~\ref{tab:m-moe} gives the endpoints. The intra-node columns are tightly gr
 
 \begin{table}[htbp]
 \centering
-\caption{\texttt{moe} dispatch-and-combine latency in \,$\mu$s, medians of allocation means, contrasting the largest intra-node topology with the largest multi-node topology for each routing case.}
+\caption[\texttt{moe} dispatch-and-combine latency]{\texttt{moe} dispatch-and-combine latency in \,$\mu$s, medians of allocation means, contrasting the largest intra-node topology with the largest multi-node topology for each routing case.}
 \label{tab:m-moe}
 \footnotesize
 \input{data/main-campaign/moe-table.tex}
@@ -271,7 +271,7 @@ The composite comparison covers the six multi-rank topologies, five global grid 
 
 \begin{table}[htbp]
 \centering
-\caption{Lowest allocation-median \texttt{cg\_step} time by topology and global grid side. This is a point-estimate ranking for the synthetic sequence, not a significance test or a solver-ready ranking.}
+\caption[Lowest \texttt{cg\_step} time by topology and grid side]{Lowest allocation-median \texttt{cg\_step} time by topology and global grid side. This is a point-estimate ranking for the synthetic sequence, not a significance test or a solver-ready ranking.}
 \label{tab:m-cg-step}
 \footnotesize
 \input{data/main-campaign/cg-winner-table.tex}
@@ -310,7 +310,7 @@ Table~\ref{tab:m-cg-phases} uses the separate synchronized phase pass at \texttt
 
 \begin{table}[htbp]
 \centering
-\caption{Archived mean \texttt{cg\_step} phase costs on \texttt{4n4g}, side 512, in \,$\mu$s. Step is the unsplit mean; gap is phase sum minus step.}
+\caption[\texttt{cg\_step} phase costs on \texttt{4n4g}]{Archived mean \texttt{cg\_step} phase costs on \texttt{4n4g}, side 512, in \,$\mu$s. Step is the unsplit mean; gap is phase sum minus step.}
 \label{tab:m-cg-phases}
 \scriptsize
 \input{data/main-campaign/cg-phase-table.tex}
@@ -324,7 +324,7 @@ The auxiliary OSHMPI placement control compares host-staged reductions with CUDA
 
 \begin{table}[htbp]
 \centering
-\caption{Auxiliary OSHMPI placement control: change from staged to device/UCC execution at side 512.}
+\caption[OSHMPI scalar-reduction placement control]{Auxiliary OSHMPI placement control: change from staged to device/UCC execution at side 512.}
 \label{tab:m-oshmpi-reduce-placement}
 \footnotesize
 \begin{tabular}{lrrrr}
@@ -363,7 +363,7 @@ Figure~\ref{fig:m-acg-backend-median} first presents every native multi-GPU path
 
 \begin{table}[htbp]
 \centering
-\caption{OSHMPI-halo aCG results from the fastest residual-valid trial. Relative columns compare analytical throughput, not solver-time ratios.}
+\caption[OSHMPI-halo aCG results]{OSHMPI-halo aCG results from the fastest residual-valid trial. Relative columns compare analytical throughput, not solver-time ratios.}
 \label{tab:m-acg-oshmpi}
 \footnotesize
 \input{data/main-campaign/acg-oshmpi-table.tex}
@@ -386,7 +386,7 @@ The most direct cross-level check pairs the operation actually executed rather t
 
 \begin{table}[htbp]
 \centering
-\caption{Reduction pairings and remaining configuration differences.}
+\caption[Reduction pairings between \texttt{cg\_step} and aCG]{Reduction pairings and remaining configuration differences.}
 \label{tab:m-acg-reduction-pairing}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYY}
@@ -405,7 +405,7 @@ The mean discrepancies range from 7.8\% to 11.1\% (Table~\ref{tab:m-acg-reductio
 
 \begin{table}[!hbp]
 \centering
-\caption{Mean absolute percentage discrepancy over five measured rank counts, regenerated from the retained cross-level pairs.}
+\caption[Scalar-reduction discrepancy between \texttt{cg\_step} and aCG]{Mean absolute percentage discrepancy over five measured rank counts, regenerated from the retained cross-level pairs.}
 \label{tab:m-acg-reduction-correlation}
 \input{data/main-campaign/reduction-error-table.tex}
 \end{table}
@@ -435,7 +435,7 @@ Figure~\ref{fig:m-cg-device-scaling} shows that the agreement depends entirely o
 
 \begin{table}[!hbp]
 \centering
-\caption{Mean absolute deviation between the normalized strong-scaling curves of the device-initiated \texttt{cg\_step} and the device-NVSHMEM solver, by grid side.}
+\caption[Strong-scaling deviation of the device-initiated \texttt{cg\_step}]{Mean absolute deviation between the normalized strong-scaling curves of the device-initiated \texttt{cg\_step} and the device-NVSHMEM solver, by grid side.}
 \label{tab:m-cg-device-correlation}
 \footnotesize
 \input{data/main-campaign/cg-device-correlation-table.tex}
@@ -450,7 +450,7 @@ The regular halo and composite step do not reproduce aCG's exchange. The synthet
 
 \begin{table}[htbp]
 \centering
-\caption{Application halo signatures reconstructed from the fixed sparse partitions. Volume is mean outgoing KiB per rank and exchange, excluding reductions.}
+\caption[aCG halo signatures from the sparse partitions]{Application halo signatures reconstructed from the fixed sparse partitions. Volume is mean outgoing KiB per rank and exchange, excluding reductions.}
 \label{tab:m-acg-halo-signatures}
 \footnotesize
 \input{data/main-campaign/halo-signature-table.tex}
@@ -492,7 +492,7 @@ The SYCL solver and the native CUDA solver were run in the same allocations, int
 
 \begin{table}[htbp]
 \centering
-\caption{Median solver time in seconds of each native aCG variant and its SYCL counterpart, from the same allocations, and the median over allocations of their per-allocation ratio, SYCL over CUDA; ratios above one favor CUDA. At one GPU the single-GPU solvers are compared, in the MPI columns.}
+\caption[Native and SYCL aCG solver times]{Median solver time in seconds of each native aCG variant and its SYCL counterpart, from the same allocations, and the median over allocations of their per-allocation ratio, SYCL over CUDA; ratios above one favor CUDA. At one GPU the single-GPU solvers are compared, in the MPI columns.}
 \label{tab:m-acg-sycl}
 \footnotesize
 \input{data/main-campaign/acg-sycl-table.tex}

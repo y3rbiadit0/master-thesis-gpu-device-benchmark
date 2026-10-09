@@ -156,6 +156,8 @@ def main():
             errors.append(f"{name}: unclosed environments {stack}")
         errors.extend(f"{name}: include complete table outside tabular: {source}"
                       for source in table_row_inputs(text))
+        if re.search(r"\\caption\{", text):
+            errors.append(f"{name}: caption without a short [list entry] title")
         if len(re.findall(r"(?<!\\)\$", text)) % 2:
             errors.append(f"{name}: odd inline-math delimiter count")
         if text.count(r"\[") != text.count(r"\]"):
@@ -189,7 +191,7 @@ def main():
     errors.extend(acronym_errors(acronym_scopes(files), definitions))
     if errors:
         raise SystemExit("\n".join(errors))
-    print(f"PASS: {len(files)} TeX files; braces, environments, math delimiters, citations, references, inputs, figures, table cells, and acronyms.")
+    print(f"PASS: {len(files)} TeX files; braces, environments, math delimiters, citations, references, inputs, figures, table cells, caption list titles, and acronyms.")
     print("PDF compilation remains necessary to validate typesetting and layout.")
 
 

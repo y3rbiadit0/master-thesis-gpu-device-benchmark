@@ -14,7 +14,7 @@ A multi-GPU application communicates within nodes and across a network between n
 
 \begin{table}[htbp]
 \centering
-\caption{Dimensions of a GPU communication path and representative choices within each.}
+\caption[Dimensions of a GPU communication path]{Dimensions of a GPU communication path and representative choices within each.}
 \label{tab:m-initiation-axes}
 \scriptsize
 \begin{tabularx}{\textwidth}{lYY}
@@ -52,7 +52,7 @@ Payload route, memory allocation, process sharing, and access mechanism are sepa
 
 \begin{table}[htbp]
 \centering
-\caption{Properties that jointly determine an intra-node GPU communication path.}
+\caption[Properties of an intra-node GPU communication path]{Properties that jointly determine an intra-node GPU communication path.}
 \label{tab:m-intra-types}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYY}
@@ -94,7 +94,7 @@ Describing a library simply as ``GPU-side'' or ``CPU-side'' is imprecise, becaus
 
 \begin{table}[htbp]
 \centering
-\caption{Representative inter-node paths, adapted from \cite{unat_landscape_2026}. Setup includes registration; posting denotes submission of network work.}
+\caption[Representative inter-node communication paths]{Representative inter-node paths, adapted from \cite{unat_landscape_2026}. Setup includes registration; posting denotes submission of network work.}
 \label{tab:m-comm-types}
 \footnotesize
 \begin{tabularx}{\textwidth}{YlllY}
@@ -188,7 +188,7 @@ Table~\ref{tab:m-collectives} summarizes the principal uniform collectives and t
 
 \begin{table}[htbp]
 \centering
-\caption{Collective operations discussed in this thesis, classified by structural attribute. ``Personalized'' marks operations in which each peer receives distinct data.}
+\caption[Collective operations by structural attribute]{Collective operations discussed in this thesis, classified by structural attribute. ``Personalized'' marks operations in which each peer receives distinct data.}
 \label{tab:m-collectives}
 \footnotesize
 \begin{tabularx}{\textwidth}{lccYY}
@@ -247,7 +247,7 @@ Table~\ref{tab:m-cg-dependencies} gives the dependency structure of a representa
 
 \begin{table}[htbp]
 \centering
-\caption{Representative CG iteration and the dependencies that expose or hide communication.}
+\caption[Dependencies in a representative CG iteration]{Representative CG iteration and the dependencies that expose or hide communication.}
 \label{tab:m-cg-dependencies}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYY}
@@ -349,7 +349,7 @@ Orthogonally to the algorithm, the analyzed legacy path selects among Simple, \a
 
 \begin{table}[htbp]
 \centering
-\caption{Protocols in the legacy NCCL path analyzed in \cite{hu_demystifying_2025}. Values are configuration-specific reference figures.}
+\caption[Protocols in the legacy NCCL path]{Protocols in the legacy NCCL path analyzed in \cite{hu_demystifying_2025}. Values are configuration-specific reference figures.}
 \label{tab:m-nccl-proto}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYYY}
@@ -403,7 +403,7 @@ Table~\ref{tab:m-backends} maps the exact stacks relevant to the experiments ont
 
 \begin{table}[htbp]
 \centering
-\caption{Application-visible properties of the communication stacks evaluated in the benchmark.}
+\caption[Application-visible properties of the evaluated stacks]{Application-visible properties of the communication stacks evaluated in the benchmark.}
 \label{tab:m-backends}
 \footnotesize
 \begin{tabularx}{\textwidth}{YYYYY}
