@@ -1,15 +1,15 @@
 \frontchapter{Abstract}
 In recent years, the growth of AI has led to increased use of GPUs across High Performance Computing (HPC) clusters. Large models often need multiple GPUs to fit in memory, shorten training time, and reduce inference latency. However, exchanging data and synchronizing work can leave GPUs idle, especially across nodes.
 
-This thesis explores how communication-stack selection can improve GPU-cluster performance. It compares GPU-initiated and CPU-orchestrated communication, then tests whether results from communication patterns can help predict performance in a complete application.
+This thesis analyzes when GPU-initiated communication improves performance over CPU-orchestrated communication. It then evaluates a real-world Conjugate Gradient solver to test whether benchmark results can help developers select a stack based on an application's communication patterns.
 
-A benchmark suite was developed to compare seven CUDA/SYCL stacks using MPI, NCCL, NVSHMEM, OSHMPI, and oneCCL, from individual communication patterns to application microbenchmarks where for the experiments it was used up to 32 NVIDIA A100 GPUs across eight nodes of CINECA's Leonardo supercomputer.
+A benchmark suite was developed to compare seven CUDA/SYCL stacks using MPI, NCCL, NVSHMEM, OSHMPI, and oneCCL, from individual communication patterns to application microbenchmarks. Experiments used up to 32 NVIDIA A100 GPUs across eight nodes of CINECA's Leonardo supercomputer.
 
 The benchmark comparison also involved extending oneCCL with grouped NCCL send/receive operations and an OSHMPI backend, exposing these communication paths through a common interface.
 
 The evaluation then moves to a complete application: the aCG Conjugate Gradient solver. An OSHMPI backend and a SYCL implementation with MPI or oneCCL reductions were developed and compared with its existing MPI, NCCL, and NVSHMEM variants while solving two large sparse linear systems. This comparison tests whether benchmark results help predict performance when communication is combined with computation.
 
-No communication stack is fastest in every case. In repeated neighbor exchanges on eight nodes with four GPUs each, NVSHMEM reaches 40.6\,GB/s against 35.7\,GB/s for CUDA MPI, while NCCL-based paths lead bulk collectives. SYCL solver times are 0.87--1.02 times native CUDA times within one node, and SYCL MPI continues strong scaling to 32 GPUs. Benchmark rankings do not always carry over when the solver introduces irregular exchanges and overlap with computation.
+No communication stack is fastest in every case. In repeated neighbor exchanges on eight nodes with four GPUs each, GPU-initiated NVSHMEM reaches 40.6\,GB/s against 35.7\,GB/s for CUDA MPI, while NCCL-based paths lead bulk collectives. SYCL solver times are 0.87--1.02 times native CUDA times within one node, and SYCL MPI continues strong scaling to 32 GPUs. Benchmark rankings do not always carry over when the solver introduces irregular exchanges and overlap with computation.
 
 Together, the benchmark and aCG solver results show that improving performance requires choosing a communication stack suited to the application's data exchanges, synchronization, and topology.
 
