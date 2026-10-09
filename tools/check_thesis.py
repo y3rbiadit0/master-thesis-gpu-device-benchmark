@@ -54,6 +54,8 @@ NOT_ACRONYMS = {
 # Product names whose parts would otherwise read as uses of a defined acronym.
 COMPOUND_NAMES = ("HPC-X", r"ROC\_SHMEM", r"MLNX\_OFED", "GPU-IB")
 HEADING = r"\\(?:chapter|section|subsection|subsubsection|paragraph|frontchapter)\*?\{((?:[^{}]|\{[^{}]*\})*)\}"
+# Heading levels shown in the table of contents (tocdepth 2); these spell acronyms out.
+TOC_HEADING = r"\\(?:chapter|section|subsection)\*?\{((?:[^{}]|\{[^{}]*\})*)\}"
 
 
 def acronym_definitions(text):
@@ -96,6 +98,9 @@ def acronym_errors(scopes, definitions):
         defined, reported = set(), set()
         for name, raw in scope:
             text = strip_non_prose(raw)
+            for heading in re.findall(TOC_HEADING, text):
+                errors.extend(f"{name}: acronym {word} in table-of-contents heading; spell it out"
+                              for word in re.findall(r"[A-Za-z][A-Za-z0-9+]*", heading) if lookup(word))
             for heading in re.findall(HEADING, text):
                 errors.extend(f"{name}: unlisted acronym {word} in heading"
                               for word in re.findall(r"[A-Za-z][A-Za-z0-9+]*", heading) if unlisted(word))

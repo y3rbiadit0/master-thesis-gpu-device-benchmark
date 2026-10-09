@@ -44,8 +44,12 @@ class AcronymTests(unittest.TestCase):
         self.assertEqual(found, ["t: unlisted acronym RDMA"])
 
     def test_headings_do_not_count_as_first_use(self):
-        found = errors([r"\section{MPI Paths} \ac{MPI} \ac{GPU} \ac{DPCPP}"])
+        found = errors([r"\subsubsection{MPI Paths} \ac{MPI} \ac{GPU} \ac{DPCPP}"])
         self.assertEqual(found, [])
+
+    def test_table_of_contents_heading_must_spell_acronyms_out(self):
+        found = errors([r"\section{MPI Paths} \subsubsection{MPI Detail} \ac{MPI} \ac{GPU} \ac{DPCPP}"])
+        self.assertEqual(found, ["t: acronym MPI in table-of-contents heading; spell it out"])
 
     def test_unused_definition_is_rejected(self):
         self.assertIn(f"{checker.ACRONYM_LIST}.tex: DPCPP is never used",

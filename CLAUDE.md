@@ -57,6 +57,7 @@ Defined in Chapter 3 and used consistently:
   paths, table cell counts, caption short titles, and acronyms. Run it after editing any `.tex` file.
 - Acronyms are listed in `backmatter/acronyms.tex` (printed at the end of the thesis). The
   body expands each acronym once, at its first prose use; headings and captions stay plain.
+  Chapter, section, and subsection titles appear in the table of contents and spell acronyms out.
   The abstract may use acronyms freely (`ACRONYM_EXEMPT` in the checker). Product names that are not acronyms belong in
   `NOT_ACRONYMS` in the checker.
 - `python3 -B -m unittest discover -s tools/tests` covers the data-import and table-generation

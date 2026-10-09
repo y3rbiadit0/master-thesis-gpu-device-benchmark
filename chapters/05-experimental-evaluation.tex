@@ -209,7 +209,7 @@ The oneCCL/NCCL column behaves differently, because it adds an adapter to the co
 
 These primitive results leave several plausible candidates: MPI for startup-sensitive transfers, persistent NVSHMEM for large repeated halos, and NCCL-based paths for bulk collectives. The next question is whether composing operations preserves those advantages.
 
-\section{MoE Dispatch and Combine}\label{sec:moe-results}
+\section{Mixture-of-Experts Dispatch and Combine}\label{sec:moe-results}
 
 The two application microbenchmarks address different threats to the primitive rankings. This section covers \texttt{moe}, which keeps the redistribution operation but abandons the assumption that every peer receives the same number of bytes. Section~\ref{sec:cg-step-results} then covers \texttt{cg\_step}, the level that Section~\ref{sec:acg-results} pairs with the solver.
 
@@ -263,7 +263,7 @@ This is the same failure mode that Section~\ref{sec:cg-step-results} finds for \
 No stack wins all three routing cases, so this pattern has no single answer. NCCL and oneCCL/NCCL are fastest under uniform routing, at about half of CUDA MPI, but direct NCCL becomes 1.55 times slower than MPI once most tokens stay local. NVSHMEM is the opposite, and gives the fastest multi-node result of all under locality-biased routing, at 0.72 of MPI. Under a hotspot, the two put-based paths, NVSHMEM and OSHMPI, are penalized about 1.8 times relative to the \texttt{alltoallv} implementations. OSHMPI is slower than MPI in every case at 32 GPUs, by 1.70 to 1.84 times, despite matching it within a node. MPI and SYCL MPI are never fastest but never collapse.
 \end{keypoint}
 
-\section{CG Step}\label{sec:cg-step-results}
+\section{Conjugate Gradient Step}\label{sec:cg-step-results}
 
 \subsection{Step Time}
 
@@ -348,7 +348,7 @@ Matching operation size is insufficient when submission structure changes. The b
 OSHMPI has the lowest estimate in 25 of the 30 multi-rank cells, including every multi-node one, but under a contract the solver does not share: its reduction result stays in host memory. NCCL leads the remaining five intra-node cells and is the strongest path whose contract is complete. NVSHMEM is slower here and shows the widest allocation spread, so its ordering against the others is not decisive. MPI is the reference the other stacks are measured against, and its halo uses two serialized \texttt{MPI\_Sendrecv} calls rather than the grouped exchange of the halo benchmark. The SYCL stacks carry a measurable cost in every cell, 1.34 times CUDA MPI at the median for SYCL MPI.
 \end{keypoint}
 
-\section{aCG Solver}\label{sec:acg-results}
+\section{Accelerated Conjugate Gradient Solver}\label{sec:acg-results}
 
 \subsection{Solver Time and Scaling}
 
