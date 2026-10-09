@@ -3,11 +3,11 @@ In recent years, the growth of AI has led to increased use of GPUs across High P
 
 This thesis explores how communication-stack selection can improve GPU-cluster performance. It compares GPU-initiated and CPU-orchestrated communication, then tests whether results from communication patterns can help predict performance in a complete application.
 
-A benchmark suite was developed to compare seven CUDA/SYCL stacks using MPI, NCCL, NVSHMEM, OSHMPI, and oneCCL, from individual communication patterns to application microbenchmarks. Scalability tests use up to 32 NVIDIA A100 GPUs across eight nodes of CINECA's Leonardo supercomputer.
+A benchmark suite was developed to compare seven CUDA/SYCL stacks using MPI, NCCL, NVSHMEM, OSHMPI, and oneCCL, from individual communication patterns to application microbenchmarks where for the experiments it was used up to 32 NVIDIA A100 GPUs across eight nodes of CINECA's Leonardo supercomputer.
 
 The benchmark comparison also involved extending oneCCL with grouped NCCL send/receive operations and an OSHMPI backend, exposing these communication paths through a common interface.
 
-The evaluation then moved from communication patterns to the aCG Conjugate Gradient solver. Its existing MPI, NCCL, and NVSHMEM implementations were compared with solver variants using the OSHMPI halo communicator and SYCL implementation developed in this thesis. Tests on two large sparse matrices assessed whether the benchmark results could help predict solver performance.
+The evaluation starts from communication patterns to the aCG Conjugate Gradient solver. Its existing MPI, NCCL, and NVSHMEM implementations were compared with solver variants using the OSHMPI halo communicator and SYCL implementation developed in this thesis. Tests on two large sparse matrices assessed whether the benchmark results could help predict solver performance.
 
 No communication stack is fastest in every case. In repeated neighbor exchanges on eight nodes with four GPUs each, NVSHMEM reaches 40.6\,GB/s against 35.7\,GB/s for CUDA MPI, while NCCL-based paths lead bulk collectives. SYCL solver times are 0.87--1.02 times native CUDA times within one node, and SYCL MPI continues strong scaling to 32 GPUs. Benchmark rankings do not always carry over when the solver introduces irregular exchanges and overlap with computation.
 
