@@ -1,16 +1,16 @@
 \frontchapter{Abstract}
 In recent years, the growth of AI has led to increased use of GPUs across High Performance Computing (HPC) clusters. Large models often need multiple GPUs to fit in memory, shorten training time, and reduce inference latency. However, exchanging data and synchronizing work can leave GPUs idle, especially across nodes.
 
-This thesis explores how communication choices can improve GPU-cluster performance. It compares GPU-initiated and CPU-orchestrated communication, then tests whether the benchmark findings carry over to a complete application and a portable implementation.
+This thesis explores how communication-stack selection can improve GPU-cluster performance. It compares GPU-initiated and CPU-orchestrated communication, then tests whether results from communication patterns can help predict performance in a complete application.
 
 A benchmark suite was developed to compare seven CUDA/SYCL stacks using MPI, NCCL, NVSHMEM, OSHMPI, and oneCCL, from individual communication patterns to application microbenchmarks. Scalability tests use up to 32 NVIDIA A100 GPUs across eight nodes of CINECA's Leonardo supercomputer.
 
-To compare libraries through a common interface, oneCCL was extended with grouped NCCL send/receive operations and an OSHMPI backend. An NVSHMEM backend prototype also establishes initialization and symmetric-memory support, providing a foundation for future communication operations.
+To compare libraries through a common interface, oneCCL was extended with grouped NCCL send/receive operations and an OSHMPI backend.
 
-To test the findings in an application, the aCG Conjugate Gradient solver was extended with an OSHMPI halo communicator and a SYCL implementation. Experiments on two large sparse matrices connect communication measurements to solver performance, while paired CUDA/SYCL runs assess performance retention.
+To test these results in an application, the aCG Conjugate Gradient solver's existing MPI, NCCL, and NVSHMEM implementations were evaluated alongside the OSHMPI halo communicator and SYCL implementation developed in this thesis. Tests on two large sparse matrices assess how well communication patterns predict solver performance.
 
 No library wins in every case. In repeated neighbor exchanges on eight nodes with four GPUs each, NVSHMEM reaches 40.6\,GB/s against 35.7\,GB/s for CUDA MPI, while NCCL-based paths lead bulk collectives. SYCL solver times are 0.87--1.02 times native CUDA times within one node, and SYCL MPI continues strong scaling to 32 GPUs. Benchmark rankings do not always carry over when the solver introduces irregular exchanges and overlap with computation.
 
-Improving performance therefore requires choosing communication libraries around the application's data exchanges, synchronization, and topology.
+Together, the benchmark and aCG solver results show that improving performance requires choosing a communication stack suited to the application's data exchanges, synchronization, and topology.
 
 \printkeywords
