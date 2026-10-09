@@ -41,6 +41,8 @@ def table_row_inputs(text):
 
 
 ACRONYM_LIST = "backmatter/acronyms"
+# Inputs that may use acronyms without defining them.
+ACRONYM_EXEMPT = ("frontmatter/abstract",)
 # Names and units shaped like acronyms that are deliberately not expanded.
 NOT_ACRONYMS = {
     "AllReduce", "AMD", "BullSequana", "CINECA", "ConnectX", "cuBLAS", "cuSOLVERMp", "cuSPARSE",
@@ -128,7 +130,7 @@ def acronym_scopes(files):
     for reset, source in re.findall(r"(\\acresetall)|\\input\{([^}]+)\}", main_text):
         if reset:
             scopes.append([])
-        elif source != ACRONYM_LIST:
+        elif source != ACRONYM_LIST and source not in ACRONYM_EXEMPT:
             path = ROOT / (source if source.endswith(".tex") else source + ".tex")
             scopes[-1].append((source, files.get(path, "")))
     return scopes
