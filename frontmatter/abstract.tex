@@ -7,7 +7,7 @@ A benchmark suite was developed to compare seven CUDA/SYCL stacks using MPI, NCC
 
 The benchmark comparison also involved extending oneCCL with grouped NCCL send/receive operations and an OSHMPI backend, exposing these communication paths through a common interface.
 
-The evaluation starts from communication patterns to the aCG Conjugate Gradient solver. Its existing MPI, NCCL, and NVSHMEM implementations were compared with solver variants using the OSHMPI halo communicator and SYCL implementation developed in this thesis. Tests on two large sparse matrices assessed whether the benchmark results could help predict solver performance.
+The evaluation then moves to a complete application: the aCG Conjugate Gradient solver. An OSHMPI backend and a SYCL implementation with MPI or oneCCL reductions were developed and compared with its existing MPI, NCCL, and NVSHMEM variants while solving two large sparse linear systems. This comparison tests whether benchmark results help predict performance when communication is combined with computation.
 
 No communication stack is fastest in every case. In repeated neighbor exchanges on eight nodes with four GPUs each, NVSHMEM reaches 40.6\,GB/s against 35.7\,GB/s for CUDA MPI, while NCCL-based paths lead bulk collectives. SYCL solver times are 0.87--1.02 times native CUDA times within one node, and SYCL MPI continues strong scaling to 32 GPUs. Benchmark rankings do not always carry over when the solver introduces irregular exchanges and overlap with computation.
 
