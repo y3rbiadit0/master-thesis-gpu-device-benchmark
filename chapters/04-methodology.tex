@@ -97,9 +97,9 @@ All experiments were run on the Booster partition of the Leonardo supercomputer 
     \item \emph{Model:} Atos BullSequana X2135 ``Da Vinci'' single-node GPU blade.
     \item \emph{Processor:} one Intel Xeon Platinum 8358 (Ice Lake), 32 cores at 2.60\,GHz.
     \item \emph{GPU:} four NVIDIA A100 SXM4 GPUs with 64\,GB of HBM2e each.
-    \item \emph{Memory:} 512\,GB DDR4 at 3200\,MHz ($8 \times 64$\,GB).
+    \item \emph{Memory:} 512\,GB \ac{DDR4} at 3200\,MHz ($8 \times 64$\,GB).
     \item \emph{Intra-node interconnect:} NVLink~3.0, with each GPU connected directly to the other three by four links, giving 200\,GB/s of bidirectional bandwidth per GPU pair; there is no NVSwitch or NVLink SHARP support.
-    \item \emph{Network:} NVIDIA Mellanox InfiniBand HDR in a DragonFly+ topology. The recorded node configuration exposes four ConnectX-6 (MT4123) network devices, one active port each at 100\,Gb/s with a 4096-byte MTU, firmware 20.39.2048.
+    \item \emph{Network:} NVIDIA Mellanox InfiniBand \ac{HDR} in a DragonFly+ topology. The recorded node configuration exposes four ConnectX-6 (MT4123) network devices, one active port each at 100\,Gb/s with a 4096-byte \ac{MTU}, firmware 20.39.2048.
     \item \emph{Operating system and scheduler:} Red Hat Enterprise Linux 8, with Slurm.
 \end{itemize}
 
@@ -118,9 +118,9 @@ Comparing \texttt{1n2g} with \texttt{2n1g} changes the communication domain whil
 
 \begin{itemize}
     \item \emph{NVIDIA driver:} 535.274.02, with the \texttt{nvidia\_peermem} module loaded for GPUDirect RDMA.
-    \item \emph{InfiniBand stack:} MLNX\_OFED 23.04-1.1.3.
-    \item \emph{CUDA toolchain:} NVHPC 24.5 with CUDA 12.4, for the CUDA benchmarks and aCG.
-    \item \emph{SYCL toolchain:} DPC++ 6.3 built from intel/llvm with the CUDA backend, GCC 12.2, and CUDA 12.2, for the SYCL benchmarks and solver.
+    \item \emph{InfiniBand stack:} MLNX\_OFED 23.04-1.1.3, the NVIDIA Mellanox build of the \ac{OFED}.
+    \item \emph{CUDA toolchain:} \ac{NVHPC} 24.5 with CUDA 12.4, for the CUDA benchmarks and aCG.
+    \item \emph{SYCL toolchain:} DPC++ 6.3 built from intel/llvm with the CUDA backend, \ac{GCC} 12.2, and CUDA 12.2, for the SYCL benchmarks and solver.
     \item \emph{MPI:} HPC-X 2.19, providing Open MPI 4.1.7a1 over UCX 1.17.0, with UCC 1.4.0 \cite{ucc_2025} as an optional collective component. It serves the CUDA and SYCL MPI paths and is the substrate of OSHMPI. The installation is built with CUDA support, and UCX with \texttt{gdrcopy}, so GPU buffers are accepted directly by the point-to-point, RMA, and shared-memory components (\texttt{pml} and \texttt{osc} resolve to \texttt{ucx}, and the intra-node byte transport to \texttt{smcuda}).
     \item \emph{NCCL:} 2.18.5, for the direct NCCL path and beneath oneCCL.
     \item \emph{NVSHMEM:} 2.11.0, for the host- and device-invoked SHMEM paths.
@@ -299,7 +299,7 @@ Pattern & Operation & Size range & Iterations\\
 \texttt{alltoall} & Equal block per peer & 4\,B--256\,KiB per peer & 100/20\\
 \midrule
 \texttt{moe} & Variable-count dispatch and combine & 16\,384 tokens of 256 float32 per rank; three routing cases & 100/20\\
-\texttt{cg\_step} & Halo, stencil, two FP64 sums & Global side 512--8192 & 50/10\\
+\texttt{cg\_step} & Halo, stencil, two float64 sums & Global side 512--8192 & 50/10\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -428,7 +428,7 @@ Three settings deliberately differ from the benchmark defaults, and each is acco
 The comparison is paired by construction. Every job runs all four multi-GPU variants, or both single-GPU solvers, in rounds: each round runs every variant once, and the order reverses from one round to the next, starting reversed on odd job numbers. Each cell holds three allocations of three rounds. Both solvers read the same matrix and METIS partition files, solve the same manufactured problem (seed 101) to a relative residual of $10^{-6}$ with a limit of 100\,000 iterations, run ten untimed warmup iterations, and are timed over the same interval: from a barrier after warmup, through the initial residual and the iteration loop, to completion, as the maximum over ranks. The SYCL solver additionally recomputes $\|b - Ax\| / \|b\|$ on the host from the original matrix after each solve, independently of its device code path, and that value is the one checked against the tolerance. The main comparison is the ratio of the SYCL and native medians within an allocation, summarized by its median over allocations; the native main campaign is kept as a secondary reference. The two solvers use different toolchains but share the communication environment:
 \begin{itemize}
     \item \emph{Toolchains:} DPC++ 6.3 with the CUDA backend, GCC 12.2, CUDA 12.2, and oneMath (cuBLAS and cuSPARSE) for the SYCL solver; the native build and module environment described above for the CUDA solver, loaded in each native run.
-    \item \emph{Communication:} the same HPC-X 2.19 installation and one shared file of Open MPI and UCX settings for both, with UCC disabled and a 16\,KiB rendezvous threshold. Its values equal those of the native environment for every Open MPI and UCX variable; the native file's additional one-sided (\texttt{OMPI\_MCA\_osc}), NVSHMEM, and OpenSHMEM settings were not applied; they configure one-sided MPI and the SHMEM communicators rather than the MPI and NCCL paths compared here. oneCCL is built with its NCCL backend over NCCL 2.22.3 from the site modules and bootstraps over the OFI TCP provider, so the NCCL pair also changes the NCCL release.
+    \item \emph{Communication:} the same HPC-X 2.19 installation and one shared file of Open MPI and UCX settings for both, with UCC disabled and a 16\,KiB rendezvous threshold. Its values equal those of the native environment for every Open MPI and UCX variable; the native file's additional one-sided (\texttt{OMPI\_MCA\_osc}), NVSHMEM, and OpenSHMEM settings were not applied; they configure one-sided MPI and the SHMEM communicators rather than the MPI and NCCL paths compared here. oneCCL is built with its NCCL backend over NCCL 2.22.3 from the site modules and bootstraps over the \ac{OFI} TCP provider, so the NCCL pair also changes the NCCL release.
     \item \emph{Placement:} one rank per GPU, with the SYCL ranks pinned to their GPU by local rank and the native solver selecting its own.
 \end{itemize}
 The SYCL solver does not report a per-kernel breakdown: its operations are submitted without host waits, so host-side per-operation timers would measure submission rather than execution. It records instead the intervals in which the host blocks, namely halo packing, the halo wait, the scalar reductions including their producer kernels, and the per-iteration readback.
@@ -437,7 +437,7 @@ The SYCL solver does not report a per-kernel breakdown: its operations are submi
 
 \begin{itemize}
     \item \emph{Solver time} is the time to solution. For the primary scaling view, following the reference study, the fastest residual-valid trial is selected per matrix, variant, and GPU count; all other trials are retained, and MPI variability is reported through allocation medians and ranges.
-    \item \emph{Throughput} is work per second per GPU. Solver time alone is not enough: communicators reduce in different orders, so the same problem can converge in a slightly different number of iterations, and a variant would look faster just for needing fewer. Dividing work by time removes that effect. Work is counted as in the reference aCG study \cite{trotter_cpu-_2025}: two floating-point operations (FLOPs) per nonzero or vector element a kernel processes. For $K$ iterations on a matrix with $n$ rows and $\mathrm{nnz}$ nonzeros,
+    \item \emph{Throughput} is work per second per GPU. Solver time alone is not enough: communicators reduce in different orders, so the same problem can converge in a slightly different number of iterations, and a variant would look faster just for needing fewer. Dividing work by time removes that effect. Work is counted as in the reference aCG study \cite{trotter_cpu-_2025}: two \acp{FLOP} per nonzero or vector element a kernel processes. For $K$ iterations on a matrix with $n$ rows and $\mathrm{nnz}$ nonzeros,
     \[
     W(K)=2(K+1)\,\mathrm{nnz}+2(5K+1)\,n,
     \]

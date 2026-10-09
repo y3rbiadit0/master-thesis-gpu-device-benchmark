@@ -104,7 +104,7 @@ The trade-off runs the other way at small payloads, which is why the policy is a
 \label{fig:m-ucc-allreduce}
 \end{figure}
 
-The discontinuity near 4\,KiB is consistent with the UCC TL/UCP source's change from a latency-oriented recursive k-nomial schedule to scatter-reduce/allgather k-nomial \cite{openucx_ucc_source_2026}. Source defaults explain a plausible mechanism, while forcing alternatives or recording the exact selected schedule would strengthen attribution for individual cells. The experiment uses one fixed UCC policy for the standalone allreduce sweep, so it does not claim a pointwise optimal configuration.
+The discontinuity near 4\,KiB is consistent with the change, in the source of UCC's UCP transport layer, from a latency-oriented recursive k-nomial schedule to scatter-reduce/allgather k-nomial \cite{openucx_ucc_source_2026}. Source defaults explain a plausible mechanism, while forcing alternatives or recording the exact selected schedule would strengthen attribution for individual cells. The experiment uses one fixed UCC policy for the standalone allreduce sweep, so it does not claim a pointwise optimal configuration.
 
 The single-rank \texttt{allreduce} control is anomalously slow for large buffers: the auxiliary UCC data report approximately 21\,ms at 16\,MiB, despite no inter-rank reduction. That cost is essentially unchanged by the UCC setting, at 21.9\,ms disabled against 21.4\,ms enabled, so it is not a collective-component effect. It is the same order of magnitude as the 34.9\,ms non-UCC four-rank result above, which is consistent with both being dominated by a local copy or reduction implementation rather than by transfer, though a one-rank control cannot separate those two by itself. It is excluded as a reference for network startup.
 
@@ -417,7 +417,7 @@ The mean discrepancies range from 7.8\% to 11.1\% (Table~\ref{tab:m-acg-reductio
 \label{fig:m-acg-reduction-prediction}
 \end{figure}
 
-The auxiliary configuration analysis reports that disabling NCCL dispatch materially changes NVSHMEM reduction time and gives matched errors of approximately 14--21\%. The matched per-trial arm is not present in the imported default JSON, so it is not plotted as an independently regenerated prediction. Repeating that control with explicit metadata would bring NVSHMEM to the same reproducibility level as the MPI/NCCL pairs. The separately recorded UCX-threshold control changes the composite MPI step by only approximately 2--3\%, which is too small to explain the much larger application variability.
+The auxiliary configuration analysis reports that disabling NCCL dispatch materially changes NVSHMEM reduction time and gives matched errors of approximately 14--21\%. The matched per-trial arm is not present in the imported default \ac{JSON} record, so it is not plotted as an independently regenerated prediction. Repeating that control with explicit metadata would bring NVSHMEM to the same reproducibility level as the MPI/NCCL pairs. The separately recorded UCX-threshold control changes the composite MPI step by only approximately 2--3\%, which is too small to explain the much larger application variability.
 
 
 \subsection{Device-Initiated Scaling Agreement}\label{sec:cg-device-correlation}

@@ -6,7 +6,7 @@ This appendix preserves a later exploratory comparison that is not part of the r
 
 The study compares NCCL~2.18.5 with ordinary allocation, NCCL~2.31.2 with ordinary allocation, and NCCL~2.31.2 with \texttt{ncclMemAlloc} and symmetric window registration on four A100 GPUs. The available summary contains three-run median latencies for 21 allreduce and 19 all-to-all sizes. Comparing versions and comparing the two 2.31.2 configurations answer different questions; the latter still combines allocation and registration.
 
-Symmetric buffers do not establish that user kernels invoked NCCL's device API \cite{nvidia_nccl_registration_2026,nvidia_nccl_device_2026}. Datatype, exact source and launch configuration, completion boundary, warm-up, correctness output, and individual trial timings are unavailable. No uncertainty intervals are reconstructed, and the supplied eight-byte cell is not assumed to be one FP64 sum. The study identifies candidates for follow-up rather than modifying the main campaign's ranking.
+Symmetric buffers do not establish that user kernels invoked NCCL's device API \cite{nvidia_nccl_registration_2026,nvidia_nccl_device_2026}. Datatype, exact source and launch configuration, completion boundary, warm-up, correctness output, and individual trial timings are unavailable. No uncertainty intervals are reconstructed, and the supplied eight-byte cell is not assumed to be one float64 sum. The study identifies candidates for follow-up rather than modifying the main campaign's ranking.
 
 \section{Exploratory Results}\label{sec:nccl-preliminary-results}
 
@@ -46,7 +46,7 @@ Across the supplied 4\,B--32\,KiB cells, symmetric allocation and registration i
 \label{fig:m-nccl-preliminary-allreduce}
 \end{figure}
 
-The eight-byte cell is a candidate for a matched FP64 experiment, not already an estimate of aCG's scalar cost: datatype, invocation mode, and completion boundary remain unresolved.
+The eight-byte cell is a candidate for a matched float64 experiment, not already an estimate of aCG's scalar cost: datatype, invocation mode, and completion boundary remain unresolved.
 
 \subsection{All-to-All Does Not Share the Small-Message Gain}
 
