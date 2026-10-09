@@ -46,7 +46,7 @@ NOT_ACRONYMS = {
     "AllReduce", "AMD", "BullSequana", "CINECA", "ConnectX", "cuBLAS", "cuSOLVERMp", "cuSPARSE",
     "DeepEP", "DGX", "DragonFly+", "GB", "GB200", "GHz", "GiB", "GPUDirect", "GPUNetIO", "HBM2e",
     "InfiniBand", "KiB", "LLVM", "LogGP", "LogP", "LUMI", "METIS", "MHz", "MiB", "MPICH",
-    "MT4123", "NVIDIA", "oneAPI", "NVLink", "NVSHMEM", "NVSwitch", "OpenSHMEM", "PICO", "ROCm", "rocSHMEM",
+    "MT4123", "NVIDIA", "oneAPI", "NVLink", "NVSwitch", "OpenSHMEM", "PICO", "ROCm", "rocSHMEM",
     "SuiteSparse", "SXM", "SXM4", "SYCL", "T3D", "TOP500", "TuCCL", "vLLM", "xCCL",
 }
 # Product names whose parts would otherwise read as uses of a defined acronym.
