@@ -502,7 +502,7 @@ Table~\ref{tab:m-acg-sycl} reports the SYCL-to-native solver-time ratio calculat
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-sycl-ratio.png}
-\caption[SYCL solver time relative to native CUDA]{SYCL solver time as a percentage of native CUDA solver time at the same GPU count. Points are ratios of the median times within each allocation; lines show the median ratio across allocations. The 100\% line indicates equal solver time, and lower values favor SYCL. The vertical axis is logarithmic. The shaded region marks scaling out. Low MPI percentages there reflect unusually slow native MPI runs; this is a runtime comparison, not parallel efficiency.}
+\caption[Change in SYCL solver time relative to native CUDA]{Percentage change in SYCL solver time relative to native CUDA at the same GPU count, $100\,(T_{\mathrm{SYCL}}/T_{\mathrm{CUDA}}-1)$. Points are single allocations, each comparing the SYCL and native medians of that job; lines are medians over allocations. Values below the 0\% line mean SYCL takes less time; a change of $-50\%$ corresponds to a twofold speedup, so the axis is not a percentage speedup. The shaded region marks scaling out. The large MPI reductions there reflect unusually slow native MPI runs; this is a runtime comparison, not parallel efficiency.}
 \label{fig:m-acg-sycl-ratio}
 \end{figure}
 
@@ -510,7 +510,7 @@ Scaling up, SYCL solver times range from 0.87 to 1.02 times the native CUDA time
 
 Scaling out with MPI, the SYCL solver continues strong scaling on both matrices (Figure~\ref{fig:m-acg-sycl-scaling}, right). At \texttt{2n4g}, \texttt{4n4g}, and \texttt{8n4g}, its times fall from 8.0 to 6.1 to 5.6\,s on Bump\_2911. On Queen\_4147 they fall from 14.7 to 9.6 to 6.6\,s. Native MPI instead shows the slow runs described in Section~\ref{sec:acg-variability}, with Queen\_4147 medians of 169 and 153\,s at \texttt{4n4g} and \texttt{8n4g}. These slow runs account for the unusually low SYCL-to-native ratios of 0.04--0.75. No SYCL MPI trial shows the same behavior despite sharing the nodes and MPI settings. This points to an interaction with how the native solver drives communication, without isolating its cause.
 
-Scaling out with NCCL, the paired results give SYCL-to-native ratios of 0.74--1.03 (Figure~\ref{fig:m-acg-sycl-ratio}). In these allocations, the SYCL oneCCL/NCCL solver is generally as fast as or faster than the native NCCL solver. This comparison includes differences in NCCL version, halo exchange, and synchronization as well as the programming interface.
+Scaling out with NCCL, the paired results give SYCL-to-native ratios of 0.74--1.03, a change in solver time of $-26\%$ to $+3\%$ (Figure~\ref{fig:m-acg-sycl-ratio}). In these allocations, the SYCL oneCCL/NCCL solver is generally as fast as or faster than the native NCCL solver. This comparison includes differences in NCCL version, halo exchange, and synchronization as well as the programming interface.
 
 Comparing against the earlier native campaign gives a different picture. At \texttt{8n4g}, native NCCL takes 18.9\,s on Bump\_2911 in the paired campaign, compared with 6.4\,s before; Queen\_4147 takes 24.0 versus 7.5\,s. Relative to those earlier native medians, SYCL oneCCL/NCCL takes 1.19--2.19 times as long across \texttt{2n4g}--\texttt{8n4g}. The baseline changes substantially between campaigns, so that ratio is not an isolated measure of SYCL overhead.
 

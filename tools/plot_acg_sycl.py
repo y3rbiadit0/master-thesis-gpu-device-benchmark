@@ -15,8 +15,6 @@ import statistics as stats
 from collections import defaultdict
 from pathlib import Path
 
-from matplotlib.ticker import PercentFormatter
-
 spec = importlib.util.spec_from_file_location("plots", Path(__file__).parent / "plot_main_evidence.py")
 plots = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(plots)
@@ -80,25 +78,25 @@ def scaling(times, archived):
 
 
 def ratios(sycl_rows, native_rows):
-    """SYCL / native time per allocation, displayed as percentages, not efficiency."""
+    """Change in solver time, 100 * (SYCL / native - 1), per allocation; not efficiency."""
     fig, axes = plt.subplots(1, 2, figsize=(9.5, 3.8), layout="constrained")
     by_job = defaultdict(list)
     for r in sycl_rows + native_rows:
         if r["status"] == "valid":
             by_job[(r["matrix"], r["backend"], int(r["ranks"]), r["job"])].append(float(r["solver_s"]))
     for ax, matrix in zip(axes, MATRICES):
-        ax.axhline(1, color="black", linewidth=0.8, label="100%: equal solver time")
+        ax.axhline(0, color="black", linewidth=0.9, label="0%: equal solver time")
         boundary = (4 * 8) ** 0.5
         ax.axvspan(boundary, 40, color="#000000", alpha=0.04, linewidth=0)
         ax.axvline(boundary, color="#777777", linestyle=":", linewidth=0.8)
         for pair, sycl_label, native_label, label, color, marker, style in (
             ("single", "acg-sycl-single", "acg-cg-single", "Single GPU", "black", "*", "-"),
-            ("mpi", "acg-sycl-mpi", "acg-cg-mpi", "SYCL MPI / MPI", "#8651a6", "v", "--"),
-            ("nccl", "acg-sycl-oneccl-nccl", "acg-cg-nccl", "SYCL oneCCL/NCCL / NCCL", "#a04a76", "P", "-"),
+            ("mpi", "acg-sycl-mpi", "acg-cg-mpi", "SYCL MPI vs. MPI", "#8651a6", "v", "--"),
+            ("nccl", "acg-sycl-oneccl-nccl", "acg-cg-nccl", "SYCL oneCCL/NCCL vs. NCCL", "#a04a76", "P", "-"),
         ):
             xs, medians = [], []
             for ranks in (1, 2, 4, 8, 16, 32):
-                points = [stats.median(times) / stats.median(by_job[(matrix, native_label, ranks, job)])
+                points = [100 * (stats.median(times) / stats.median(by_job[(matrix, native_label, ranks, job)]) - 1)
                           for (m, b, p, job), times in sorted(by_job.items())
                           if (m, b, p) == (matrix, sycl_label, ranks) and (matrix, native_label, ranks, job) in by_job]
                 if not points:
@@ -115,13 +113,16 @@ def ratios(sycl_rows, native_rows):
         for x, label in ((2, "Scaling up"), (16, "Scaling out")):
             ax.text(x, 1.02, label, transform=ax.get_xaxis_transform(),
                     ha="center", va="bottom", fontsize=8, color="#555555")
-        ax.set_title(f"{matrix}: lower is better", pad=27)
-        ax.set(xlabel="GPUs", ylabel="Solver time relative to native CUDA (%)")
+        for y, label in ((11, "SYCL slower \u2191"), (-32, "SYCL faster \u2193")):
+            ax.text(1.2, y, label, ha="left", va="center", fontsize=7, color="#555555")
+        ax.set_title(matrix, pad=27)
+        ax.set(xlabel="GPUs", ylabel="Change in solver time\nrelative to native CUDA (%)")
         ticks(ax, (1, 2, 4, 8, 16, 32))
+        ax.set_yscale("linear")
         ax.set_xlim(0.85, 40)
-        ax.set_ylim(0.03, 1.15)
-        ax.set_yticks([0.05, 0.1, 0.25, 0.5, 1])
-        ax.yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
+        ax.set_ylim(-100, 15)
+        ax.set_yticks(range(-100, 1, 25))
+        ax.yaxis.set_major_formatter(lambda v, _: f"\u2212{-v:.0f}%" if v < 0 else f"{v:.0f}%")
     axes[0].legend(fontsize=7, loc="lower left")
     plots.save(fig, "acg-sycl-ratio.png")
 
