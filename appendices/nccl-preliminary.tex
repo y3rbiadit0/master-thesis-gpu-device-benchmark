@@ -1,16 +1,16 @@
-\chapter{Exploratory NCCL Symmetric-Memory Study}\label{app:nccl-preliminary}
+\chapter{Exploratory Symmetric-Memory Study}\label{app:nccl-preliminary}
 
-This appendix preserves a later exploratory comparison that is not part of the reconciled main campaign and contributes no evidence to the research-question answers. Its incomplete metadata prevent a device-initiation or application-transfer claim, but the supplied medians identify a candidate for a controlled follow-up.
+This appendix presents a later exploratory NCCL comparison, separate from the main campaign. Only summary timings are recorded, with insufficient metadata to determine whether GPU initiation was used or whether the improvements carry over to an application. The results suggest follow-up experiments and are excluded from the research-question answers.
 
-\section{Protocol and Evidence Boundary}\label{sec:nccl-preliminary-method}
+\section{Protocol and Measurement Limitations}\label{sec:nccl-preliminary-method}
 
-The study compares NCCL~2.18.5 with ordinary allocation, NCCL~2.31.2 with ordinary allocation, and NCCL~2.31.2 with \texttt{ncclMemAlloc} and symmetric window registration on four A100 GPUs. The available summary contains three-run median latencies for 21 allreduce and 19 all-to-all sizes. Comparing versions and comparing the two 2.31.2 configurations answer different questions; the latter still combines allocation and registration.
+The study compares NCCL~2.18.5 with ordinary allocation, NCCL~2.31.2 with ordinary allocation, and NCCL~2.31.2 with \texttt{ncclMemAlloc} and symmetric window registration on four A100 GPUs. The summary contains three-run median latencies for 21 allreduce and 19 all-to-all sizes. Comparing versions tests a library update; comparing the two 2.31.2 configurations tests allocation and registration together.
 
-Symmetric buffers do not establish that user kernels invoked NCCL's device API \cite{nvidia_nccl_registration_2026,nvidia_nccl_device_2026}. Datatype, exact source and launch configuration, completion boundary, warm-up, correctness output, and individual trial timings are unavailable. No uncertainty intervals are reconstructed, and the supplied eight-byte cell is not assumed to be one float64 sum. The study identifies candidates for follow-up rather than modifying the main campaign's ranking.
+Symmetric buffers can also be used by host-called collectives, so their presence does not show that user kernels invoked NCCL's device API \cite{nvidia_nccl_registration_2026,nvidia_nccl_device_2026}. The record lacks the datatype, exact source and launch configuration, timing endpoint, warm-up, correctness output, and individual trial timings. Without those details, uncertainty intervals cannot be reconstructed and the eight-byte result cannot be assumed to measure one float64 sum.
 
 \section{Exploratory Results}\label{sec:nccl-preliminary-results}
 
-Table~\ref{tab:m-nccl-preliminary} retains representative gains and regressions from the supplied three-run medians.
+Table~\ref{tab:m-nccl-preliminary} shows selected gains and regressions from the three-run medians.
 
 \begin{table}[htbp]
 \centering
@@ -35,28 +35,28 @@ All-to-all & 64\,B & 11.1 & 13.8 & 14.0 & $0.79\times$\\
 \end{tabular}
 \end{table}
 
-\subsection{Small Allreduce Candidate}
+\subsection{Small Allreduce Improvements}
 
-Across the supplied 4\,B--32\,KiB cells, symmetric allocation and registration improve latency by approximately 1.54--1.74 times relative to 2.18.5. At eight bytes the reduction from 12.4 to 7.5\,$\mu$s is approximately 40\% lower latency. Plain 2.31.2 remains at 12.6\,$\mu$s, so the version update alone does not reproduce this small-message gain. The advantage reverses at intermediate sizes, including 256 and 512\,KiB.
+For message sizes from 4\,B to 32\,KiB, symmetric allocation and registration reduce latency by a factor of approximately 1.54--1.74 relative to 2.18.5. At eight bytes, latency falls from 12.4 to 7.5\,$\mu$s, a reduction of approximately 40\%. Plain 2.31.2 remains at 12.6\,$\mu$s, so the version update alone does not reproduce this small-message gain. The advantage reverses at intermediate sizes, including 256 and 512\,KiB.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/nccl-preliminary-allreduce.png}
-\caption[Preliminary NCCL allreduce medians]{All supplied preliminary allreduce medians. Connecting lines are guides; individual trials and uncertainty intervals are unavailable.}
+\caption[Preliminary NCCL allreduce medians]{All preliminary allreduce medians from the summary. Connecting lines are guides; individual trials and uncertainty intervals are unavailable.}
 \label{fig:m-nccl-preliminary-allreduce}
 \end{figure}
 
-The eight-byte cell is a candidate for a matched float64 experiment, not already an estimate of aCG's scalar cost: datatype, invocation mode, and completion boundary remain unresolved.
+The eight-byte result motivates a follow-up using one float64 sum with a known invocation method and timing endpoint. Matching those details would allow a comparison with aCG's scalar-reduction cost.
 
 \subsection{All-to-All Does Not Share the Small-Message Gain}
 
-Small-message all-to-all changes little between the plain and symmetric 2.31.2 configurations, and both are slower than 2.18.5 over the supplied 64\,B--32\,KiB cells. Larger messages show a modest benefit; at 16\,MiB the symmetric configuration is approximately 1.19 times faster than plain 2.31.2.
+Small-message all-to-all changes little between the plain and symmetric 2.31.2 configurations, and both are slower than 2.18.5 from 64\,B to 32\,KiB. Larger messages show a modest benefit; at 16\,MiB the symmetric configuration is approximately 1.19 times faster than plain 2.31.2.
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/nccl-preliminary-alltoall.png}
-\caption[Preliminary NCCL all-to-all medians]{All supplied preliminary all-to-all medians. The size convention is retained from the source summary and is not equated with the main per-peer sweep.}
+\caption[Preliminary NCCL all-to-all medians]{All preliminary all-to-all medians from the summary. Sizes follow the source summary's convention and cannot be directly compared with the main campaign's per-peer size axis.}
 \label{fig:m-nccl-preliminary-alltoall}
 \end{figure}
 
-Source-directory observations alone cannot establish which NCCL kernel produced a timing. Host collectives, grouped point-to-point calls, and user device-API kernels are different paths \cite{nvidia_nccl_collectives_2026,nvidia_nccl_registration_2026}. The reported inter-node proxy regressions and GDAKI stalls lack timing tables and diagnostic logs, so they supply no numerical comparison or established failure cause. The controlled follow-up is a verified one-double intra-node reduction with explicit invocation and completion metadata, followed by an application change only if its benefit persists.
+Inspecting a source directory does not identify which NCCL kernel ran during a measurement. Host collectives, grouped point-to-point calls, and user device-API kernels invoke different implementations \cite{nvidia_nccl_collectives_2026,nvidia_nccl_registration_2026}. Reports of inter-node proxy regressions and GDAKI stalls also lack timing tables and diagnostic logs, leaving their magnitude and causes unresolved. A useful next experiment is a validated one-double intra-node reduction with its invocation method and completion recorded, followed by a solver test if the improvement persists.

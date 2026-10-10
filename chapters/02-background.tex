@@ -1,10 +1,10 @@
 \chapter{Background}\label{ch:m-problem}
 
-This chapter establishes the conceptual framework used to interpret the measurements. An application's \emph{communication signature} comprises its operations, message sizes, rank placement, and dependencies. A programming interface expresses those requirements; a library implementation selects algorithms and protocols; and transport mechanisms map the resulting traffic to physical links. Performance depends on how these layers interact.
+Understanding when GPU initiation helps requires following a transfer from the application to the hardware. An application's \emph{communication signature} describes its operations, message sizes, rank placement, and dependencies. The programming interface expresses these needs, the library chooses algorithms and protocols, and the transport moves data over physical links. This chapter explains how those layers interact and why changing one can affect application performance.
 
 The discussion proceeds from interconnects and GPU execution to communication semantics, application dependencies, and library implementations. Throughout the thesis, \emph{model} denotes semantics such as two-sided message passing or one-sided PGAS; \emph{implementation} denotes a concrete library such as HPC-X MPI or NVSHMEM; and \emph{oneCCL backend} denotes an adapter beneath oneCCL. Transport frameworks such as \ac{UCX} select lower-level mechanisms, including shared memory, CUDA \ac{IPC}, \ac{TCP}, and InfiniBand verbs. The chapter closes with performance concepts; the experimental platform and configured stacks are described in Section~\ref{sec:eval-environment}.
 
-\section{GPU-Centric Communication and Interconnects}\label{sec:interconnects}
+\section{Graphics Processing Unit Communication and Interconnects}\label{sec:interconnects}
 
 A multi-GPU application communicates within nodes and across a network between nodes. Each domain admits several payload routes and divisions of work between the GPU, CPU, and \ac{NIC}. Hardware connectivity constrains these choices, while the application and communication stack determine which supported mechanisms are used.
 
@@ -74,7 +74,7 @@ Fabric assistance & Ordinary transfers or multicast/reduction & Can replicate or
 
 \paragraph{Cross-process sharing.} In the one-rank-per-GPU execution model, allocations belong to different processes. CUDA IPC and shareable \ac{VMM} handles allow an owning process to export memory for a peer to import and map. VMM additionally provides allocation-level control over mappings and access permissions. These are ways to establish reachability, not distinct payload routes or requirements for symmetric allocation. Conventional peer access also permits remote kernel loads/stores without VMM \cite{nvidia_cuda_programming_2026}.
 
-\paragraph{Library-managed access.} NVSHMEM and NCCL's \ac{LSA} device-API mode establish peer mappings so that GPU code can access remote buffers. Their symmetric-memory contracts simplify locating corresponding buffers across ranks, but those contracts belong to the library interface rather than to peer access itself. Ordering, completion, and notification remain necessary before a receiver consumes remotely written data.
+\paragraph{Library-managed access.} NVSHMEM and NCCL's \ac{LSA} device-API mode create peer mappings so that GPU code can access remote buffers. Their symmetric-memory allocation rules make corresponding buffers easier to locate across ranks. Those rules come from the libraries; peer-memory access itself does not require symmetric allocation. The receiver must still observe ordering, completion, and notification before using remotely written data.
 
 \paragraph{Fabric-assisted replication and reduction.} On systems supporting NVLink \ac{SHARP}, multicast mappings and \texttt{multimem} instructions enable replication or reduction through the fabric \cite{shen_every_2026}. These mechanisms can reduce endpoint work and traffic for suitable collective phases. They cannot combine distinct all-to-all payloads into a common result. They provide context for newer NCCL paths; applicability to a particular platform depends on the hardware capabilities recorded in its experimental setup.
 
@@ -132,10 +132,10 @@ The benchmark and solver must connect device memory and kernel execution to the 
 CUDA organizes kernel threads into blocks scheduled on \acp{SM}. Threads within a block can cooperate through shared memory and block barriers; blocks ordinarily execute independently. SYCL expresses a corresponding hierarchy of work-items, sub-groups, and work-groups, with backend-dependent mapping to hardware \cite{nvidia_cuda_programming_2026,hammond_comparative_2019}. These scopes matter when a communication primitive is called by one thread or cooperatively by a group.
 
 \paragraph{Streams, queues, and events.}
-A CUDA stream orders submitted kernels, copies, and stream-aware library operations. Work in different streams needs explicit dependencies where buffers are shared. A SYCL queue submits commands and returns events; an in-order queue preserves submission order, while an out-of-order queue requires dependencies through events or runtime-managed data access. Host submission can finish before device execution. Consequently, timing an enqueue call measures a different boundary from waiting on its completion event, and unnecessary host waits can serialize otherwise asynchronous work.
+A CUDA stream orders submitted kernels, copies, and stream-aware library operations. Work in different streams needs explicit dependencies where buffers are shared. A SYCL queue submits commands and returns events; an in-order queue preserves submission order, while an out-of-order queue requires dependencies through events or runtime-managed data access. The host can finish submitting work before the GPU executes it. Timing only submission therefore measures less work than waiting for the completion event. Unnecessary host waits can also serialize work that could otherwise run asynchronously.
 
 \paragraph{Device memory and unified shared memory.}
-CUDA device allocations and SYCL device \ac{USM} allocations provide pointers to GPU-resident storage. SYCL also provides host and shared USM, with different accessibility and placement properties. USM supplies a pointer-based interface; it does not imply that an arbitrary MPI implementation accepts the pointer, that the allocation is registered with the NIC, or that it meets a SHMEM symmetric-memory contract. The caller must also keep storage alive until asynchronous users have completed.
+CUDA device allocations and SYCL device \ac{USM} allocations provide pointers to GPU-resident storage. SYCL also provides host and shared USM, with different accessibility and placement properties. Before passing a USM pointer to a communication library, the application must check whether that library accepts it, whether network access needs registration, and whether the operation requires symmetric memory. The caller must also keep the storage allocated until all asynchronous operations using it have finished.
 
 \paragraph{Native interoperability.}
 SYCL implementations can expose backend-native objects. On a CUDA backend, obtaining the native stream allows an adapter to enqueue NCCL work in the device execution context used by SYCL. The adapter must still honor incoming dependencies and represent completion to subsequent SYCL commands. On Intel GPUs, lower-level runtime services are provided by Level Zero. HIP, used by the published aCG suite's AMD variants, provides a CUDA-like kernel and runtime interface within the ROCm ecosystem.
@@ -148,7 +148,7 @@ Source portability means that application code can target multiple platforms; bu
 
 \section{Communication Operations}\label{sec:communication-operations}
 
-Communication operations specify data movement, combination, or synchronization. Point-to-point operations concern pairs of ranks; collectives define a coordinated result over a group. Their completion contracts and surrounding dependencies determine when an application can use the result.
+Communication operations move data, combine values, or synchronize participants. Point-to-point operations concern pairs of ranks; collectives define a coordinated result over a group. Each interface specifies when an operation is complete and its result can be used by subsequent work.
 
 \subsection{Point-to-Point Operations}\label{sec:point-to-point}
 
@@ -166,7 +166,7 @@ A halo expressed through nonblocking MPI receives and sends can post every trans
 
 \subsubsection{Participation and Semantics}
 
-A \emph{collective operation} is defined over the ranks of a communicator as one logical data transformation or synchronization. Participation does not imply simultaneous entry, and most collectives are not barriers. A blocking collective's return establishes its local completion contract; a nonblocking collective establishes that contract when its request completes. A stream-enqueued collective instead completes at the corresponding device execution boundary.
+A \emph{collective operation} is defined over the ranks of a communicator as one logical data transformation or synchronization. Ranks may enter at different times, and most collectives are not barriers. A blocking collective is locally complete when its call returns; a nonblocking collective is locally complete when its request completes, which the application can check or wait for. A stream-enqueued collective finishes when execution reaches its end in the device stream, which may occur after the host call has returned.
 
 All ranks must issue compatible collective calls in an order permitted by the interface. This matching lets an implementation treat the operation as one scheduled entity rather than as independent transfers that merely happen to produce the same final layout.
 
@@ -210,16 +210,16 @@ The operations can also be composed: a reduce-scatter followed by an allgather p
 
 \subsection{Completion, Ordering, and Progress}\label{sec:completion-semantics}
 
-Several distinct boundaries are relevant to a transfer:
+Starting a transfer, delivering its data, and making that data safe to use are separate steps:
 \begin{itemize}
-\item \emph{Local completion} permits the caller to reuse the operation's local buffers according to its contract. An MPI send completion, for example, permits source-buffer reuse but does not establish that the receiver has consumed the message.
-\item \emph{Remote completion} establishes that an update has reached the destination memory as defined by the communication interface. A receiving GPU must also observe the required memory-ordering and visibility rules before accessing it.
+\item \emph{Local completion} permits the caller to reuse local buffers as specified by the operation. For example, an MPI send completion permits source-buffer reuse even if the receiving application has not yet consumed the message.
+\item \emph{Remote completion} means that an update has reached the destination memory as defined by the communication interface. A receiving GPU must also observe the required memory-ordering and visibility rules before accessing it.
 \item \emph{Notification} tells the receiver that data is ready. A flag or signal must be ordered after the payload it announces; remote completion alone does not tell the receiver when to proceed.
 \item \emph{Ordering} constrains the relative observation of operations. It need not wait for those operations to finish or synchronize all participating ranks.
-\item \emph{Collective synchronization} coordinates a group of ranks. A barrier establishes participation, but its treatment of outstanding communication depends on the interface; it must not be substituted for a completion primitive without checking that contract.
+\item \emph{Collective synchronization} coordinates a group of ranks. A barrier waits for participation, but whether it also completes earlier communication depends on the interface. The application must check this guarantee before using a barrier to wait for transfers.
 \end{itemize}
 
-\emph{Progress} is the work that advances an operation after submission, such as matching requests, posting descriptors, transferring payload, or detecting completion. A nonblocking interface permits the caller to continue but does not necessarily guarantee autonomous progress. Communication can overlap GPU computation through CPU polling, a progress thread, GPU execution, or NIC offload, provided the required resources remain available. A measurement must therefore state both its completion boundary and the progress mechanism active inside that interval.
+\emph{Progress} is the work that advances an operation after submission, such as matching requests, posting descriptors, transferring payload, or detecting completion. A nonblocking call lets the caller continue, but communication may still need further CPU or GPU work to finish. CPU polling, a progress thread, GPU execution, or NIC offload can allow transfers to overlap computation if the required resources are free to run. Timing an operation therefore requires stating both what signals its completion and what drives it forward during the measured interval.
 
 \subsection{Application Communication Signatures}\label{sec:workload-patterns}
 
@@ -231,7 +231,7 @@ A communication signature combines operation sequence, message-size distribution
 
 \paragraph{Mixture-of-Experts.} Under expert parallelism, token dispatch and result combination form personalized redistributions among devices. Uneven routing produces variable pairwise counts; implementations may pad to a fixed capacity or exchange counts and transfer only assigned tokens \cite{cai_survey_2025,huang_toward_2024}. These alternatives motivate uniform all-to-all and alltoallv tests. Specialized libraries such as DeepEP also implement sparse dispatch and combine with device-side primitives over symmetric-memory substrates, so a dense collective benchmark represents only part of this workload \cite{ma_demystifying_2026,hamidouche_gpu-initiated_2025}.
 
-\paragraph{Latency-sensitive inference.} Tensor-parallel decoding can place repeated small collectives on the token-generation critical path, making startup latency important even when communication volume is modest \cite{shen_every_2026}. Training, MoE, and inference provide motivation for the measured regimes; complete learning applications are outside the evaluation scope.
+\paragraph{Latency-sensitive inference.} Tensor-parallel decoding can place repeated small collectives on the token-generation critical path, making startup latency important even when communication volume is modest \cite{shen_every_2026}. Training, MoE, and inference motivate the selected patterns and message sizes; the evaluation does not run complete learning applications.
 
 \subsubsection{Conjugate Gradient}\label{sec:cg-background}
 
@@ -270,9 +270,9 @@ In floating-point arithmetic, changing reduction order can change the computed c
 
 \section{Communication Libraries and Backends}\label{sec:backends}
 
-The evaluated stacks draw on MPI, OpenSHMEM, and specialized collective libraries. MPI and OpenSHMEM are specifications with multiple implementations; NCCL, RCCL, and oneCCL are libraries with related but distinct interfaces. Their operation coverage, memory contracts, execution ordering, and progress mechanisms determine how they can implement the communication signatures above.
+The evaluated stacks draw on MPI, OpenSHMEM, and specialized collective libraries. MPI and OpenSHMEM are specifications with multiple implementations; NCCL, RCCL, and oneCCL are libraries with related but distinct interfaces. Choosing among them requires checking which operations they support, which buffers they accept, and how they order and complete communication.
 
-\subsection{MPI}\label{sec:mpi}
+\subsection{Message Passing Interface}\label{sec:mpi}
 
 \subsubsection{The MPI Standard}
 
@@ -300,7 +300,7 @@ In a PGAS model, processes can access designated remote memory through operation
 
 OpenSHMEM is a PGAS library interface specification \cite{openshmem_spec}, derived from the SHMEM programming model originally introduced by Cray Research in 1993 for the Cray T3D \cite{cray_t3d_history}. It provides one-sided communication operations over remotely accessible symmetric data objects. The standard covers the API and its memory model only: GPU allocation support and device-callable operations are properties of individual implementations and extensions.
 
-The central concept is \emph{symmetric memory}: corresponding objects exist on participating \acp{PE}, and a local symmetric address together with a PE identifier identifies the remote object. Symmetric heap allocations are collective and must satisfy matching allocation requirements; the interface does not require the application to assume identical virtual addresses in different processes. RMA requires the remotely accessed operand to be symmetric, while requirements on local operands and collective buffers depend on the operation and implementation. An adapter accepting ordinary application buffers must stage operands that do not meet these contracts. The oneCCL/OSHMPI backend provides that staging path.
+The central concept is \emph{symmetric memory}: corresponding objects exist on participating \acp{PE}, and a local symmetric address together with a PE identifier identifies the remote object. Symmetric heap allocations are collective and must satisfy matching allocation requirements; the application need not assume identical virtual addresses in different processes. RMA requires the remotely accessed operand to be symmetric, while restrictions on local operands and collective buffers depend on the operation and implementation. An adapter accepting ordinary application buffers must copy unsuitable operands into compatible storage. The oneCCL/OSHMPI backend uses this staging approach.
 
 The completion distinctions in Section~\ref{sec:completion-semantics} have concrete counterparts in OpenSHMEM. A blocking put permits local source reuse when it returns, but remote delivery may still be pending. A \texttt{fence} orders preceding puts before subsequent puts to the same destination within its defined scope; it need not wait for delivery. A \texttt{quiet} waits for completion of the outstanding operations covered by its context. Neither operation alone notifies the receiver that it should consume the data \cite{openmpi_shmem_fence_2026,openmpi_shmem_quiet_2026}.
 
@@ -326,7 +326,7 @@ Intel SHMEM combines OpenSHMEM-style communication with device calls inside SYCL
 \paragraph{OSHMPI (portable, over MPI).}
 OSHMPI implements OpenSHMEM over MPI RMA and collective operations. Its progress and data movement depend on the underlying MPI implementation; GPU support additionally requires suitable device-memory capabilities and allocation extensions. The direct path evaluated here uses a CUDA symmetric space for halo buffers, while the oneCCL adapter supplies symmetric staging for ordinary buffers. This makes OSHMPI a useful case for examining how a common one-sided interface maps onto host-driven MPI mechanisms. The application-specific choice to retain MPI scalar reductions is described in Section~\ref{sec:acg-method}.
 
-\paragraph{Diverging GPU extensions.} Common OpenSHMEM origins do not imply identical GPU contracts. Implementations differ in allocation placement, symmetric-operand requirements, operation scopes, capability queries, and stream- or queue-ordered completion. These differences are documented in a proposal for a unified GPU-aware extension \cite{ravi_unified_2026}. Adapters must therefore check the concrete implementation's memory and participation requirements rather than infer them from API names alone.
+\paragraph{Diverging GPU extensions.} OpenSHMEM implementations impose different requirements on GPU callers. They differ in allocation placement, symmetric operands, participating threads, capability queries, and stream- or queue-ordered completion. A proposal for a unified GPU-aware extension documents these differences \cite{ravi_unified_2026}. Adapters must check the chosen implementation's memory and participation rules even when API names look similar.
 
 \subsubsection{Programming Trade-offs}
 
@@ -343,9 +343,9 @@ NCCL \cite{nvidia_nccl_repo} supplies topology-aware communication for NVIDIA GP
 
 \paragraph{Interface.} Relative to the MPI examples above, an NCCL allreduce expresses the same global reduction but enqueues it on a CUDA stream, so it is ordered with kernels and copies on that stream without requiring a blocking host call. A halo has no native neighborhood collective in the host API and is instead expressed as grouped \texttt{ncclSend}/\texttt{ncclRecv} operations. This narrower surface lets NCCL specialize aggressively for GPU topology, but it also means that operation coverage and grouping semantics form part of the comparison.
 
-\paragraph{Algorithms, channels, and protocols.} In the analyzed legacy NCCL path, collectives are composed from reusable primitives over logical ring and double-binary-tree topologies established at communicator creation \cite{hu_demystifying_2025}. Work is divided into \emph{channels}, each operating on a disjoint buffer slice and generally launched as a CUDA block. Multiple channels help saturate links and can spread traffic across network adapters, while excessive channel counts add resource and synchronization overhead. Other NCCL versions and platforms may expose additional algorithms, including hardware-assisted and symmetric-memory paths, so ring and tree should be read as the principal algorithms of the analyzed path rather than the complete current search space.
+\paragraph{Algorithms, channels, and protocols.} In the legacy NCCL implementation analyzed here, collectives use reusable primitives over logical ring and double-binary-tree topologies built at communicator creation \cite{hu_demystifying_2025}. Work is divided into \emph{channels}, each operating on a disjoint buffer slice and generally launched as a CUDA block. Multiple channels help saturate links and spread traffic across network adapters, while excessive channel counts add resource and synchronization overhead. Ring and tree are the principal algorithms in this analysis; other NCCL versions and platforms also support hardware-assisted and symmetric-memory implementations.
 
-Orthogonally to the algorithm, the analyzed legacy path selects among Simple, \ac{LL}, and LL128 protocols, summarized in Table~\ref{tab:m-nccl-proto}. The choice trades payload efficiency against synchronization cost and is constrained by hardware: LL128 depends on write-atomicity properties that are not available on every route \cite{hu_demystifying_2025}.
+Alongside the algorithm, the legacy NCCL implementation selects among Simple, \ac{LL}, and LL128 protocols, summarized in Table~\ref{tab:m-nccl-proto}. The choice trades payload efficiency against synchronization cost and is constrained by hardware: LL128 depends on write-atomicity properties that are not supported on every route \cite{hu_demystifying_2025}.
 
 \begin{table}[htbp]
 \centering
@@ -393,7 +393,7 @@ The libraries above translate operation semantics into communication schedules. 
 
 A \emph{ring} arranges $P$ ranks in a logical cycle and moves data in $2(P-1)$ steps for an allreduce, with each rank sending a $1/P$ slice at every step. For an evenly partitioned buffer of $n$ bytes, each rank sends $2n(P-1)/P$ bytes and receives the same amount over the complete operation. Each volume approaches $2n$ as the rank count grows, while the number of steps grows linearly in $P$, favoring large messages over small ones \cite{weingram_xccl_2023}. A \emph{binomial tree} inverts the trade-off, completing in $O(\log P)$ steps and therefore favoring short messages, at the cost of lower link concurrency and concentrated traffic near interior nodes. NCCL's \emph{double binary tree} overlays two trees so that the leaves of one are interior nodes of the other, giving logarithmic latency while keeping nearly every rank active \cite{weingram_xccl_2023,hu_demystifying_2025}. \emph{Recursive doubling} and \emph{recursive halving} pair ranks at exponentially changing distances; combining a recursive-halving reduce-scatter with a recursive-doubling allgather yields Rabenseifner's allreduce.
 
-For all-to-all, \emph{Bruck's algorithm} trades local data reorganization and additional forwarded data for fewer communication rounds, while pairwise exchange sends directly to one peer per round \cite{bruck_alltoall_1997,pjesivac_mpi_collectives_2007}. Those trade-offs do not establish a GPU performance ranking: the cost of local memory operations and the available topology remain part of the implementation. Finally, \emph{hierarchical} schedules decompose an operation into intra-node and inter-node phases, allowing local aggregation where the operation permits it and accounting for the different bandwidths of the two domains.
+For all-to-all, \emph{Bruck's algorithm} trades local data reorganization and additional forwarded data for fewer communication rounds, while pairwise exchange sends directly to one peer per round \cite{bruck_alltoall_1997,pjesivac_mpi_collectives_2007}. Which algorithm is faster on GPUs also depends on local memory-operation costs and the interconnect topology. Finally, \emph{hierarchical} schedules split an operation into intra-node and inter-node phases, using local aggregation where possible to account for the different bandwidths of the two domains.
 
 Libraries select schedules using runtime heuristics or explicit controls. Open MPI's tuned component uses fixed and dynamic decision rules \cite{pjesivac_mpi_collectives_2007,openmpi_alltoall_source_2026}; NCCL selects algorithms, protocols, and channel counts. PICO and TuCCL show that alternative configurations can outperform defaults for particular workloads and systems \cite{pasqualoni_pico_2026,li_tuccl_2025}. Their detailed findings are discussed in Chapter~\ref{ch:m-related}.
 
@@ -421,7 +421,7 @@ SYCL oneCCL/\allowbreak OSHMPI & oneCCL over OpenSHMEM & Host, blocking & USM wi
 \end{tabularx}
 \end{table}
 
-The oneCCL/NVSHMEM foundation is omitted because its public collective operations remain unsupported. The measured oneCCL/OSHMPI path includes symmetric staging, whereas direct OSHMPI can use its CUDA allocation extension. Thus the common interface changes the memory path as well as the library call. Operation-specific implementations and completion boundaries are detailed in Section~\ref{sec:benchmark-method}.
+The oneCCL/NVSHMEM foundation is omitted because its public collective operations remain unsupported. The measured oneCCL/OSHMPI adapter copies operands through symmetric staging buffers, whereas direct OSHMPI can use its CUDA allocation extension. The common interface therefore changes where data is stored and copied as well as which library call is issued. Section~\ref{sec:benchmark-method} describes each implementation and the point at which its timing ends.
 
 \section{Compilers and Toolchains}
 
@@ -439,7 +439,7 @@ The host compiler and C++ standard library must be compatible with both device t
 \section{Communication Performance Characteristics}
 
 \paragraph{Analytic models.}
-The cost of a single transfer is conventionally modeled by the Hockney model as $T(m) = \alpha + \beta m$, where $\alpha$ is startup latency and $\beta$ reciprocal bandwidth. Small messages are dominated by $\alpha$, while large messages approach the $\beta m$ regime. Richer models add structure: LogP separates latency, per-message overhead, and the minimum gap between messages, while LogGP adds a per-byte gap parameter for long messages \cite{rico-gallego_survey_2019}. In this thesis these models are interpretive frames used to distinguish startup, injection, and bandwidth effects rather than predictive models fitted to every backend.
+The Hockney model describes the cost of a single transfer as $T(m) = \alpha + \beta m$, where $\alpha$ is startup latency and $\beta$ reciprocal bandwidth. Startup dominates for small messages; for large messages, the cost grows mainly with $\beta m$. Richer models add detail: LogP separates latency, per-message overhead, and the minimum gap between messages, while LogGP adds a per-byte gap parameter for long messages \cite{rico-gallego_survey_2019}. This thesis uses these models to interpret startup, injection, and bandwidth effects, without fitting a predictive model to each backend.
 
 \paragraph{Collective cost.}
 For the ring allreduce in Section~\ref{sec:collective-algorithms}, a simple model is

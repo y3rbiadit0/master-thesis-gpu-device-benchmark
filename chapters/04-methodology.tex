@@ -1,22 +1,22 @@
 \chapter{Experimental Methodology}\label{ch:m-methodology}
 
-This chapter defines the experiment behind the comparison of host-driven and device-initiated communication on a GPU-accelerated cluster. It sets out the measurement design and its parameters, the platform and the configured stacks that are actually compared, the timing and statistical protocol, the communication patterns and the application validation built on them, and the boundaries of what the retained evidence supports. The recurring concern is attribution: the evaluated paths differ in compute interface, memory handling, completion semantics, and transport as well as in where communication is invoked, so the design states throughout which of those differences a given comparison holds fixed and which it does not.
+This chapter explains how host-driven and GPU-initiated communication are compared, from individual transfers to solver execution. It describes the platform, software stacks, timing and validation procedures, and application tests. A central concern is what each measurement can explain: changing a stack can change memory handling, synchronization, transport, and kernel organization as well as where communication is initiated. The experiment records these differences so that a faster implementation is not mistaken for proof that GPU initiation alone caused the improvement.
 
 \section{Research Approach}\label{sec:research-planning-levels}
 
-The evaluation employs a bottom-up approach, progressing from isolated microbenchmarks to a full application context. This progression is structured in three levels, and the campaigns were executed in that order, because each level uses the preceding one to choose what is worth measuring:
+The evaluation starts with individual communication operations and progressively adds application behavior. The campaigns were run in the following order, using each comparison to guide the next:
 
 \begin{enumerate}
-    \item \emph{Isolated communication microbenchmarks:} \texttt{pingpong}, \texttt{halo\_1d}, \texttt{allreduce}, and \texttt{alltoall} exercise one operation at a time, with no computation to overlap or distort the transfer. They establish the message sizes, topologies, and runtime settings at which a given backend is competitive.
-    \item \emph{Application microbenchmarks:} \texttt{moe} and \texttt{cg\_step} retain the same harness, timing contract, and validation policy, but replace a single operation with a workload's communication sequence. \texttt{moe} adds routing-dependent, variable-count redistribution; \texttt{cg\_step} combines a halo exchange, a local stencil, and two scalar reductions. They test whether the isolated observations survive composition, either with an irregular payload distribution or with local computation.
-    \item \emph{Full \texttt{aCG} solver:} Tests cross-level agreement by introducing sparse partitioning, realistic application dependencies, and convergence criteria.
+    \item \emph{Isolated communication microbenchmarks:} \texttt{pingpong}, \texttt{halo\_1d}, \texttt{allreduce}, and \texttt{alltoall} exercise one operation at a time, with no application computation to overlap the transfer. They identify the message sizes, topologies, and runtime settings at which each backend is competitive.
+    \item \emph{Application microbenchmarks:} \texttt{moe} and \texttt{cg\_step} use the same harness, timing rules, and validation procedure, but measure a workload's communication sequence. \texttt{moe} adds routing-dependent, variable-count redistribution; \texttt{cg\_step} combines a halo exchange, a local stencil, and two scalar reductions. They test whether rankings change when operations are combined with irregular payloads or local computation.
+    \item \emph{Full \texttt{aCG} solver:} Tests whether the benchmark results remain useful once sparse partitioning, application dependencies, and convergence determine execution.
 \end{enumerate}
 
 Of the two application microbenchmarks, \texttt{cg\_step} is the one carried into the cross-level comparison of Section~\ref{sec:acg-method}, because the solver evaluated in this thesis is a CG solver and its reductions can be matched by datatype and payload. \texttt{moe} has no matched application in this thesis; it is measured to test how strongly the ranking obtained from a uniform, fixed-count exchange depends on the payload distribution assumed by that exchange.
 
-Raising the application context in steps is what makes the levels diagnostic: each one adds a single class of application property, so a ranking that changes between two levels identifies which property caused it.
+This progression helps explain where benchmark guidance stops matching the application. When a ranking changes, the added workload features suggest what to investigate. Several features can change together, so a ranking reversal alone does not identify a unique cause.
 
-The unit of comparison is a configured runtime stack, not a library. Each stack fixes a compute interface, a communication path, and a completion contract together, and the evaluated device-initiated paths differ from their host-driven counterparts in all three, not only in where a transfer is invoked. The design therefore aims to locate performance regimes rather than to attribute differences to invocation alone; Section~\ref{sec:eval-environment} describes the environment and the seven stacks, including the differences each comparison leaves uncontrolled.
+Each measurement describes a runtime stack: a compute interface, communication implementation, and method of waiting for completion. Host- and device-initiated implementations can also differ in memory placement, batching, and kernel organization. The experiment asks which combinations perform well for each workload. Section~\ref{sec:eval-environment} describes the seven stacks and the differences that the comparisons leave uncontrolled.
 
 \subsection{Experiment Parameters}\label{sec:execution-procedure}
 
@@ -51,7 +51,7 @@ A \emph{cell} is one $(\text{pattern}, \text{stack}, \text{topology})$ combinati
 
 \paragraph{Independence.} Every cell was run as five independent repetitions. Each repetition is a separate scheduler job that obtains its own allocation, so repetitions share no process state and may differ in nodes and network routes. Within one allocation the benchmark is launched three times. Only allocations are treated as independent samples: trial means are averaged within each allocation, the reported value is the median of the allocation means, and shaded bands show their minimum--maximum range, which describes observed variation rather than a confidence interval.
 
-\paragraph{Exceptions to the defaults.} The retained \texttt{alltoall} and \texttt{cg\_step} sweeps contain three allocations instead of five, each still with three trials; their counts are reported as measured and not reweighted. \texttt{cg\_step} also uses 50 timed and 10 warm-up iterations instead of 100 and 20.
+\paragraph{Exceptions to the defaults.} The \texttt{alltoall} and \texttt{cg\_step} sweeps contain three allocations instead of five, each still with three trials; their counts are reported as measured and not reweighted. \texttt{cg\_step} also uses 50 timed and 10 warm-up iterations instead of 100 and 20.
 
 \subsection{Benchmark Tooling}\label{sec:harness}
 
@@ -78,9 +78,9 @@ Table~\ref{tab:m-artifact-evidence} connects the research questions to the measu
 \toprule
 Question & Evidence & What the comparison establishes\\
 \midrule
-RQ1 & Primitive and composite measurements; persistent NVSHMEM kernels; monolithic aCG & Favorable regimes of the evaluated execution paths\\
-RQ2 & Direct SHMEM measurements; grouped NCCL and OSHMPI adapters; NVSHMEM runtime validation & Complete-path costs and required semantic adaptations\\
-RQ3 & Matched reduction costs, solver scaling, phase measurements, and matched CUDA--SYCL solver campaign & Predictive accuracy, limits of halo representation, and implementation performance retention\\
+RQ1 & Primitive and composite measurements; persistent NVSHMEM kernels; monolithic aCG & Workloads and settings where the tested implementations perform well\\
+RQ2 & Direct SHMEM measurements; grouped NCCL and OSHMPI adapters; NVSHMEM runtime validation & Integration costs and memory and synchronization requirements\\
+RQ3 & Matched reduction costs, solver scaling, phase measurements, and matched CUDA--SYCL solver campaign & Benchmark--solver agreement, limits of halo representation, and performance retention\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -250,7 +250,7 @@ Stream memory operations & Enabled for the documented path & Disabled\\
 
 \section{Benchmark Specification}\label{sec:benchmark-method}
 
-All benchmarks share one measurement contract, and differ only in the operation they time, the point at which each stack considers that operation complete, and how their payload is counted. This section first defines the shared contract, then describes each benchmark in the order of the evaluation levels: the four communication microbenchmarks, then the two application microbenchmarks. How samples are aggregated into the reported values is defined with the experiment parameters in Section~\ref{sec:execution-procedure}.
+All benchmarks use common rules for warm-up, timing, validation, and reporting. The timed operation, its completion condition, and the definition of payload are specified separately for each pattern. This section describes the shared procedure, then the four communication microbenchmarks and two application microbenchmarks. Section~\ref{sec:execution-procedure} explains how samples are combined into the reported values.
 
 \subsection{Measurement Protocol}\label{sec:completion-method}
 
@@ -260,16 +260,16 @@ t_i=\max_{r\in\{0,\ldots,P-1\}}t_{i,r},
 \end{equation}
 and the trial latency is the arithmetic mean of that series. \texttt{pingpong} is the only exception, as described below.
 
-\paragraph{Completion.} The timed interval ends at the completion boundary of each stack, which is part of the measured cost rather than an implementation detail. Table~\ref{tab:m-completion} summarizes the boundary each stack family uses; the benchmark descriptions below note where a pattern departs from it.
+\paragraph{Completion.} Timing ends when the operation has completed according to the stack's interface, not merely when it has been submitted. Waiting for a stream, event, or collective can contribute different costs. Table~\ref{tab:m-completion} lists the completion condition for each stack family; the pattern descriptions below identify any exceptions.
 
 \begin{table}[htbp]
 \centering
-\caption[Completion boundary by stack family]{Completion boundary that closes the timed interval, by stack family.}
+\caption[Completion condition by stack family]{Condition used to end the timed interval, by stack family.}
 \label{tab:m-completion}
 \footnotesize
 \begin{tabularx}{\textwidth}{lY}
 \toprule
-Stack & Completion boundary\\
+Stack & Completion condition\\
 \midrule
 CUDA and SYCL MPI & Return of the blocking or waited MPI calls, with device synchronization where the step requires it\\
 NCCL & Synchronization of the CUDA stream the operation was queued on\\
@@ -321,7 +321,7 @@ Rank 0 sends a buffer to rank 1, which returns the same payload; the exchange is
 
 Each rank exchanges one boundary region with its left and right neighbors on a periodic ring, over every topology with at least two ranks.
 \begin{itemize}
-    \item \emph{Timing:} each size is measured in two cases. An \emph{isolated} sample times one exchange and exposes submission and completion latency. A \emph{steady} sample times a batch of 100 consecutive exchanges and divides by the batch length, amortizing that cost over queued or persistent work. The two are different execution contracts, and the steady result is not an estimate of raw network latency. The MPI stacks wait for each exchange; NCCL and oneCCL/NCCL complete per batch; OSHMPI closes with a global barrier rather than neighbor signaling; NVSHMEM runs a cooperative device kernel with neighbor signals.
+    \item \emph{Timing:} each size is measured in two cases. An \emph{isolated} sample times one exchange, including submission and completion. A \emph{steady} sample times 100 consecutive exchanges and divides by the batch length, spreading fixed costs over queued or persistent work. These measurements answer different questions: the steady result describes sustained exchange throughput, not raw network latency. The MPI stacks wait for each exchange; NCCL and oneCCL/NCCL complete per batch; OSHMPI closes with a global barrier; NVSHMEM runs a cooperative device kernel with neighbor signals.
     \item \emph{Correctness:} each rank checks both received regions against the markers its neighbors wrote.
     \item \emph{Payload:} two sends and two receives per rank.
 \end{itemize}
