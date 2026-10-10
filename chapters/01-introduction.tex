@@ -26,7 +26,8 @@ Prior work already connects communication mechanisms to applications. GPUDirect 
 
 \begin{itemize}
 \item \emph{Comparable characterization across communication stacks.}
-Separate library benchmarks do not establish how the selected MPI, collective-library, and SHMEM paths rank under a shared measurement policy. A common CUDA/SYCL harness makes it possible to locate favorable performance regimes while recording the memory, completion, and progress differences that qualify the comparison.
+
+Separate library benchmarks do not establish how the selected MPI, collective-library, and SHMEM paths rank under a shared measurement policy. A common CUDA/SYCL bench framework makes it possible to locate favorable performance regimes while recording the memory, completion, and progress differences that qualify the comparison.
 
 \item \emph{Performance and integration costs of SHMEM-style communication.}
 Direct SHMEM measurements do not establish how much performance survives the buffer and completion adaptations required by a common interface. Comparing NVSHMEM and OSHMPI with MPI and NCCL exposes their direct trade-offs; implementing the missing paths in the oneCCL source used for this work exposes the integration requirements. Grouped NCCL support and an OSHMPI backend covering the benchmarked world-communicator operation set provide executable comparison paths, while a separately validated NVSHMEM runtime foundation establishes the prerequisites for a further backend.
@@ -36,7 +37,9 @@ It remains to be established which observations from this comparison predict app
 \end{itemize}
 
 \begin{keypoint}[Central proposition]
-Persistent device work can amortize host-control costs, but memory placement, completion semantics, and progress determine the favorable regimes. Pattern-oriented measurements can guide backend selection when the application's peer structure and dependencies preserve those regimes.
+
+One motivation for GPU-initiated communication is to reduce the CPU's role in coordinating computation and data transfers. A persistent kernel takes this further by keeping work running on the GPU instead of repeatedly returning control to the CPU. This can reduce coordination overhead, but whether the application runs faster depends on the problem: how much computation it performs, what data it exchanges, and how often it must wait for communication. Benchmarks that reflect these characteristics can help identify when persistent GPU execution is useful and which communication stack best suits the application.
+
 \end{keypoint}
 
 The benchmark consequently covers reductions, neighbor exchanges, and all-to-all redistribution, with point-to-point tests as a transfer reference. Iterative sparse solvers motivate small reductions and halo exchanges; distributed training on rapidly growing AI supercomputers \cite{pilz_trends_2025} motivates bulk reductions; and \ac{MoE} models, which route each token to a small number of expert submodels held on different devices \cite{mu_comprehensive_2026}, motivate uniform and variable-count redistribution. The application study validates the reduction and halo families through aCG.
