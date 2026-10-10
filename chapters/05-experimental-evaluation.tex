@@ -67,7 +67,9 @@ The fastest stack depends on whether exchanges are measured individually or in b
 
 For reductions, small scalar sums emphasize startup latency while large buffers emphasize throughput. Figure~\ref{fig:m-allreduce-backends} shows all seven measured stacks at representative intra- and multi-node topologies. NCCL-based implementations lead for large messages (Table~\ref{tab:m-allreduce-bandwidth}). Within a node, NVSHMEM matches NCCL closely (128.3 against 127.5\,GB/s on \texttt{1n4g}) because the benchmark enables NVSHMEM's dispatch of collectives to NCCL. This agreement measures delegated NCCL execution, not NVSHMEM's own reduction algorithm.
 
-The agreement does not survive scale in this campaign. From \texttt{4n4g} onward the NVSHMEM series separates from NCCL and falls behind every other path, to 14.3 against 31.8\,GB/s at \texttt{4n4g} and 11.9 against 29.5\,GB/s at \texttt{8n4g}, with a 16\,MiB latency of 2733\,$\mu$s against NCCL's 1104\,$\mu$s. Its allocation spread is also much wider than its neighbors'. Because dispatch configuration is exactly the variable that makes the intra-node curves agree, a separation that appears only across nodes is more consistent with a change in the selected multi-node path than with the collective algorithm itself, and the archived records do not carry the per-run dispatch setting needed to decide that. The multi-node NVSHMEM reduction figures are therefore reported as measured and are not used to rank collective implementations.
+The two series diverge across nodes. At \texttt{4n4g}, NVSHMEM reaches 14.3\,GB/s against NCCL's 31.8\,GB/s; at \texttt{8n4g}, the figures are 11.9 and 29.5\,GB/s. For the 16\,MiB reduction, NVSHMEM takes 2733\,$\mu$s against NCCL's 1104\,$\mu$s. Its timings also vary more widely between allocations.
+
+The selected collective implementation may explain part of this difference. NVSHMEM delegates to NCCL within a node, but the archive lacks the per-run dispatch information needed to confirm what ran across nodes. The timings describe the measured stack, but do not support a ranking of the underlying collective algorithms.
 
 \begin{figure}[htbp]
 \centering
@@ -147,7 +149,7 @@ Figure~\ref{fig:m-ucc-alltoall} shows the sharp change in MPI's small-message pe
 \label{fig:m-ucc-alltoall}
 \end{figure}
 
-Open MPI's tuned collective component allows its algorithm choice to be overridden, so the default can be compared with each candidate directly: enabling \texttt{coll\_tuned\_use\_dynamic\_rules} and setting \texttt{coll\_tuned\_alltoall\_algorithm} to 1, 2, 3, or 4 forces linear, pairwise, modified Bruck, or synchronized-linear exchange, and each setting is measured as a separate run. Table~\ref{tab:m-alltoall-forced} shows the result at 16 ranks: below 512 bytes per peer the default matches modified Bruck almost exactly, confirming that the collapse is an algorithm-selection effect, and forcing linear or synchronized-linear exchange avoids most of the penalty. This supports an algorithm-selection explanation rather than attributing the full gain to a uniquely efficient UCC network transport.
+Open MPI's tuned collective component lets each algorithm be selected explicitly. This control is enabled with \texttt{coll\_tuned\_use\_dynamic\_rules}. The \texttt{coll\_tuned\_alltoall\_algorithm} values 1, 2, 3, and 4 select linear, pairwise, modified Bruck, and synchronized-linear exchange, respectively. Each setting is measured in a separate run. Table~\ref{tab:m-alltoall-forced} shows the results at 16 ranks. Below 512 bytes per peer, the default closely matches modified Bruck, while forcing linear or synchronized-linear exchange avoids most of the penalty. This supports algorithm selection as an explanation for the slowdown, without attributing the full gain to UCC's network transport.
 
 \begin{table}[htbp]
 \centering
@@ -178,7 +180,7 @@ These examples show why GPU count alone is insufficient for stack selection. A r
 
 \subsection{SYCL Portability}\label{sec:sycl-portability}
 
-Two of the seven stacks compile the same benchmark source through SYCL instead of CUDA, which makes the portability cost measurable directly. Table~\ref{tab:m-sycl-portability} summarizes it over every measured cell: for each pattern it gives the ratio of SYCL MPI to CUDA MPI, the two stacks that differ only in compute interface, and the corresponding ratio of oneCCL/NCCL to direct NCCL, which differs in adapter as well.
+Two paired comparisons assess the effect of using SYCL. SYCL MPI and CUDA MPI use the same communication library with different compute interfaces. Comparing oneCCL/NCCL with direct NCCL also includes an adapter. Table~\ref{tab:m-sycl-portability} summarizes the per-cell timing ratios for each pattern, showing the median and maximum SYCL MPI ratios and the median oneCCL/NCCL ratio.
 
 \begin{table}[htbp]
 \centering
@@ -203,7 +205,7 @@ Pattern & Cells & SYCL/CUDA median & SYCL/CUDA max & oneCCL/NCCL median\\
 
 For the five patterns that time communication alone, SYCL MPI costs about 1\% more than CUDA MPI at the median. The largest deviations occur in ping-pong, reaching $1.84\times$ at large messages; isolated halo exchanges reach $1.19\times$, while the other communication-only rows stay within 8\%. Small-message ping-pong timings remain close. Overall, the median overhead is small when both implementations use the same transfers, transport, and completion requirements, with changes limited to host submission and buffer allocation.
 
-The composite step is the one pattern with a clear gap, at $1.34\times$ median over its multi-rank cells, and it is also the only pattern that includes computation. Since the same exchange costs about 1\% more through SYCL in the communication-only patterns, the gap points to the step's kernels and host orchestration rather than to the communication path; the solver comparison of Section~\ref{sec:acg-sycl} tests how much of such a gap is a property of SYCL.
+The composite step has a larger median gap, at $1.34\times$ over its multi-rank cells, and is the only pattern that includes computation. Communication-only timings are much closer, suggesting that the step's kernels and host coordination contribute to the additional cost. The solver comparison in Section~\ref{sec:acg-sycl} tests whether a SYCL application shows a similar difference.
 
 The oneCCL/NCCL column behaves differently, because it adds an adapter to the compute-interface change. It is within 2\% of direct NCCL for the three collective patterns, but reaches $1.32\times$ for the isolated halo and $1.10\times$ for ping-pong, the two cases where submission cost is exposed rather than amortized. A common interface is therefore inexpensive where the operation is large enough to hide its submission, and visible where it is not.
 
@@ -238,7 +240,11 @@ Table~\ref{tab:m-moe} gives the endpoints. The intra-node columns are tightly gr
 
 \subsection{Backend Ranking}
 
-Figure~\ref{fig:m-moe-sensitivity} is the central \texttt{moe} result. No stack is faster than CUDA MPI in all three routing cases, and three of the five compared stacks cross from below one to above one as the routing changes. The two NCCL-based paths are fastest under \texttt{uniform} routing, at almost exactly half of CUDA MPI's time, but under \texttt{locality80} direct NCCL is 1.55 times slower than CUDA MPI: when 80\% of tokens stay local, the remaining exchange is small and irregular, and NCCL's grouped point-to-point path no longer amortizes its submission cost over a bulk transfer. NVSHMEM shows the opposite profile, moving from 0.83 under \texttt{uniform} to 0.72 under \texttt{locality80}, the lowest measured value at \texttt{8n4g}, where per-destination puts suit many small, uneven blocks.
+Figure~\ref{fig:m-moe-sensitivity} shows how routing changes the ranking at \texttt{8n4g}. No stack is faster than CUDA MPI in all three cases. Three of the five alternatives switch from faster to slower than MPI as routing changes.
+
+Under \texttt{uniform} routing, the two NCCL-based implementations are fastest, taking approximately half of CUDA MPI's time. Under \texttt{locality80}, direct NCCL instead takes 1.55 times as long as CUDA MPI. With 80\% of tokens staying local, the remote exchanges are smaller and irregular. This reversal is consistent with submission overhead becoming more important when it is spread over less transferred data.
+
+NVSHMEM benefits from locality: its time relative to MPI falls from 0.83 under \texttt{uniform} to 0.72 under \texttt{locality80}, the lowest measured ratio. Its per-destination puts can handle the small, uneven blocks directly, which may help explain the different response to routing.
 
 \begin{figure}[htbp]
 \centering
@@ -247,7 +253,7 @@ Figure~\ref{fig:m-moe-sensitivity} is the central \texttt{moe} result. No stack 
 \label{fig:m-moe-sensitivity}
 \end{figure}
 
-The \texttt{hotspot80} case separates the stacks by a different mechanism. Directing 80\% of tokens at rank 0 makes every path substantially slower in absolute terms, to 34.0\,ms for CUDA MPI at \texttt{8n4g}, but it penalizes the two one-sided paths roughly twice as much: NVSHMEM reaches 62.0\,ms and OSHMPI 62.7\,ms, about 1.8 times CUDA MPI. The \texttt{alltoallv} implementations schedule a skewed exchange, whereas the SHMEM paths issue per-destination puts in the order the ranks produce them and have no collective algorithm available to reorganize the resulting incast. This is consistent with the structural difference, though the measurement does not separate scheduling from NIC-level congestion at the target.
+The \texttt{hotspot80} case concentrates 80\% of tokens on rank 0, slowing every stack at \texttt{8n4g}. CUDA MPI takes 34.0\,ms, while NVSHMEM and OSHMPI take 62.0 and 62.7\,ms, about 1.8 times as long. The \texttt{alltoallv} implementations can schedule the uneven exchange as a collective. The SHMEM implementations issue puts in the order ranks produce them, without a collective algorithm to reorganize traffic arriving at the same destination. This difference may contribute to the slowdown, but the measurements do not separate scheduling costs from congestion at the receiving NIC.
 
 OSHMPI is the one stack that is slower than CUDA MPI in every routing case at \texttt{8n4g}, by 1.70 to 1.84 times, despite matching MPI within one node at \texttt{1n4g} under two of the three cases. Its per-phase quiet, device synchronization, and barrier are inexpensive when every put lands on NVLink and expensive once each of them must complete across the fabric.
 
@@ -424,7 +430,7 @@ The auxiliary configuration analysis reports that disabling NCCL dispatch materi
 
 The device-initiated implementation supports a second cross-level check, on a different quantity. Neither the device benchmark nor the monolithic device solver records phase timers, so the reduction comparison of Section~\ref{sec:reduction-agreement} cannot be repeated for them. What both expose is whole-iteration time: the benchmark's step time and the solver's time per iteration. They solve different problems, so only their strong-scaling shape is comparable, and each series is normalized to its own two-GPU value before being compared.
 
-Figure~\ref{fig:m-cg-device-scaling} shows that the agreement depends entirely on how much local work the benchmark carries. At side 8192 the two curves almost coincide: the benchmark falls to 0.20 of its two-GPU time at 32 GPUs, against 0.26 for Bump\_2911 and 0.16 for Queen\_4147, a mean absolute deviation of 8.0\% and 12.6\% respectively (Table~\ref{tab:m-cg-device-correlation}). At side 512 the benchmark does not scale at all but grows to 3.55 times its two-GPU time, because at that size the step is dominated by the halo and the two reductions, and adding GPUs only adds communication. The deviation there is 582\% and 853\%.
+Figure~\ref{fig:m-cg-device-scaling} shows how the agreement changes with benchmark size. At side 8192, the benchmark time falls to 0.20 of its two-GPU value at 32 GPUs. The solver reaches 0.26 on Bump\_2911 and 0.16 on Queen\_4147. The mean absolute deviations are 8.0\% and 12.6\%, respectively (Table~\ref{tab:m-cg-device-correlation}). At side 512, the benchmark instead grows to 3.55 times its two-GPU time, with deviations of 582\% and 853\%. This smaller problem leaves less local work per GPU, making communication and synchronization more prominent as GPUs are added.
 
 \begin{figure}[!hbp]
 \centering
@@ -466,22 +472,17 @@ These differences explain why the fastest composite benchmark need not give the 
 
 All 507 retained completed logs meet the recorded relative residual criterion, including 90 OSHMPI trials. This validates the recorded numerical outcome of those runs; it does not imply that every attempted run completed or that floating-point reduction order leaves iteration counts unchanged. Both total time and executed work are retained so that convergence differences remain visible.
 
-MPI shows a separate performance-variability problem. Its halo and subsequent allreduce intervals grow together in slow runs, whereas the OSHMPI-halo solver uses the same MPI scalar interface with much more stable reduction timings. The contrast implicates the surrounding exchange and rank-arrival behavior, but does not isolate a particular UCX state or a single progress mechanism.
+MPI shows a separate performance-variability problem: some native-solver runs take much longer than others, a behavior referred to here as the \emph{slow mode}. It describes an observed timing pattern, not a runtime setting. The halo and subsequent allreduce intervals grow together in these runs. In contrast, the OSHMPI-halo solver uses the same MPI scalar interface with much more stable reduction timings. This points to the surrounding exchange and differences in when ranks reach the reduction, without isolating a particular UCX state or progress mechanism.
 
 Large variations also occur among trials within one allocation, as Figure~\ref{fig:m-acg-scaling} shows. Node selection alone is therefore insufficient to explain the effect. Valid solutions can coexist with timing decompositions whose overlapping event regions are unsuitable for phase attribution. The chapter consequently reports MPI allocation ranges and avoids presenting its rare fastest run as a representative scaling curve. The irregular-halo replay is intended to test whether the behavior can be reproduced outside the complete solver.
 
 \subsection{Native and Portable Solver Comparison}\label{sec:acg-sycl}
 
-The native solver and its SYCL implementation answer the portability part of RQ3: how much of the native solver's performance a portable programming model retains on the same hardware. Solver-level ratios between two campaigns fold allocation and fabric state into the answer, so the two solvers were measured together, in the same allocations, and each SYCL variant is compared only with its native counterpart from the same job. The outcomes are:
-\begin{itemize}
-    \item \emph{Scaling up.} Within one node, from one to four GPUs, the SYCL solver takes 0.87--1.02 of the native solver time on both matrices and with both reduction paths, so no portability cost is measurable there.
-    \item \emph{Scaling out with MPI.} The SYCL solver keeps strong-scaling to 32 GPUs, from 8.0 to 5.6\,s on Bump\_2911 and from 14.7 to 6.6\,s on Queen\_4147 between 8 and 32 GPUs, while native MPI enters its slow mode on the same MPI installation, settings, and nodes.
-    \item \emph{Scaling out with NCCL.} In the same allocations the two NCCL-based solvers are at parity, at 0.74--1.03; against the main campaign's faster native NCCL runs, SYCL oneCCL/NCCL takes 1.19--2.19 times as long at 8--32 GPUs, a gap located in its host-synchronous reductions.
-    \item \emph{Cause of parity.} Both implementations share the data layout and per-iteration synchronization structure, so expressing the solver in SYCL costs nothing measurable once those are matched.
-    \item \emph{Validity.} All 192 trials on each side meet the residual criterion, the SYCL residual being recomputed on the host from the original matrix.
-\end{itemize}
+This comparison addresses the portability part of RQ3: how much native CUDA performance does the SYCL solver retain on the same hardware? Both implementations were run in the same allocations to reduce differences caused by node selection and network conditions. The earlier native campaign provides a separate reference. The two comparisons answer different questions and are discussed separately below.
 
-The SYCL solver and the native CUDA solver were run in the same allocations, interleaved round by round (Section~\ref{sec:acg-environment}), so each comparison below shares nodes, fabric neighbors, MPI installation, and transport settings. One \texttt{2n4g} allocation on Bump\_2911 failed for every run of both solvers with the same UCX error and is excluded, which leaves two allocations in that cell and three in every other. The reported comparison is the SYCL-to-native ratio of the two medians within an allocation, summarized by its median over allocations (Table~\ref{tab:m-acg-sycl}). The time-per-iteration ratios agree with it to within 2\% in every cell except Queen\_4147 on one GPU, where the SYCL solver runs 2.3\% more iterations.
+The paired runs share nodes, partitions, the MPI installation, and Open MPI and UCX settings (Section~\ref{sec:acg-environment}). Toolchains differ, and the oneCCL/NCCL comparison also changes the NCCL release and halo implementation. One \texttt{2n4g} allocation on Bump\_2911 failed for every run of both solvers with the same UCX error. Excluding it leaves two allocations for that case and three for every other case. All 192 completed trials on each side meet the residual criterion; the SYCL residual is independently recomputed on the host.
+
+Table~\ref{tab:m-acg-sycl} reports the SYCL-to-native solver-time ratio calculated within allocations, following Section~\ref{sec:acg-environment}. Ratios below one favor SYCL. Time-per-iteration ratios agree with solver-time ratios within 2\%, except on Queen\_4147 with one GPU, where SYCL takes 2.3\% more iterations.
 
 \begin{figure}[htbp]
 \centering
