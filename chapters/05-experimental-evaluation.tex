@@ -502,7 +502,7 @@ Table~\ref{tab:m-acg-sycl} reports the SYCL-to-native solver-time ratio calculat
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-sycl-ratio.png}
-\caption[SYCL-to-native aCG solver-time ratio]{SYCL-to-native solver-time ratio against GPU count. Points are single allocations, each the ratio of the SYCL and native medians of that job; lines are medians over allocations. The shaded region spans more than one node. Values above one favor CUDA; the SYCL MPI ratios below one across nodes reflect the native MPI slow mode, not a faster SYCL solver.}
+\caption[SYCL solver time relative to native CUDA]{SYCL solver time as a percentage of native CUDA solver time at the same GPU count. Points are ratios of the median times within each allocation; lines show the median ratio across allocations. The 100\% line indicates equal solver time, and lower values favor SYCL. The vertical axis is logarithmic. The shaded region marks scaling out. Low MPI percentages there reflect unusually slow native MPI runs; this is a runtime comparison, not parallel efficiency.}
 \label{fig:m-acg-sycl-ratio}
 \end{figure}
 

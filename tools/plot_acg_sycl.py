@@ -15,6 +15,8 @@ import statistics as stats
 from collections import defaultdict
 from pathlib import Path
 
+from matplotlib.ticker import PercentFormatter
+
 spec = importlib.util.spec_from_file_location("plots", Path(__file__).parent / "plot_main_evidence.py")
 plots = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(plots)
@@ -78,15 +80,17 @@ def scaling(times, archived):
 
 
 def ratios(sycl_rows, native_rows):
-    """SYCL / native per allocation (points) and median over allocations (line)."""
+    """SYCL / native time per allocation, displayed as percentages, not efficiency."""
     fig, axes = plt.subplots(1, 2, figsize=(9.5, 3.8), layout="constrained")
     by_job = defaultdict(list)
     for r in sycl_rows + native_rows:
         if r["status"] == "valid":
             by_job[(r["matrix"], r["backend"], int(r["ranks"]), r["job"])].append(float(r["solver_s"]))
     for ax, matrix in zip(axes, MATRICES):
-        ax.axhline(1, color="black", linewidth=0.8)
-        ax.axvspan(4.6, 40, color="#000000", alpha=0.04, linewidth=0)
+        ax.axhline(1, color="black", linewidth=0.8, label="100%: equal solver time")
+        boundary = (4 * 8) ** 0.5
+        ax.axvspan(boundary, 40, color="#000000", alpha=0.04, linewidth=0)
+        ax.axvline(boundary, color="#777777", linestyle=":", linewidth=0.8)
         for pair, sycl_label, native_label, label, color, marker, style in (
             ("single", "acg-sycl-single", "acg-cg-single", "Single GPU", "black", "*", "-"),
             ("mpi", "acg-sycl-mpi", "acg-cg-mpi", "SYCL MPI / MPI", "#8651a6", "v", "--"),
@@ -108,11 +112,16 @@ def ratios(sycl_rows, native_rows):
                         linewidth=1.3)
             else:
                 ax.scatter(xs, medians, color=color, marker=marker, s=40, label=label, zorder=3)
-        ax.text(5.2, 3.2, "across nodes", fontsize=7, color="#555555")
-        ax.set(title=matrix, xlabel="GPUs", ylabel="SYCL / native solver time")
+        for x, label in ((2, "Scaling up"), (16, "Scaling out")):
+            ax.text(x, 1.02, label, transform=ax.get_xaxis_transform(),
+                    ha="center", va="bottom", fontsize=8, color="#555555")
+        ax.set_title(f"{matrix}: lower is better", pad=27)
+        ax.set(xlabel="GPUs", ylabel="Solver time relative to native CUDA (%)")
         ticks(ax, (1, 2, 4, 8, 16, 32))
-        ax.set_ylim(0.03, 4)
-        ax.set_yticks([0.03125, 0.125, 0.5, 1, 2, 4], ["1/32", "1/8", "1/2", "1", "2", "4"])
+        ax.set_xlim(0.85, 40)
+        ax.set_ylim(0.03, 1.15)
+        ax.set_yticks([0.05, 0.1, 0.25, 0.5, 1])
+        ax.yaxis.set_major_formatter(PercentFormatter(xmax=1, decimals=0))
     axes[0].legend(fontsize=7, loc="lower left")
     plots.save(fig, "acg-sycl-ratio.png")
 
