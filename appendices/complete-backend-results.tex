@@ -4,7 +4,7 @@ Chapter~\ref{ch:m-results} uses representative topologies so that all measured b
 
 \section{Halo Exchange}
 
-Figures~\ref{fig:app-halo-isolated} and~\ref{fig:app-halo-steady} separate the single-exchange and 100-exchange contracts. Payload counts two sends and two receives. The multi-node NVSHMEM panels retain the CPU-proxy-assisted \texttt{ibrc} path.
+Figures~\ref{fig:app-halo-isolated} and~\ref{fig:app-halo-steady} show timings for individual exchanges and batches of 100 exchanges separately. Payload counts two sends and two receives. The multi-node NVSHMEM measurements use the CPU-proxy-assisted \texttt{ibrc} transport.
 
 \begin{figure}[htbp]
 \centering
@@ -40,7 +40,7 @@ The single-rank collective panels are implementation controls rather than networ
 
 \section{Composite Sequence}
 
-Figure~\ref{fig:app-cg-all} provides every retained multi-rank \texttt{cg\_step} topology; at \texttt{1n1g} no inter-rank communication occurs, so a ratio between stacks there does not compare communication paths. Ratios use the CUDA MPI median at the same topology and global side as a fixed denominator; the bands do not propagate uncertainty in that denominator. The archived OSHMPI series retains its host-terminal scalar result.
+Figure~\ref{fig:app-cg-all} shows every measured multi-rank \texttt{cg\_step} topology. The single-rank control is omitted because it performs no inter-rank communication. Ratios use the CUDA MPI median at the same topology and global side as a fixed denominator; the bands do not propagate uncertainty in that denominator. In the measured OSHMPI implementation, the reduced scalars remain in host memory and are not copied back to the GPU.
 
 \begin{figure}[htbp]
 \centering
