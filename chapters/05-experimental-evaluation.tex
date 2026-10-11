@@ -97,7 +97,7 @@ Payload size changes the ranking. MPI and OSHMPI are fastest at four bytes acros
 
 The UCC control explains why MPI's result cannot be summarized by a single library label, and it is the largest configuration effect measured anywhere in this campaign. Figure~\ref{fig:m-ucc-allreduce} shows both configurations in absolute terms, because the ratio alone understates what is at stake. At a 16\,MiB intra-node reduction on \texttt{1n4g}, the same MPI installation takes 34.9\,ms with UCC disabled and 361\,$\mu$s with it enabled, a factor of 96.5. The corresponding multi-node figures are 39.6\,ms against 1121\,$\mu$s at \texttt{2n4g} and 45.2\,ms against 1873\,$\mu$s at \texttt{8n4g}. The non-UCC curve does not merely scale worse: it breaks down above 1\,MiB, where doubling the payload to 2\,MiB multiplies its cost by 5.1, from 809\,$\mu$s to 4101\,$\mu$s, and the gap widens monotonically from there.
 
-The trade-off runs the other way at small payloads, which is why the policy is a choice rather than a default to enable everywhere. Around 4\,KiB, UCC is slower on every measured topology, by factors of 0.55, 0.54, and 0.46 at \texttt{1n4g}, \texttt{2n4g}, and \texttt{8n4g}. Intra-node the curve recovers quickly; on the two multi-node topologies UCC remains behind until roughly 64\,KiB. The reductions that \texttt{cg\_step} and aCG actually perform are single doubles, which sit firmly inside that penalty region, and this is why Section~\ref{sec:runtime-method} disables UCC for the composite step while enabling it for the standalone sweep.
+The trade-off runs the other way at small payloads, which is why the policy is a choice rather than a default to enable everywhere. Around 4\,KiB, UCC is slower on every measured topology, by factors of 0.55, 0.54, and 0.46 at \texttt{1n4g}, \texttt{2n4g}, and \texttt{8n4g}. Intra-node the curve recovers quickly; on the two multi-node topologies UCC remains behind until roughly 64\,KiB. The reductions that \texttt{cg\_step} and aCG actually perform are single doubles, which sit firmly inside that penalty region, and this is why Section~\ref{sec:runtime-method} disables UCC for the \texttt{cg\_step} benchmark while enabling it for the standalone sweep.
 
 \begin{figure}[htbp]
 \centering
@@ -205,7 +205,7 @@ Pattern & Cells & SYCL/CUDA median & SYCL/CUDA max & oneCCL/NCCL median\\
 
 For the five patterns that time communication alone, SYCL MPI costs about 1\% more than CUDA MPI at the median. The largest deviations occur in ping-pong, reaching $1.84\times$ at large messages; isolated halo exchanges reach $1.19\times$, while the other communication-only rows stay within 8\%. Small-message ping-pong timings remain close. Overall, the median overhead is small when both implementations use the same transfers, transport, and completion requirements, with changes limited to host submission and buffer allocation.
 
-The composite step has a larger median gap, at $1.34\times$ over its multi-rank cells, and is the only pattern that includes computation. Communication-only timings are much closer, suggesting that the step's kernels and host coordination contribute to the additional cost. The solver comparison in Section~\ref{sec:acg-sycl} tests whether a SYCL application shows a similar difference.
+The \texttt{cg\_step} benchmark has a larger median gap, at $1.34\times$ over its multi-rank cells, and is the only pattern that includes computation. Communication-only timings are much closer, suggesting that the benchmark's kernels and host coordination contribute to the additional cost. The solver comparison in Section~\ref{sec:acg-sycl} tests whether a SYCL application shows a similar difference.
 
 The oneCCL/NCCL column behaves differently, because it adds an adapter to the compute-interface change. It is within 2\% of direct NCCL for the three collective patterns, but reaches $1.32\times$ for the isolated halo and $1.10\times$ for ping-pong, the two cases where submission cost is exposed rather than amortized. A common interface is therefore inexpensive where the operation is large enough to hide its submission, and visible where it is not.
 
@@ -269,11 +269,11 @@ Section~\ref{sec:cg-step-results} finds a related limitation in \texttt{cg\_step
 MPI provides a competitive reference across all three routing cases, although it is never fastest. OSHMPI is 1.70--1.84 times slower than MPI at \texttt{8n4g}, despite matching it within a node in two cases. NVSHMEM is fastest under locality-biased routing at \texttt{8n4g}, taking 0.72 of MPI's time, but both put-based implementations suffer under a hotspot. NCCL is fastest under uniform routing and becomes 1.55 times slower than MPI when most tokens stay local. oneCCL/NCCL follows direct NCCL under uniform routing, at about half of MPI's time. SYCL MPI tracks CUDA MPI. The best choice depends on where the tokens go.
 \end{keypoint}
 
-\section{Conjugate Gradient Step}\label{sec:cg-step-results}
+\section{Simplified CG Iteration Benchmark}\label{sec:cg-step-results}
 
 \subsection{Step Time}
 
-The composite comparison covers six multi-rank topologies, five global grid sides, and six backends, with nine successful trials per cell. Single-GPU runs are excluded because they perform no inter-rank communication. The benchmark combines a halo, stencil, and reductions, but stops before using the reduced scalars in a subsequent GPU update. Table~\ref{tab:m-cg-step} lists the lowest allocation-median times for this sequence. OSHMPI leads 25 of the 30 cells, including all multi-node topologies; NCCL leads the remaining five intra-node cells.
+The \texttt{cg\_step} comparison covers six multi-rank topologies, five global grid sides, and six backends, with nine successful trials per cell. Single-GPU runs are excluded because they perform no inter-rank communication. The benchmark combines a halo, stencil, and reductions, but stops before using the reduced scalars in a subsequent GPU update. Table~\ref{tab:m-cg-step} lists the lowest allocation-median times for this sequence. OSHMPI leads 25 of the 30 cells, including all multi-node topologies; NCCL leads the remaining five intra-node cells.
 
 \begin{table}[htbp]
 \centering
@@ -288,7 +288,7 @@ Figure~\ref{fig:m-cg-relative} shows why the margin matters. The direct CUDA pat
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/cg-step-relative.png}
-\caption[\texttt{cg\_step} time relative to CUDA MPI]{Composite-step time relative to CUDA MPI at the same global grid side and topology. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack. Only multi-rank topologies are shown: at \texttt{1n1g} no inter-rank communication occurs.}
+\caption[\texttt{cg\_step} time relative to CUDA MPI]{\texttt{cg\_step} time relative to CUDA MPI at the same global grid side and topology. Centers are allocation medians; bands are allocation ranges divided by the fixed reference median, not confidence intervals for the ratio. Values below one favor the compared stack. Only multi-rank topologies are shown: at \texttt{1n1g} no inter-rank communication occurs.}
 \label{fig:m-cg-relative}
 \end{figure}
 
@@ -348,9 +348,9 @@ At this scalar payload, a host-staged reduction can be cheaper than the device/U
 
 \subsection{Comparison with Microbenchmarks}\label{sec:cg-comparison-micro}
 
-Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The comparison with the solver below therefore uses the composite step's one-double reductions.
+Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The comparison with the solver below therefore uses the one-double reductions in the \texttt{cg\_step} benchmark.
 
-\begin{keypoint}[Composite-step takeaway]
+\begin{keypoint}[Simplified CG iteration benchmark takeaway]
 MPI is the reference, but its two serialized \texttt{MPI\_Sendrecv} calls differ from the grouped exchange in the halo benchmark. OSHMPI has the lowest estimate in 25 of the 30 cells, with reduced scalars left in host memory instead of ready for a subsequent GPU computation. NVSHMEM is slower here and has the widest allocation spread, limiting firm comparisons. NCCL leads the remaining five intra-node cells and returns GPU-resident results. The oneCCL/NCCL adapter adds overhead to direct NCCL. SYCL MPI takes 1.34 times CUDA MPI's time at the median, showing that combining communication with computation introduces costs absent from the isolated patterns.
 \end{keypoint}
 
@@ -358,7 +358,7 @@ MPI is the reference, but its two serialized \texttt{MPI\_Sendrecv} calls differ
 
 \subsection{Solver Time and Scaling}
 
-Figure~\ref{fig:m-acg-backend-median} compares the native multi-GPU variants using median solver time over completed trials. NCCL has the lowest representative host-initiated times in the two-matrix campaign. OSHMPI's fastest-trial throughput is within approximately 1.5--4.6\% of NCCL at two and four GPUs, but approximately 25--26\% lower at 32 GPUs (Table~\ref{tab:m-acg-oshmpi}). This solver uses MPI for scalar reductions, so its timings do not test the host-staged OpenSHMEM reductions used in the composite benchmark.
+Figure~\ref{fig:m-acg-backend-median} compares the native multi-GPU variants using median solver time over completed trials. NCCL has the lowest representative host-initiated times in the two-matrix campaign. OSHMPI's fastest-trial throughput is within approximately 1.5--4.6\% of NCCL at two and four GPUs, but approximately 25--26\% lower at 32 GPUs (Table~\ref{tab:m-acg-oshmpi}). This solver uses MPI for scalar reductions, so its timings do not test the host-staged OpenSHMEM reductions used in the \texttt{cg\_step} benchmark.
 
 \begin{figure}[htbp]
 \centering
@@ -388,7 +388,7 @@ OSHMPI increasingly outperforms the host-NVSHMEM configuration. That result must
 
 \subsection{Scalar-Reduction Agreement}\label{sec:reduction-agreement}
 
-The most direct comparison between benchmark and solver pairs the operation actually executed rather than the communicator's name (Table~\ref{tab:m-acg-reduction-pairing}). Both the composite step and steady CG iteration perform two separate one-double global sums. The comparison uses half the composite reduction phase and compares it with the application's recorded cost per reduction.
+The most direct comparison between benchmark and solver pairs the operation actually executed rather than the communicator's name (Table~\ref{tab:m-acg-reduction-pairing}). Both the \texttt{cg\_step} benchmark and steady CG iteration perform two separate one-double global sums. The comparison uses half the reduction-phase time in \texttt{cg\_step} and compares it with the application's recorded cost per reduction.
 
 \begin{table}[htbp]
 \centering
@@ -397,7 +397,7 @@ The most direct comparison between benchmark and solver pairs the operation actu
 \footnotesize
 \begin{tabularx}{\textwidth}{lYY}
 \toprule
-Composite path & Application path & Interpretation\\
+\texttt{cg\_step} path & Application path & Interpretation\\
 \midrule
 CUDA MPI & MPI scalar calls with OSHMPI halo & Avoids mixing the unstable MPI halo into the reference\\
 CUDA NCCL & NCCL communicator & Same scalar collective interface\\
@@ -419,11 +419,11 @@ The mean discrepancies range from 7.8\% to 11.1\% (Table~\ref{tab:m-acg-reductio
 \begin{figure}[!hbp]
 \centering
 \includegraphics[width=\textwidth]{figures/results/acg-reduction-prediction.png}
-\caption[Composite estimate versus aCG measurement]{One-double composite estimate versus aCG measurement. Point labels give GPU count. The dashed line is exact agreement; no model is fitted to these points. MPI observations come from the OSHMPI-halo solver.}
+\caption[\texttt{cg\_step} estimate versus aCG measurement]{One-double reduction estimate from \texttt{cg\_step} versus aCG measurement. Point labels give GPU count. The dashed line is exact agreement; no model is fitted to these points. MPI observations come from the OSHMPI-halo solver.}
 \label{fig:m-acg-reduction-prediction}
 \end{figure}
 
-The auxiliary configuration analysis reports that disabling NCCL dispatch materially changes NVSHMEM reduction time and gives matched errors of approximately 14--21\%. The matched per-trial arm is not present in the imported default \ac{JSON} record, so it is not plotted as an independently regenerated prediction. Repeating that control with explicit metadata would bring NVSHMEM to the same reproducibility level as the MPI/NCCL pairs. The separately recorded UCX-threshold control changes the composite MPI step by only approximately 2--3\%, which is too small to explain the much larger application variability.
+The auxiliary configuration analysis reports that disabling NCCL dispatch materially changes NVSHMEM reduction time and gives matched errors of approximately 14--21\%. The matched per-trial arm is not present in the imported default \ac{JSON} record, so it is not plotted as an independently regenerated prediction. Repeating that control with explicit metadata would bring NVSHMEM to the same reproducibility level as the MPI/NCCL pairs. The separately recorded UCX-threshold control changes the MPI \texttt{cg\_step} time by only approximately 2--3\%, which is too small to explain the much larger application variability.
 
 
 \subsection{Device-Initiated Scaling Agreement}\label{sec:cg-device-correlation}
@@ -452,7 +452,7 @@ The practical lesson is to match local computation as well as communication. The
 
 \subsection{Halo Structure and Overlap}
 
-The regular halo and composite step do not reproduce aCG's exchange. The synthetic step has at most two fixed neighbors and a small structured payload. Table~\ref{tab:m-acg-halo-signatures} reconstructs the application signatures from the stored communication matrices, with element-to-byte conversion checked against the per-rank log totals. Bump reaches a mean of 10.8 outgoing neighbors at 32 GPUs, with as many as 17 on an individual rank. These asymmetric graphs are available as replay inputs in the reconciled archive. Nonblocking MPI and NCCL paths may progress while local SpMV executes, whereas the measured OSHMPI path completes before that work begins.
+The regular halo test and the \texttt{cg\_step} benchmark do not reproduce aCG's exchange. The \texttt{cg\_step} benchmark has at most two fixed neighbors and a small structured payload. Table~\ref{tab:m-acg-halo-signatures} reconstructs the application signatures from the stored communication matrices, with element-to-byte conversion checked against the per-rank log totals. Bump reaches a mean of 10.8 outgoing neighbors at 32 GPUs, with as many as 17 on an individual rank. These asymmetric graphs are available as replay inputs in the reconciled archive. Nonblocking MPI and NCCL paths may progress while local SpMV executes, whereas the measured OSHMPI path completes before that work begins.
 
 \begin{table}[htbp]
 \centering
@@ -466,7 +466,7 @@ The nominal halo timer cannot resolve this difference by itself. It measures onl
 
 Auxiliary attempts to replace global barriers with neighbor flags or to split begin/end without deferring completion did not improve total solver time. They show why a change in timer placement is insufficient to create overlap. A useful next comparison must retain the same peer graph and measure submission, progress, completion, and exposed wait around independent local work.
 
-These differences explain why the fastest composite benchmark need not give the fastest solver. The reduction operation and result location change, as do the halo peers and opportunities for overlap. The measurements do not separate how much each factor contributes to the ranking reversal.
+These differences explain why the fastest backend in the \texttt{cg\_step} benchmark need not give the fastest solver. The reduction operation and result location change, as do the halo peers and opportunities for overlap. The measurements do not separate how much each factor contributes to the ranking reversal.
 
 \subsection{Convergence and Variability}\label{sec:acg-variability}
 

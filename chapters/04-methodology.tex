@@ -78,7 +78,7 @@ Table~\ref{tab:m-artifact-evidence} connects the research questions to the measu
 \toprule
 Question & Evidence & What the comparison establishes\\
 \midrule
-RQ1 & Primitive and composite measurements; persistent NVSHMEM kernels; monolithic aCG & Workloads and settings where the tested implementations perform well\\
+RQ1 & Primitive tests and application microbenchmarks; persistent NVSHMEM kernels; monolithic aCG & Workloads and settings where the tested implementations perform well\\
 RQ2 & Direct SHMEM measurements; grouped NCCL and OSHMPI adapters; NVSHMEM runtime validation & Integration costs and memory and synchronization requirements\\
 RQ3 & Matched reduction costs, solver scaling, phase measurements, and matched CUDA--SYCL solver campaign & Benchmark--solver agreement, limits of halo representation, and performance retention\\
 \bottomrule
@@ -364,9 +364,9 @@ A latency difference between routing cases is therefore attributable to distribu
 \end{itemize}
 \texttt{moe} runs with UCC disabled (Section~\ref{sec:runtime-method}), a setting not tuned for the variable-count path it uses, so its MPI results describe one fixed configuration.
 
-\subsubsection{CG Step}
+\subsubsection{Simplified CG Iteration Benchmark}
 
-The \texttt{cg\_step} benchmark extracts the communication structure of one conjugate-gradient iteration. An $S\times S$ grid, with $S$ from 512 to 8192, is distributed by columns. Each iteration packs the boundary columns, exchanges a nonperiodic west/east halo, applies a four-neighbor stencil, computes two local dot products, and performs two global sums of one double each, matching the two scalar reductions of a CG iteration. At fixed $S$, more ranks reduce local work; at a fixed rank count, a larger $S$ increases local work quadratically and halo length linearly. The benchmark keeps this operation sequence but omits vector updates, changing search directions, and convergence: the reduced scalars do not feed a next iterate, so it tests a communication/computation composition rather than the dependency graph of a full solver (Table~\ref{tab:m-cg-dependencies}).
+The \texttt{cg\_step} benchmark combines communication and local computation to represent part of a conjugate-gradient iteration. An $S\times S$ grid, with $S$ from 512 to 8192, is distributed by columns. Each iteration packs the boundary columns, exchanges a nonperiodic west/east halo, applies a four-neighbor stencil, computes two local dot products, and performs two global sums of one double each, matching the two scalar reductions of a CG iteration. At fixed $S$, more ranks reduce local work; at a fixed rank count, a larger $S$ increases local work quadratically and halo length linearly. The benchmark omits vector updates, changes to search directions, and convergence checks. Its reduced scalars are not used to compute the next iterate, so it measures a simplified sequence rather than a complete solver iteration (Table~\ref{tab:m-cg-dependencies}).
 \begin{itemize}
     \item \emph{Timing:} each sample covers pack, halo exchange, unpack, stencil, both dot products, and both completed reductions. The MPI halo uses two serialized \texttt{MPI\_Sendrecv} calls. The archived OSHMPI stack reduces each scalar in host memory and does not copy the result back to the GPU. The NVSHMEM stack fuses the two sums into one two-element reduction. An optional second pass times pack, halo, compute, and reductions separately; it synchronizes at every phase boundary, so its phase sum is an instrumentation-sensitive diagnostic rather than a measure of overlap.
     \item \emph{Correctness:} every rank checks its stencil slab against a host reference, and the two global dot products are checked. The archived OSHMPI check validates the host-side result only, so it does not cover returning that result to a GPU consumer.
@@ -414,7 +414,7 @@ Two builds of the solver are used: the CUDA solver provides every result of the 
 \end{itemize}
 Three settings deliberately differ from the benchmark defaults, and each is accounted for in the comparison:
 \begin{itemize}
-    \item \emph{Rendezvous threshold:} UCX switches to rendezvous at 16\,KiB instead of 1\,KiB. A separate control shows this changes the composite step by only about 2--3\%.
+    \item \emph{Rendezvous threshold:} UCX switches to rendezvous at 16\,KiB instead of 1\,KiB. A separate control shows this changes the \texttt{cg\_step} benchmark time by only about 2--3\%.
     \item \emph{NCCL dispatch:} disabled beneath NVSHMEM, so host-NVSHMEM reductions use NVSHMEM's native path rather than the NCCL-dispatched path of the benchmarks. The default benchmark NVSHMEM reduction is therefore not used as a matched prediction.
     \item \emph{UCC:} disabled, as in \texttt{cg\_step}, whose scalar reductions it matches.
 \end{itemize}

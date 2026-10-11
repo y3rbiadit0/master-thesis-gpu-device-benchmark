@@ -264,7 +264,7 @@ Next direction & $\beta_k=\rho_{k+1}/\rho_k$; $p_{k+1}=r_{k+1}+\beta_k p_k$ & En
 \end{tabularx}
 \end{table}
 
-This schedule explains why tiny reductions can limit scaling even when halo payloads are much larger: the scalar results directly gate subsequent work, while some halo time may be hidden by SpMV. Pipelined variants alter the recurrences to create additional overlap, and a monolithic device-side solver changes how phases are launched and synchronized \cite{trotter_cpu-_2025}. The composite \texttt{cg\_step} captures the halo-plus-two-reductions skeleton, while complete aCG execution supplies the irregular partition, computation, and convergence behavior.
+This schedule explains why tiny reductions can limit scaling even when halo payloads are much larger: the scalar results directly gate subsequent work, while some halo time may be hidden by SpMV. Pipelined variants alter the recurrences to create additional overlap, and a monolithic device-side solver changes how phases are launched and synchronized \cite{trotter_cpu-_2025}. The \texttt{cg\_step} benchmark combines a halo exchange, local stencil computation, and two scalar reductions, but omits vector updates and convergence checks. Complete aCG execution adds irregular partitions and the computation and data dependencies of a full solver.
 
 In floating-point arithmetic, changing reduction order can change the computed coefficients and the number of iterations needed to meet a residual tolerance. A backend comparison must therefore report convergence and distinguish per-iteration cost from total time to solution. The recursively updated residual can also differ from an explicitly recomputed $b-Ax_k$, so the residual definition belongs in the correctness policy.
 
