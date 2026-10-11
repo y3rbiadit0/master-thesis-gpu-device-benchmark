@@ -477,7 +477,7 @@ def build():
           "https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/usage/deviceapi.html",
           "Main campaign uses NCCL 2.18.5 and NVSHMEM 2.11.0; newer NCCL device APIs are context/future work."])
 
-    # 06 — three research questions with an evidence ladder.
+    # 06 — three research questions and the three evaluation stages.
     s = prs.slides[5]
     head(s, "When does a faster path help?", "Research questions")
     for i, (h, b) in enumerate([
@@ -669,11 +669,11 @@ def build():
          "9.60 with OSHMPI. Bump's NCCL and device-NVSHMEM medians at that endpoint are very close, "
          "so I do not interpret that small gap as a robust ordering. The regular benchmark halo "
          "does not reproduce the solver's irregular peers and overlap. Matched scalar reductions "
-         "agree more closely across levels. The meaningful target is exposed application time "
+         "agree more closely between benchmark and solver. The meaningful target is exposed application time "
          "under the same result and completion requirements, not the fastest isolated transfer.",
          ["data/main-campaign/acg-summary.csv: best_solver_s; all plotted paths have 9 trials / 3 allocations per cell",
           "data/main-campaign/reduction-error-table.tex",
-          "chapters/06-discussion.tex: Cross-Level Synthesis and Limitations",
+          "chapters/06-discussion.tex: From Benchmarks to the Solver and Limitations",
           "At 8n4g, Bump medians: NCCL 6.369126 s; device NVSHMEM 6.413378 s."])
 
     # 13 — current research tied to concrete follow-up experiments.
@@ -810,7 +810,7 @@ def build():
          "uses MPI reductions from the OSHMPI-halo solver and reductions from the NCCL solver.",
          ["data/main-campaign/reduction-error-table.tex: " + str(reduction[1:]),
           "data/main-campaign/cg-device-correlation-table.tex: " + str(correlation[1:]),
-          "chapters/06-discussion.tex: Cross-Level Synthesis"], True)
+          "chapters/06-discussion.tex: From Benchmarks to the Solver"], True)
 
     # A4 — preliminary NCCL study, explicit scope and regressions.
     s = prs.slides[17]
