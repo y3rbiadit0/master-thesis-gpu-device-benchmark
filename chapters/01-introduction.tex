@@ -90,7 +90,7 @@ To answer these questions, this thesis makes five main contributions. The second
 \begin{enumerate}
 
 \item \emph{A unified benchmark across vendor-specific and portable \acp{API}.}
-The harness applies common process-to-GPU mapping, warm-up, timing, validation, and result-reduction policies across seven MPI, NCCL/oneCCL, NVSHMEM, and OSHMPI stacks. Its primitive tests and application microbenchmarks establish the comparison for RQ1 and RQ2 and the phase-level cross-context checks used by RQ3. The suite is available in \cite{merenda_gpu_comm_benchmark_2026}.
+The benchmark suite compares seven communication stacks based on MPI, NCCL/oneCCL, NVSHMEM, and OSHMPI. It uses consistent procedures to assign processes to GPUs, warm up each test, measure execution time, check correctness, and summarize results. Its individual communication tests and application microbenchmarks support RQ1 and RQ2. Comparing these measurements with the corresponding communication phases in aCG supports RQ3. The suite is available in \cite{merenda_gpu_comm_benchmark_2026}.
 
 \item \emph{Grouped point-to-point support for the oneCCL NCCL backend.}
 The extension propagates oneCCL's group lifecycle to NCCL, enabling mutually dependent send/receive batches used by halo and all-to-all exchanges. It preserves completion and error handling for deferred work and is covered by dedicated grouped point-to-point tests. This supplies a measured common-interface path for RQ2. The implementation is available in \cite{merenda_oneccl_nccl_groups_2026}.
