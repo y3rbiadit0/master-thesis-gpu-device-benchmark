@@ -2,18 +2,18 @@
 
 The measurements in Chapter~\ref{ch:m-results} answer two connected questions: when does GPU-initiated communication help, and when can a benchmark guide application-level stack selection? This chapter follows the evaluation from individual patterns through \texttt{moe} and \texttt{cg\_step} to the aCG solver. At each step, it asks which rankings persist and what changes when the workload adds irregular exchanges, computation, or synchronization. It then brings together the GPU-initiated scaling and CUDA--SYCL comparisons, answers the research questions, and explains the limits of the conclusions.
 
-\section{Cross-Level Synthesis}
+\section{From Benchmarks to the Solver}
 
-A library name alone is not enough to predict performance. The selected algorithm, transport, memory placement, and synchronization also determine the cost of an operation. Table~\ref{tab:m-evidence-ladder} follows the comparison from isolated patterns to the solver and identifies the application features introduced along the way. Rankings changed at every level. To use a benchmark for stack selection, a developer must therefore check which features it shares with the intended application.
+A library name alone does not predict performance; the algorithm, transport, memory placement, and synchronization behind it matter as well. Table~\ref{tab:m-benchmark-to-solver} retraces the evaluation from isolated operations to the solver and notes what each step adds. The fastest stack changed at every step, so a developer who wants to use a benchmark to choose a stack must first check how closely that benchmark resembles the application.
 
 \begin{table}[htbp]
 \centering
-\caption[From communication patterns to the solver]{The progression from communication patterns to the solver. Each level introduces application features that can change the rankings seen at the preceding level.}
-\label{tab:m-evidence-ladder}
+\caption[From isolated operations to the solver]{From isolated operations to the solver. Each row adds workload features that can change which stack is fastest.}
+\label{tab:m-benchmark-to-solver}
 \footnotesize
 \begin{tabularx}{\textwidth}{lYY}
 \toprule
-Level & Property it adds & Effect on the ranking above\\
+Measurement & What it adds & What changed\\
 \midrule
 Patterns & Payload size and topology & The fastest stack changes with message size and node layout\\
 \texttt{moe} & Routing-dependent, variable-count payloads & Reverses the bulk redistribution ranking in two of three routing cases at \texttt{8n4g}\\

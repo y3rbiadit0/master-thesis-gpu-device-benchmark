@@ -1,6 +1,6 @@
 \chapter{Experimental Results}\label{ch:m-results}
 
-This chapter follows the evaluation levels of Section~\ref{sec:research-planning-levels}: first the communication microbenchmarks, then the \texttt{moe} and \texttt{cg\_step} application microbenchmarks, and finally the aCG solver. Across all of them, the performance of a backend depends strongly on the communication pattern and on the configuration of the underlying libraries.
+This chapter presents the results in the order the experiments were run (Section~\ref{sec:research-planning-levels}): first the communication microbenchmarks, then the \texttt{moe} and \texttt{cg\_step} application microbenchmarks, and finally the aCG solver. Across all of them, the performance of a backend depends strongly on the communication pattern and on the configuration of the underlying libraries.
 
 Each section follows the same topology progression, from \texttt{1n2g} and \texttt{1n4g} on NVLink, through \texttt{2n1g} on a single InfiniBand link, to \texttt{2n4g}--\texttt{8n4g} with both domains active. The question it answers throughout is whether a stack that performs well within a node keeps that advantage once communication crosses the network.
 
@@ -348,7 +348,7 @@ At this scalar payload, a host-staged reduction can be cheaper than the device/U
 
 \subsection{Comparison with Microbenchmarks}\label{sec:cg-comparison-micro}
 
-Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The cross-level comparison below therefore uses the composite step's one-double reductions.
+Matching operation size is insufficient when submission structure changes. The benchmark's MPI halo uses two serialized \texttt{MPI\_Sendrecv} exchanges in \texttt{cg\_step}, whereas the regular halo test groups its neighbor work differently. The auxiliary comparison reports a roughly 1.9-fold discrepancy, consistent with this operation-count difference. Similarly, equal eight-byte payloads do not by themselves match two float32 values with one float64 value. The comparison with the solver below therefore uses the composite step's one-double reductions.
 
 \begin{keypoint}[Composite-step takeaway]
 MPI is the reference, but its two serialized \texttt{MPI\_Sendrecv} calls differ from the grouped exchange in the halo benchmark. OSHMPI has the lowest estimate in 25 of the 30 cells, with reduced scalars left in host memory instead of ready for a subsequent GPU computation. NVSHMEM is slower here and has the widest allocation spread, limiting firm comparisons. NCCL leads the remaining five intra-node cells and returns GPU-resident results. The oneCCL/NCCL adapter adds overhead to direct NCCL. SYCL MPI takes 1.34 times CUDA MPI's time at the median, showing that combining communication with computation introduces costs absent from the isolated patterns.
@@ -388,7 +388,7 @@ OSHMPI increasingly outperforms the host-NVSHMEM configuration. That result must
 
 \subsection{Scalar-Reduction Agreement}\label{sec:reduction-agreement}
 
-The most direct cross-level check pairs the operation actually executed rather than the communicator's name (Table~\ref{tab:m-acg-reduction-pairing}). Both the composite step and steady CG iteration perform two separate one-double global sums. The comparison uses half the composite reduction phase and compares it with the application's recorded cost per reduction.
+The most direct comparison between benchmark and solver pairs the operation actually executed rather than the communicator's name (Table~\ref{tab:m-acg-reduction-pairing}). Both the composite step and steady CG iteration perform two separate one-double global sums. The comparison uses half the composite reduction phase and compares it with the application's recorded cost per reduction.
 
 \begin{table}[htbp]
 \centering
@@ -411,7 +411,7 @@ The mean discrepancies range from 7.8\% to 11.1\% (Table~\ref{tab:m-acg-reductio
 
 \begin{table}[!hbp]
 \centering
-\caption[Scalar-reduction discrepancy between \texttt{cg\_step} and aCG]{Mean absolute percentage discrepancy over five measured rank counts, regenerated from the retained cross-level pairs.}
+\caption[Scalar-reduction discrepancy between \texttt{cg\_step} and aCG]{Mean absolute percentage discrepancy over five measured rank counts, regenerated from the retained benchmark--solver pairs.}
 \label{tab:m-acg-reduction-correlation}
 \input{data/main-campaign/reduction-error-table.tex}
 \end{table}
@@ -428,7 +428,7 @@ The auxiliary configuration analysis reports that disabling NCCL dispatch materi
 
 \subsection{Device-Initiated Scaling Agreement}\label{sec:cg-device-correlation}
 
-The device-initiated implementation supports a second cross-level check, on a different quantity. Neither the device benchmark nor the monolithic device solver records phase timers, so the reduction comparison of Section~\ref{sec:reduction-agreement} cannot be repeated for them. What both expose is whole-iteration time: the benchmark's step time and the solver's time per iteration. They solve different problems, so only their strong-scaling shape is comparable, and each series is normalized to its own two-GPU value before being compared.
+The device-initiated implementation supports a second comparison between benchmark and solver, on a different quantity. Neither the device benchmark nor the monolithic device solver records phase timers, so the reduction comparison of Section~\ref{sec:reduction-agreement} cannot be repeated for them. What both expose is whole-iteration time: the benchmark's step time and the solver's time per iteration. They solve different problems, so only their strong-scaling shape is comparable, and each series is normalized to its own two-GPU value before being compared.
 
 Figure~\ref{fig:m-cg-device-scaling} shows how the agreement changes with benchmark size. At side 8192, the benchmark time falls to 0.20 of its two-GPU value at 32 GPUs. The solver reaches 0.26 on Bump\_2911 and 0.16 on Queen\_4147. The mean absolute deviations are 8.0\% and 12.6\%, respectively (Table~\ref{tab:m-cg-device-correlation}). At side 512, the benchmark instead grows to 3.55 times its two-GPU time, with deviations of 582\% and 853\%. This smaller problem leaves less local work per GPU, making communication and synchronization more prominent as GPUs are added.
 
