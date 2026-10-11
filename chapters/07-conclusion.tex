@@ -12,7 +12,7 @@ The benchmark-to-application comparison reaches a similarly practical conclusion
 
 The preliminary NCCL~2.31.2 study in Appendix~\ref{app:nccl-preliminary} suggests a further experiment. Symmetric buffers improve the small-allreduce medians relative to NCCL~2.18.5, but the advantage reverses at some intermediate sizes and does not extend to small all-to-all. An application-level test would need to record the version, memory handling, and invocation method before attributing any improvement to GPU initiation.
 
-The practical outcome is a sequence of steps for choosing a communication stack for an application on a particular system:
+Looking back at the results, they suggest the following checks when choosing a communication stack for an application on a particular system:
 
 \begin{enumerate}
     \item \emph{Compute patterns.} Identify the local work per GPU and where it depends on remote data. The device-initiated step reproduced the solver's scaling at one grid side and missed it at another, showing that the ratio of computation to communication matters when choosing a representative benchmark.
@@ -22,7 +22,7 @@ The practical outcome is a sequence of steps for choosing a communication stack 
     \item \emph{Performance gains and losses.} Compare the candidates first in an application microbenchmark and then in the application itself. Require each result to be ready in the same memory location for the next computation, and reproduce the application's synchronization and overlap. Report slowdowns as well as improvements.
 \end{enumerate}
 
-This procedure follows the evaluation used here, which covered one solver and one routed-exchange microbenchmark on one system. Its usefulness for other applications and clusters remains to be tested.
+These checks come from a single system, a single solver, and the \texttt{moe} benchmark. They still need to be tested on other applications and clusters.
 
 \section{Future Work}\label{sec:priority-experiments}
 
