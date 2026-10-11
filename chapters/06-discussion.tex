@@ -82,13 +82,13 @@ The reduction implementation also changes the cost within the SYCL solver. With 
 
 \section{Research Questions Revisited}
 
-\paragraph{RQ1: conditions for beneficial GPU invocation.}
+\paragraph{RQ1: When GPU initiation pays off.}
 Persistent, kernel-invoked NVSHMEM performs well for large batches of regular halo exchanges, while MPI retains the advantage for small messages and isolated exchanges. In aCG, the monolithic device-NVSHMEM implementation improves relative to blocking OSHMPI as more GPUs are used but remains behind NCCL in the representative curves. The MoE hotspot case shows another limitation: when 80\% of tokens target one rank, the NVSHMEM and OSHMPI put-based implementations are about 1.8 times slower than the \texttt{alltoallv} implementations at 32 GPUs. Neither put-based implementation uses a collective algorithm to reorganize this concentrated traffic. The measured GPU-initiated benefits include changes in persistence, batching, signaling, and solver organization; isolating invocation and testing GPU-posted networking require the follow-up experiments in Section~\ref{sec:priority-experiments}.
 
-\paragraph{RQ2: practical SHMEM trade-offs.}
+\paragraph{RQ2: Practical trade-offs of SHMEM-style communication.}
 SHMEM-style communication requires the application or an adapter to manage symmetric allocation, remote addresses, notifications, and safe buffer reuse. These responsibilities fit persistent or explicitly coordinated exchanges, but adapters can add substantial work. oneCCL/NCCL preserves asynchronous execution and approaches direct NCCL at the bulk all-to-all endpoint. In contrast, oneCCL/OSHMPI is approximately 18 times slower than direct OSHMPI for the measured 16\,MiB intra-node allreduce. The same common interface stays within 2\% of direct NCCL on the collective patterns. The integration choices therefore matter: copying data into symmetric buffers and blocking the host can outweigh the underlying library's direct performance.
 
-\paragraph{RQ3: application transfer and CUDA--SYCL retention.}
+\paragraph{RQ3: From benchmarks to applications, and SYCL performance retention.}
 The benchmark and solver agree approximately for matched MPI and NCCL scalar reductions. The device-initiated step also reproduces the monolithic solver's scaling shape when their local work per GPU is comparable. The regular halo and synthetic OSHMPI result fail to predict the solver ranking because the peers, overlap, reduction operation, and completion requirements differ. Benchmarks can guide selection, but these examples show why their resemblance to the application must be checked.
 
 For SYCL, the paired campaign reports solver-time ratios of 0.87--1.02 relative to native CUDA within one node, with every trial on both sides residual-valid. Across nodes, SYCL MPI avoids the slow native MPI runs. SYCL oneCCL/NCCL performs similarly to native NCCL in the paired allocations. Relative to the earlier native campaign, it reaches 46--84\% of native NCCL's performance at 8--32 GPUs, but that comparison also includes allocation differences. Section~\ref{sec:sycl-cost} distinguishes this variation from the additional host waits measured in oneCCL reductions.

@@ -48,7 +48,7 @@ The benchmark consequently covers reductions, neighbor exchanges, and all-to-all
 
 Selecting a communication stack begins with a practical uncertainty: when does moving communication calls into a GPU kernel repay the cost of changing the execution path? A host-driven application may repeatedly wait for a producing kernel, submit a transfer, and establish completion before computation can continue. Persistent device execution offers a way to keep this sequence on the GPU, but introduces its own synchronization and progress requirements. The first step is therefore to locate the message sizes and topologies at which the balance changes. The persistent NVSHMEM ping-pong and halo kernels provide this evidence at pattern level, while the monolithic NVSHMEM solver extends the investigation to repeated application execution. Because these paths also differ in algorithms and organization, the comparison concerns the benefit of each complete stack.
 
-\begin{researchquestion}[RQ1 -- Conditions for beneficial GPU initiation]
+\begin{researchquestion}[RQ1 -- When GPU initiation pays off]
 Under which evaluated configurations do persistent NVSHMEM ping-pong and halo kernels and the monolithic NVSHMEM aCG solver outperform host-initiated alternatives? What evidence supports launch, synchronization, or proxy-progress costs as explanations for the observed message-size and scaling boundaries?
 \end{researchquestion}
 
@@ -62,7 +62,7 @@ The next step is to put the candidate stacks into an application. In a CG solver
 
 The application also makes the portability question concrete. Expressing the solver through SYCL changes kernels, memory handling, and host orchestration alongside the available communication interfaces. The final question therefore combines the main test of benchmark-to-application transfer with a supporting comparison of CUDA--SYCL performance retention on the evaluated NVIDIA platform. The latter pairs a SYCL solver campaign with the CUDA solver on the same problems and partitions.
 
-\begin{researchquestion}[RQ3 -- Application transfer and CUDA--SYCL performance retention]
+\begin{researchquestion}[RQ3 -- From benchmarks to applications, and SYCL performance retention]
 To what extent do the microbenchmarks and composite CG step predict communication costs and backend rankings in aCG, and which application dependencies explain agreement or divergence? For the SYCL version, how much native CUDA solver performance is retained on the evaluated platform?
 \end{researchquestion}
 
